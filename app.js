@@ -70,7 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       showMessage(`
         <h2>No search term</h2>
-        <p>Please enter a scientific topic.</p>
+
+        <p>
+          Please enter a scientific topic.
+        </p>
       `);
 
       return;
@@ -161,6 +164,10 @@ document.addEventListener("DOMContentLoaded", function () {
         getToday();
 
 
+      // ----------------------------------------
+      // Remove future-dated records
+      // ----------------------------------------
+
       papers =
         papers.filter(function (paper) {
 
@@ -172,6 +179,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         });
 
+
+      // ----------------------------------------
+      // Newest first
+      // ----------------------------------------
 
       papers.sort(function (a, b) {
 
@@ -216,6 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
     catch (error) {
 
       console.error(error);
+
 
       showMessage(`
         <h2>Search failed</h2>
@@ -276,7 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ========================================
-    // NEW TOPIC
+    // CREATE NEW TOPIC
     // ========================================
 
     if (!topic) {
@@ -291,7 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         seenPaperIds: [],
 
-        newPaperCount: 0
+        lastCheckNewPapers: 0,
+
+        totalNewPapers: 0
 
       };
 
@@ -333,6 +347,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
 
+      // --------------------------------------
+      // Establish the initial baseline
+      // --------------------------------------
+
       topic.seenPaperIds =
         papers.map(function (paper) {
 
@@ -345,7 +363,15 @@ document.addEventListener("DOMContentLoaded", function () {
         getToday();
 
 
-      topic.newPaperCount =
+      // First check doesn't count as
+      // "new" because these papers existed
+      // before STracker started tracking.
+
+      topic.lastCheckNewPapers =
+        0;
+
+
+      topic.totalNewPapers =
         0;
 
 
@@ -368,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ========================================
-    // SAME DAY
+    // DETERMINE NEXT DATE
     // ========================================
 
     const fromDate =
@@ -376,6 +402,10 @@ document.addEventListener("DOMContentLoaded", function () {
         topic.lastChecked
       );
 
+
+    // ========================================
+    // SAME-DAY CHECK
+    // ========================================
 
     if (
       fromDate > getToday()
@@ -402,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ========================================
-    // SEARCH NEW DATE RANGE
+    // FETCH PAPERS SINCE LAST CHECK
     // ========================================
 
     const papers =
@@ -414,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ========================================
-    // FIND NEW PAPERS
+    // FIND PAPERS WE HAVE NEVER SEEN
     // ========================================
 
     const newPapers =
@@ -428,7 +458,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ========================================
-    // SAVE NEW PAPER IDS
+    // ADD NEW IDS TO MEMORY
     // ========================================
 
     papers.forEach(function (paper) {
@@ -449,16 +479,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ========================================
-    // UPDATE COUNTER
+    // UPDATE HISTORY
     // ========================================
 
-    topic.newPaperCount =
+    topic.lastCheckNewPapers =
       newPapers.length;
 
 
-    // ========================================
-    // UPDATE LAST CHECK
-    // ========================================
+    topic.totalNewPapers =
+      (topic.totalNewPapers || 0) +
+      newPapers.length;
+
 
     topic.lastChecked =
       getToday();
@@ -485,6 +516,14 @@ document.addEventListener("DOMContentLoaded", function () {
         <p>
           No new papers were found since
           the previous check.
+        </p>
+
+        <p>
+          Total new papers since tracking
+          began:
+          <strong>
+            ${topic.totalNewPapers}
+          </strong>
         </p>
 
       `);
@@ -532,6 +571,19 @@ document.addEventListener("DOMContentLoaded", function () {
     topicName
   ) {
 
+    const confirmed =
+      confirm(
+        "Remove tracking for " +
+        topicName +
+        "?"
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
     const topics =
       getTrackedTopics();
 
@@ -553,6 +605,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     displayTrackedTopics();
+
+
+    showMessage(`
+      <h2>
+        Topic removed
+      </h2>
+
+      <p>
+        Tracking has been removed for
+        <strong>
+          ${escapeHtml(topicName)}
+        </strong>.
+      </p>
+    `);
 
   }
 
@@ -593,8 +659,12 @@ document.addEventListener("DOMContentLoaded", function () {
               : 0;
 
 
-          const newCount =
-            topic.newPaperCount || 0;
+          const lastNew =
+            topic.lastCheckNewPapers || 0;
+
+
+          const totalNew =
+            topic.totalNewPapers || 0;
 
 
           return `
@@ -609,7 +679,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
               <h3
                 style="
-                  margin:0 0 8px;
+                  margin:0 0 10px;
                 "
               >
                 ${escapeHtml(
@@ -618,14 +688,8 @@ document.addEventListener("DOMContentLoaded", function () {
               </h3>
 
 
-              <p
-                style="
-                  margin:5px 0;
-                "
-              >
-
+              <p>
                 📅 Last checked:
-
                 <strong>
                   ${
                     escapeHtml(
@@ -634,37 +698,30 @@ document.addEventListener("DOMContentLoaded", function () {
                     )
                   }
                 </strong>
-
               </p>
 
 
-              <p
-                style="
-                  margin:5px 0;
-                "
-              >
-
+              <p>
                 📚 Papers tracked:
-
                 <strong>
                   ${paperCount}
                 </strong>
-
               </p>
 
 
-              <p
-                style="
-                  margin:5px 0 15px;
-                "
-              >
-
-                🟢 New papers:
-
+              <p>
+                🟢 New since last check:
                 <strong>
-                  ${newCount}
+                  ${lastNew}
                 </strong>
+              </p>
 
+
+              <p>
+                📈 Total new since tracking:
+                <strong>
+                  ${totalNew}
+                </strong>
               </p>
 
 
@@ -860,12 +917,12 @@ document.addEventListener("DOMContentLoaded", function () {
           );
 
 
-        button.textContent =
-          "Load more";
-
-
         button.type =
           "button";
+
+
+        button.textContent =
+          "Load more";
 
 
         button.addEventListener(
@@ -1034,7 +1091,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     localStorage.setItem(
       "stracker_topics",
-      JSON.stringify(topics)
+      JSON.stringify(
+        topics
+      )
     );
 
   }
@@ -1085,9 +1144,7 @@ document.addEventListener("DOMContentLoaded", function () {
     results.innerHTML = `
 
       <div class="welcome">
-
         ${html}
-
       </div>
 
     `;
