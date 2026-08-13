@@ -1,2132 +1,572 @@
-document.addEventListener("DOMContentLoaded", function () {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  const searchInput =
-    document.getElementById("searchInput");
+  <title>STracker - Scientific Paper Discovery</title>
 
-  const searchButton =
-    document.getElementById("searchButton");
-
-  const trackedTopics =
-    document.getElementById("trackedTopics");
-
-  const results =
-    document.getElementById("results");
-
-  const keywordContainer =
-    document.getElementById("keywordContainer");
-
-  const excludeContainer =
-    document.getElementById("excludeContainer");
-
-  const addKeywordButton =
-    document.getElementById("addKeywordButton");
-
-  const addExcludeButton =
-    document.getElementById("addExcludeButton");
-
-  const accuracyInput =
-    document.getElementById("accuracyInput");
-
-  const accuracyValue =
-    document.getElementById("accuracyValue");
-
-  const previewButton =
-    document.getElementById("previewButton");
-
-  const advancedTrackButton =
-    document.getElementById("advancedTrackButton");
-
-
-  const API_LIMIT = 100;
-
-  const PAPERS_PER_LOAD = 20;
-
-
-  // ==========================================
-  // QUICK SEARCH
-  // ==========================================
-
-  searchButton.addEventListener(
-    "click",
-    function () {
-
-      quickSearch();
-
+  <style>
+    * {
+      box-sizing: border-box;
     }
-  );
 
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+      color: #222;
+    }
 
-  searchInput.addEventListener(
-    "keydown",
-    function (event) {
+    header {
+      background: #111827;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
 
-      if (event.key === "Enter") {
+    header h1 {
+      margin: 0 0 8px;
+    }
 
-        event.preventDefault();
+    header p {
+      margin: 0;
+      color: #d1d5db;
+    }
 
-        quickSearch();
+    main {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+    }
 
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 25px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      background: white;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    button {
+      padding: 13px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .secondary {
+      background: #6b7280;
+    }
+
+    .secondary:hover {
+      background: #4b5563;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .danger:hover {
+      background: #b91c1c;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    .hint {
+      color: #6b7280;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .keyword-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .keyword-row input {
+      flex: 1;
+    }
+
+    .advanced-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .accuracy-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    .paper {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+
+    .paper h2 {
+      margin-top: 0;
+    }
+
+    .paper a {
+      color: #2563eb;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    .tracked-topic {
+      padding: 18px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    @media (max-width: 700px) {
+      .advanced-grid {
+        grid-template-columns: 1fr;
       }
 
+      .full-width {
+        grid-column: auto;
+      }
+
+      .search-box {
+        flex-direction: column;
+      }
     }
-  );
+  </style>
+</head>
 
+<body>
 
-  // ==========================================
-  // ACCURACY SLIDER
-  // ==========================================
+  <header>
+    <h1>STracker</h1>
+    <p>Scientific Paper Discovery & Tracking</p>
+  </header>
 
-  accuracyInput.addEventListener(
-    "input",
-    function () {
+  <main>
 
-      accuracyValue.textContent =
-        accuracyInput.value + "%";
+    <!-- QUICK SEARCH -->
 
-    }
-  );
+    <div class="card">
 
+      <h2>🔎 Quick Search</h2>
 
-  // ==========================================
-  // ADD KEYWORD
-  // ==========================================
+      <div class="search-box">
 
-  addKeywordButton.addEventListener(
-    "click",
-    function () {
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search scientific papers..."
+        >
 
-      addInputRow(
-        keywordContainer,
-        "required-keyword",
-        "Example: memory formation"
-      );
+        <button id="searchButton">
+          Search
+        </button>
 
-    }
-  );
+      </div>
 
-
-  // ==========================================
-  // ADD EXCLUSION
-  // ==========================================
-
-  addExcludeButton.addEventListener(
-    "click",
-    function () {
-
-      addInputRow(
-        excludeContainer,
-        "excluded-keyword",
-        "Example: animal studies"
-      );
-
-    }
-  );
-
-
-  // ==========================================
-  // PREVIEW
-  // ==========================================
-
-  previewButton.addEventListener(
-    "click",
-    function () {
-
-      runAdvancedSearch(false);
-
-    }
-  );
-
-
-  // ==========================================
-  // TRACK
-  // ==========================================
-
-  advancedTrackButton.addEventListener(
-    "click",
-    function () {
-
-      runAdvancedSearch(true);
-
-    }
-  );
-
-
-  displayTrackedTopics();
-
-
-  // ==========================================
-  // ADD INPUT ROW
-  // ==========================================
-
-  function addInputRow(
-    container,
-    className,
-    placeholder
-  ) {
-
-    const row =
-      document.createElement("div");
-
-    row.className =
-      "keyword-row";
-
-
-    row.innerHTML = `
-
-      <input
-        type="text"
-        class="${className}"
-        placeholder="${placeholder}"
-      >
-
-      <button
-        type="button"
-        class="remove-keyword"
-      >
-        ×
-      </button>
-
-    `;
-
-
-    row
-      .querySelector("button")
-      .addEventListener(
-        "click",
-        function () {
-
-          row.remove();
-
-        }
-      );
-
-
-    container.appendChild(row);
-
-  }
-
-
-  // ==========================================
-  // GET ADVANCED CRITERIA
-  // ==========================================
-
-  function getCriteria() {
-
-    const keywords =
-      Array.from(
-        document.querySelectorAll(
-          ".required-keyword"
-        )
-      )
-      .map(function (input) {
-
-        return input.value.trim();
-
-      })
-      .filter(Boolean);
-
-
-    const excluded =
-      Array.from(
-        document.querySelectorAll(
-          ".excluded-keyword"
-        )
-      )
-      .map(function (input) {
-
-        return input.value.trim();
-
-      })
-      .filter(Boolean);
-
-
-    return {
-
-      keywords: keywords,
-
-      excluded: excluded,
-
-      author:
-        document
-          .getElementById("authorInput")
-          .value
-          .trim(),
-
-      journal:
-        document
-          .getElementById("journalInput")
-          .value
-          .trim(),
-
-      field:
-        document
-          .getElementById("fieldInput")
-          .value,
-
-      dateRange:
-        document
-          .getElementById("dateRangeInput")
-          .value,
-
-      documentType:
-        document
-          .getElementById("documentTypeInput")
-          .value,
-
-      accuracy:
-        Number(
-          accuracyInput.value
-        )
-
-    };
-
-  }
-
-
-  // ==========================================
-  // ADVANCED SEARCH
-  // ==========================================
-
-  async function runAdvancedSearch(
-    shouldTrack
-  ) {
-
-    const criteria =
-      getCriteria();
-
-
-    if (
-      criteria.keywords.length === 0 &&
-      !criteria.author &&
-      !criteria.journal &&
-      !criteria.field
-    ) {
-
-      showMessage(`
-
-        <h2>
-          Add a research criterion
-        </h2>
-
-        <p>
-          Enter at least one keyword,
-          author, journal, or research field.
-        </p>
-
-      `);
-
-      return;
-
-    }
-
-
-    const query =
-      criteria.keywords.join(" ");
-
-
-    showMessage(`
-
-      <h2>
-        🔎 Analyzing research...
-      </h2>
-
-      <p>
-        Building your research profile
-        and finding matching papers.
+      <p class="hint">
+        Search scientific papers quickly by topic.
       </p>
 
-    `);
+    </div>
 
 
-    try {
+    <!-- ADVANCED TRACKER -->
 
-      let apiQuery =
-        query;
+    <div class="card">
 
+      <h2>🔬 Advanced Research Tracker</h2>
 
-      // --------------------------------------
-      // Add author/journal to broad query
-      // --------------------------------------
+      <p>
+        Create a precise research profile to monitor.
+      </p>
 
-      if (criteria.author) {
 
-        apiQuery +=
-          " " +
-          criteria.author;
+      <div class="advanced-grid">
 
-      }
 
+        <!-- REQUIRED KEYWORDS -->
 
-      if (criteria.journal) {
+        <div class="field full-width">
 
-        apiQuery +=
-          " " +
-          criteria.journal;
+          <label>
+            Required keywords
+          </label>
 
-      }
+          <div id="keywordContainer">
 
+            <div class="keyword-row">
 
-      if (criteria.field) {
+              <input
+                type="text"
+                class="required-keyword"
+                placeholder="Example: cognitive neuroscience"
+              >
 
-        apiQuery +=
-          " " +
-          criteria.field;
+            </div>
 
-      }
+          </div>
 
+          <button
+            type="button"
+            id="addKeywordButton"
+            class="secondary"
+          >
+            + Add keyword
+          </button>
 
-      if (!apiQuery.trim()) {
+        </div>
 
-        apiQuery = "*";
 
-      }
+        <!-- EXCLUDED KEYWORDS -->
 
+        <div class="field full-width">
 
-      let url =
-        "https://api.openalex.org/works" +
+          <label>
+            Excluded keywords
+          </label>
 
-        "?search=" +
-        encodeURIComponent(
-          apiQuery
-        ) +
+          <div id="excludeContainer">
 
-        "&sort=publication_date:desc" +
+            <div class="keyword-row">
 
-        "&per-page=" +
-        API_LIMIT;
+              <input
+                type="text"
+                class="excluded-keyword"
+                placeholder="Example: animal studies"
+              >
 
+            </div>
 
-      // --------------------------------------
-      // Date filter
-      // --------------------------------------
+          </div>
 
-      const dateFilter =
-        buildDateFilter(
-          criteria.dateRange
-        );
+          <button
+            type="button"
+            id="addExcludeButton"
+            class="secondary"
+          >
+            + Add exclusion
+          </button>
 
+        </div>
 
-      if (dateFilter) {
 
-        url +=
-          "&filter=" +
-          dateFilter;
+        <!-- AUTHOR -->
 
-      }
+        <div class="field">
 
+          <label>
+            Author
+          </label>
 
-      const response =
-        await fetch(url);
+          <input
+            type="text"
+            id="authorInput"
+            placeholder="Example: Jennifer Doudna"
+          >
 
+        </div>
 
-      if (!response.ok) {
 
-        throw new Error(
-          "OpenAlex request failed"
-        );
+        <!-- JOURNAL -->
 
-      }
+        <div class="field">
 
+          <label>
+            Journal / Source
+          </label>
 
-      const data =
-        await response.json();
+          <input
+            type="text"
+            id="journalInput"
+            placeholder="Example: Nature"
+          >
 
+        </div>
 
-      let papers =
-        data.results || [];
 
+        <!-- FIELD -->
 
-      papers =
-        papers.filter(
-          function (paper) {
+        <div class="field">
 
-            return (
-              paper.id &&
-              paper.publication_date &&
-              paper.publication_date <=
-              getToday()
-            );
+          <label>
+            Research field
+          </label>
 
-          }
-        );
+          <select id="fieldInput">
 
+            <option value="">
+              Any field
+            </option>
 
-      // ======================================
-      // LOCAL FILTERING
-      // ======================================
+            <option value="Neuroscience">
+              Neuroscience
+            </option>
 
-      papers =
-        papers.filter(
-          function (paper) {
+            <option value="Biology">
+              Biology
+            </option>
 
-            return matchesCriteria(
-              paper,
-              criteria
-            );
+            <option value="Medicine">
+              Medicine
+            </option>
 
-          }
-        );
+            <option value="Computer Science">
+              Computer Science
+            </option>
 
+            <option value="Physics">
+              Physics
+            </option>
 
-      // ======================================
-      // SCORE
-      // ======================================
+            <option value="Chemistry">
+              Chemistry
+            </option>
 
-      papers =
-        papers.map(
-          function (paper) {
+            <option value="Psychology">
+              Psychology
+            </option>
 
-            const score =
-              calculateRelevance(
-                paper,
-                criteria
-              );
+            <option value="Environmental Science">
+              Environmental Science
+            </option>
 
+          </select>
 
-            return {
+        </div>
 
-              ...paper,
 
-              strackerScore:
-                score
+        <!-- DATE -->
 
-            };
+        <div class="field">
 
-          }
-        );
+          <label>
+            Publication period
+          </label>
 
+          <select id="dateRangeInput">
 
-      // ======================================
-      // THRESHOLD
-      // ======================================
+            <option value="all">
+              Any date
+            </option>
 
-      papers =
-        papers.filter(
-          function (paper) {
+            <option value="7">
+              Last 7 days
+            </option>
 
-            return (
-              paper.strackerScore >=
-              criteria.accuracy
-            );
+            <option value="30">
+              Last 30 days
+            </option>
 
-          }
-        );
+            <option value="90">
+              Last 3 months
+            </option>
 
+            <option value="365">
+              Last year
+            </option>
 
-      // ======================================
-      // SORT BY SCORE
-      // ======================================
+          </select>
 
-      papers.sort(
-        function (a, b) {
+        </div>
 
-          if (
-            b.strackerScore !==
-            a.strackerScore
-          ) {
 
-            return (
-              b.strackerScore -
-              a.strackerScore
-            );
+        <!-- DOCUMENT TYPE -->
 
-          }
+        <div class="field">
 
+          <label>
+            Document type
+          </label>
 
-          return (
-            new Date(
-              b.publication_date
-            ) -
+          <select id="documentTypeInput">
 
-            new Date(
-              a.publication_date
-            )
-          );
+            <option value="">
+              Any type
+            </option>
 
-        }
-      );
+            <option value="article">
+              Research article
+            </option>
 
+            <option value="review">
+              Review
+            </option>
 
-      if (!papers.length) {
+            <option value="preprint">
+              Preprint
+            </option>
 
-        showMessage(`
+            <option value="dataset">
+              Dataset
+            </option>
 
-          <h2>
-            No papers matched
-          </h2>
+          </select>
 
-          <p>
-            Try lowering the relevance
-            threshold or broadening your
-            criteria.
+        </div>
+
+
+        <!-- ACCURACY -->
+
+        <div class="field">
+
+          <label>
+            🎯 Relevance threshold
+          </label>
+
+          <div>
+
+            <span
+              id="accuracyValue"
+              class="accuracy-value"
+            >
+              75%
+            </span>
+
+          </div>
+
+          <input
+            type="range"
+            id="accuracyInput"
+            min="50"
+            max="100"
+            value="75"
+            step="5"
+          >
+
+          <p class="hint">
+            Higher = stricter matching.
           </p>
 
-        `);
-
-        return;
-
-      }
-
-
-      displayAdvancedResults(
-        papers,
-        criteria
-      );
-
-
-      if (shouldTrack) {
-
-        saveAdvancedTracker(
-          criteria,
-          papers
-        );
-
-      }
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-
-      showMessage(`
-
-        <h2>
-          Search failed
-        </h2>
-
-        <p>
-          STracker couldn't connect to
-          OpenAlex.
-        </p>
-
-        <p>
-          Please try again.
-        </p>
-
-      `);
-
-    }
-
-  }
-
-
-  // ==========================================
-  // QUICK SEARCH
-  // ==========================================
-
-  async function quickSearch() {
-
-    const query =
-      searchInput.value.trim();
-
-
-    if (!query) {
-
-      showMessage(`
-
-        <h2>
-          No search term
-        </h2>
-
-        <p>
-          Enter a scientific topic.
-        </p>
-
-      `);
-
-      return;
-
-    }
-
-
-    showMessage(`
-
-      <h2>
-        🔎 Searching...
-      </h2>
-
-      <p>
-        Searching for
-        <strong>
-          ${escapeHtml(query)}
-        </strong>
-      </p>
-
-    `);
-
-
-    try {
-
-      const url =
-        "https://api.openalex.org/works" +
-
-        "?search=" +
-        encodeURIComponent(query) +
-
-        "&sort=publication_date:desc" +
-
-        "&per-page=" +
-        API_LIMIT;
-
-
-      const response =
-        await fetch(url);
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          "OpenAlex request failed"
-        );
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      let papers =
-        data.results || [];
-
-
-      papers =
-        papers.filter(
-          function (paper) {
-
-            return (
-              paper.id &&
-              paper.publication_date &&
-              paper.publication_date <=
-              getToday()
-            );
-
-          }
-        );
-
-
-      papers.sort(
-        function (a, b) {
-
-          return (
-            new Date(
-              b.publication_date
-            ) -
-
-            new Date(
-              a.publication_date
-            );
-
-          );
-
-        }
-      );
-
-
-      if (!papers.length) {
-
-        showMessage(`
-
-          <h2>
-            No papers found
-          </h2>
-
-        `);
-
-        return;
-
-      }
-
-
-      displayPapers(
-        papers,
-        "Latest research",
-        query
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-
-      showMessage(`
-
-        <h2>
-          Search failed
-        </h2>
-
-        <p>
-          Please try again.
-        </p>
-
-      `);
-
-    }
-
-  }
-
-
-  // ==========================================
-  // BUILD DATE FILTER
-  // ==========================================
-
-  function buildDateFilter(
-    range
-  ) {
-
-    if (
-      !range ||
-      range === "all"
-    ) {
-
-      return "";
-
-    }
-
-
-    const date =
-      new Date();
-
-
-    date.setDate(
-      date.getDate() -
-      Number(range)
-    );
-
-
-    const year =
-      date.getFullYear();
-
-
-    const month =
-      String(
-        date.getMonth() + 1
-      ).padStart(2, "0");
-
-
-    const day =
-      String(
-        date.getDate()
-      ).padStart(2, "0");
-
-
-    const from =
-      `${year}-${month}-${day}`;
-
-
-    return (
-      "from_publication_date:" +
-      from
-    );
-
-  }
-
-
-  // ==========================================
-  // CRITERIA MATCH
-  // ==========================================
-
-  function matchesCriteria(
-    paper,
-    criteria
-  ) {
-
-    const title =
-      (
-        paper.title || ""
-      ).toLowerCase();
-
-
-    const abstract =
-      getAbstractText(
-        paper
-      ).toLowerCase();
-
-
-    const authors =
-      (
-        paper.authorships || []
-      )
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
-
-
-    const source =
-      (
-        paper.primary_location
-          ?.source
-          ?.display_name || ""
-      ).toLowerCase();
-
-
-    const concepts =
-      (
-        paper.concepts || []
-      )
-      .map(
-        function (c) {
-
-          return (
-            c.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
-
-
-    const searchable =
-      title +
-      " " +
-      abstract +
-      " " +
-      authors +
-      " " +
-      source +
-      " " +
-      concepts;
-
-
-    // --------------------------------------
-    // Exclusions
-    // --------------------------------------
-
-    for (
-      const excluded of criteria.excluded
-    ) {
-
-      if (
-        searchable.includes(
-          excluded.toLowerCase()
-        )
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-    // --------------------------------------
-    // Author
-    // --------------------------------------
-
-    if (
-      criteria.author &&
-      !authors.includes(
-        criteria.author.toLowerCase()
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    // --------------------------------------
-    // Journal
-    // --------------------------------------
-
-    if (
-      criteria.journal &&
-      !source.includes(
-        criteria.journal.toLowerCase()
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    // --------------------------------------
-    // Required keywords
-    // --------------------------------------
-
-    for (
-      const keyword of criteria.keywords
-    ) {
-
-      if (
-        !searchable.includes(
-          keyword.toLowerCase()
-        )
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-    return true;
-
-  }
-
-
-  // ==========================================
-  // RELEVANCE SCORE
-  // ==========================================
-
-  function calculateRelevance(
-    paper,
-    criteria
-  ) {
-
-    let score = 0;
-
-
-    const title =
-      (
-        paper.title || ""
-      ).toLowerCase();
-
-
-    const abstract =
-      getAbstractText(
-        paper
-      ).toLowerCase();
-
-
-    const authors =
-      (
-        paper.authorships || []
-      )
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
-
-
-    const source =
-      (
-        paper.primary_location
-          ?.source
-          ?.display_name || ""
-      ).toLowerCase();
-
-
-    const concepts =
-      (
-        paper.concepts || []
-      )
-      .map(
-        function (c) {
-
-          return (
-            c.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
-
-
-    const searchable =
-      title +
-      " " +
-      abstract +
-      " " +
-      concepts;
-
-
-    // ======================================
-    // KEYWORD SCORE
-    // ======================================
-
-    if (
-      criteria.keywords.length
-    ) {
-
-      let matched = 0;
-
-
-      criteria.keywords.forEach(
-        function (keyword) {
-
-          const k =
-            keyword.toLowerCase();
-
-
-          if (
-            title.includes(k)
-          ) {
-
-            score += 30;
-
-            matched++;
-
-          }
-
-          else if (
-            abstract.includes(k)
-          ) {
-
-            score += 20;
-
-            matched++;
-
-          }
-
-          else if (
-            concepts.includes(k)
-          ) {
-
-            score += 15;
-
-            matched++;
-
-          }
-
-        }
-      );
-
-
-      if (
-        matched ===
-        criteria.keywords.length
-      ) {
-
-        score += 10;
-
-      }
-
-    }
-
-
-    // ======================================
-    // AUTHOR
-    // ======================================
-
-    if (
-      criteria.author
-    ) {
-
-      if (
-        authors.includes(
-          criteria.author.toLowerCase()
-        )
-      ) {
-
-        score += 20;
-
-      }
-
-    }
-
-
-    // ======================================
-    // JOURNAL
-    // ======================================
-
-    if (
-      criteria.journal
-    ) {
-
-      if (
-        source.includes(
-          criteria.journal.toLowerCase()
-        )
-      ) {
-
-        score += 15;
-
-      }
-
-    }
-
-
-    // ======================================
-    // FIELD
-    // ======================================
-
-    if (
-      criteria.field
-    ) {
-
-      if (
-        searchable.includes(
-          criteria.field.toLowerCase()
-        )
-      ) {
-
-        score += 10;
-
-      }
-
-    }
-
-
-    // ======================================
-    // RECENCY
-    // ======================================
-
-    if (
-      paper.publication_date
-    ) {
-
-      const publication =
-        new Date(
-          paper.publication_date
-        );
-
-
-      const today =
-        new Date();
-
-
-      const days =
-        Math.floor(
-          (
-            today -
-            publication
-          ) /
-          (
-            1000 *
-            60 *
-            60 *
-            24
-          )
-        );
-
-
-      if (days <= 30) {
-
-        score += 10;
-
-      }
-
-      else if (days <= 90) {
-
-        score += 7;
-
-      }
-
-      else if (days <= 365) {
-
-        score += 4;
-
-      }
-
-    }
-
-
-    return Math.min(
-      100,
-      score
-    );
-
-  }
-
-
-  // ==========================================
-  // ABSTRACT TEXT
-  // ==========================================
-
-  function getAbstractText(
-    paper
-  ) {
-
-    if (
-      !paper.abstract_inverted_index
-    ) {
-
-      return "";
-
-    }
-
-
-    const index =
-      paper.abstract_inverted_index;
-
-
-    const words = [];
-
-
-    Object.keys(index)
-      .forEach(
-        function (word) {
-
-          index[word]
-            .forEach(
-              function (position) {
-
-                words[position] =
-                  word;
-
-              }
-            );
-
-        }
-      );
-
-
-    return words.join(" ");
-
-  }
-
-
-  // ==========================================
-  // DISPLAY ADVANCED RESULTS
-  // ==========================================
-
-  function displayAdvancedResults(
-    papers,
-    criteria
-  ) {
-
-    const heading =
-      "🎯 Ranked research results";
-
-
-    results.innerHTML = `
-
-      <div class="card">
-
-        <h2>
-          ${heading}
-        </h2>
-
-        <p>
-          Found
-          <strong>
-            ${papers.length}
-          </strong>
-          papers meeting your
-          <strong>
-            ${criteria.accuracy}%
-          </strong>
-          relevance threshold.
-        </p>
-
-      </div>
-
-      <div id="advancedPaperList"></div>
-
-    `;
-
-
-    const list =
-      document.getElementById(
-        "advancedPaperList"
-      );
-
-
-    papers.forEach(
-      function (paper) {
-
-        const card =
-          createAdvancedPaperCard(
-            paper
-          );
-
-
-        list.appendChild(card);
-
-      }
-    );
-
-  }
-
-
-  // ==========================================
-  // ADVANCED PAPER CARD
-  // ==========================================
-
-  function createAdvancedPaperCard(
-    paper
-  ) {
-
-    const card =
-      document.createElement("div");
-
-
-    card.className =
-      "paper";
-
-
-    const title =
-      paper.title ||
-      "Untitled";
-
-
-    const authors =
-      (
-        paper.authorships || []
-      )
-      .slice(0, 5)
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name
-          );
-
-        }
-      )
-      .filter(Boolean)
-      .join(", ") ||
-      "Unknown authors";
-
-
-    const source =
-      paper.primary_location
-        ?.source
-        ?.display_name ||
-      "Unknown source";
-
-
-    const link =
-      paper.primary_location
-        ?.landing_page_url ||
-      paper.doi ||
-      "#";
-
-
-    card.innerHTML = `
-
-      <div>
-
-        <span class="badge">
-
-          Relevance:
-          ${paper.strackerScore}%
-
-        </span>
-
-        <span class="badge">
-
-          ${escapeHtml(
-            paper.publication_date ||
-            "Unknown date"
-          )}
-
-        </span>
+        </div>
 
       </div>
 
 
-      <h2>
+      <div class="actions">
 
-        ${escapeHtml(title)}
-
-      </h2>
-
-
-      <p>
-
-        <strong>
-          Authors:
-        </strong>
-
-        ${escapeHtml(authors)}
-
-      </p>
-
-
-      <p>
-
-        <strong>
-          Journal:
-        </strong>
-
-        ${escapeHtml(source)}
-
-      </p>
-
-
-      <p>
-
-        <a
-          href="${link}"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          id="previewButton"
         >
-          View paper →
-        </a>
-
-      </p>
-
-    `;
-
-
-    return card;
-
-  }
-
-
-  // ==========================================
-  // SAVE ADVANCED TRACKER
-  // ==========================================
-
-  function saveAdvancedTracker(
-    criteria,
-    papers
-  ) {
-
-    const trackers =
-      getAdvancedTrackers();
-
-
-    const tracker = {
-
-      id:
-        Date.now(),
-
-      criteria:
-        criteria,
-
-      createdAt:
-        getToday(),
-
-      lastChecked:
-        getToday(),
-
-      seenPaperIds:
-        papers.map(
-          function (paper) {
-
-            return paper.id;
-
-          }
-        ),
-
-      lastCheckNewPapers:
-        0,
-
-      totalNewPapers:
-        0
-
-    };
-
-
-    trackers.push(
-      tracker
-    );
-
-
-    localStorage.setItem(
-      "stracker_advanced",
-      JSON.stringify(
-        trackers
-      )
-    );
-
-
-    displayTrackedTopics();
-
-  }
-
-
-  // ==========================================
-  // DISPLAY TRACKERS
-  // ==========================================
-
-  function displayTrackedTopics() {
-
-    const basicTopics =
-      getTrackedTopics();
-
-
-    const advancedTrackers =
-      getAdvancedTrackers();
-
-
-    if (
-      basicTopics.length === 0 &&
-      advancedTrackers.length === 0
-    ) {
-
-      trackedTopics.innerHTML =
-        "";
-
-      return;
-
-    }
-
-
-    trackedTopics.innerHTML = `
-
-      <div class="card">
-
-        <h2>
-          📚 My tracked research
-        </h2>
-
-
-        ${basicTopics.map(
-          function (topic) {
-
-            return `
-
-              <div class="tracked-topic">
-
-                <h3>
-                  ${escapeHtml(
-                    topic.name
-                  )}
-                </h3>
-
-                <p>
-                  📅 Last checked:
-                  ${escapeHtml(
-                    topic.lastChecked ||
-                    "Never"
-                  )}
-                </p>
-
-                <p>
-                  📚 Papers tracked:
-                  ${
-                    topic.seenPaperIds
-                      ?.length || 0
-                  }
-                </p>
-
-                <p>
-                  🟢 New since last check:
-                  ${
-                    topic.lastCheckNewPapers ||
-                    0
-                  }
-                </p>
-
-                <p>
-                  📈 Total new:
-                  ${
-                    topic.totalNewPapers ||
-                    0
-                  }
-                </p>
-
-              </div>
-
-            `;
-
-          }
-        ).join("")}
-
-
-        ${advancedTrackers.map(
-          function (tracker) {
-
-            return `
-
-              <div class="tracked-topic">
-
-                <h3>
-                  🔬 Advanced research profile
-                </h3>
-
-                <p>
-
-                  🔑 Keywords:
-
-                  ${tracker.criteria.keywords
-                    .map(
-                      function (k) {
-
-                        return `
-                          <span class="badge">
-                            ${escapeHtml(k)}
-                          </span>
-                        `;
-
-                      }
-                    )
-                    .join("")
-                  }
-
-                </p>
-
-
-                ${
-                  tracker.criteria.author
-                    ? `
-                      <p>
-                        👤 Author:
-                        <strong>
-                          ${escapeHtml(
-                            tracker.criteria.author
-                          )}
-                        </strong>
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  tracker.criteria.journal
-                    ? `
-                      <p>
-                        📖 Journal:
-                        <strong>
-                          ${escapeHtml(
-                            tracker.criteria.journal
-                          )}
-                        </strong>
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                <p>
-                  🎯 Threshold:
-                  <strong>
-                    ${tracker.criteria.accuracy}%
-                  </strong>
-                </p>
-
-
-                <p>
-                  📅 Last checked:
-                  <strong>
-                    ${tracker.lastChecked}
-                  </strong>
-                </p>
-
-
-                <p>
-                  📚 Papers tracked:
-                  <strong>
-                    ${
-                      tracker.seenPaperIds.length
-                    }
-                  </strong>
-                </p>
-
-
-                <p>
-                  🟢 New since last check:
-                  <strong>
-                    ${
-                      tracker.lastCheckNewPapers
-                    }
-                  </strong>
-                </p>
-
-
-                <p>
-                  📈 Total new:
-                  <strong>
-                    ${
-                      tracker.totalNewPapers
-                    }
-                  </strong>
-                </p>
-
-              </div>
-
-            `;
-
-          }
-        ).join("")}
+          🔍 Preview
+        </button>
+
+        <button
+          type="button"
+          id="advancedTrackButton"
+        >
+          🔔 Track this research
+        </button>
 
       </div>
 
-    `;
-
-  }
+    </div>
 
 
-  // ==========================================
-  // GET ADVANCED TRACKERS
-  // ==========================================
+    <!-- TRACKED TOPICS -->
 
-  function getAdvancedTrackers() {
-
-    try {
-
-      return JSON.parse(
-        localStorage.getItem(
-          "stracker_advanced"
-        ) || "[]"
-      );
-
-    }
-
-    catch (error) {
-
-      return [];
-
-    }
-
-  }
+    <div id="trackedTopics"></div>
 
 
-  // ==========================================
-  // BASIC TRACKERS
-  // ==========================================
+    <!-- RESULTS -->
 
-  function getTrackedTopics() {
-
-    try {
-
-      return JSON.parse(
-        localStorage.getItem(
-          "stracker_topics"
-        ) || "[]"
-      );
-
-    }
-
-    catch (error) {
-
-      return [];
-
-    }
-
-  }
-
-
-  // ==========================================
-  // DISPLAY PAPERS
-  // ==========================================
-
-  function displayPapers(
-    papers,
-    heading,
-    query
-  ) {
-
-    let visibleCount =
-      PAPERS_PER_LOAD;
-
-
-    results.innerHTML = `
+    <div id="results">
 
       <div class="card">
 
         <h2>
-          ${heading}
+          Welcome to STracker
         </h2>
 
         <p>
-
-          Topic:
-          <strong>
-            ${escapeHtml(query)}
-          </strong>
-
+          Discover, search, and monitor scientific
+          research from around the world.
         </p>
 
-        <p id="counter"></p>
+        <p>
+          Start with Quick Search or create an
+          Advanced Research Tracker above.
+        </p>
 
       </div>
 
+    </div>
 
-      <div id="paperList"></div>
+  </main>
 
 
-      <div
-        id="loadMoreArea"
-        style="
-          text-align:center;
-          margin:30px 0;
-        "
-      ></div>
+  <script src="app.js"></script>
 
-    `;
+</body>
 
-
-    const list =
-      document.getElementById(
-        "paperList"
-      );
-
-
-    const counter =
-      document.getElementById(
-        "counter"
-      );
-
-
-    const loadMoreArea =
-      document.getElementById(
-        "loadMoreArea"
-      );
-
-
-    function render() {
-
-      list.innerHTML =
-        "";
-
-
-      const visible =
-        papers.slice(
-          0,
-          visibleCount
-        );
-
-
-      visible.forEach(
-        function (paper) {
-
-          list.appendChild(
-            createSimplePaperCard(
-              paper
-            )
-          );
-
-        }
-      );
-
-
-      counter.textContent =
-        "Showing " +
-        visible.length +
-        " of " +
-        papers.length +
-        " papers";
-
-
-      loadMoreArea.innerHTML =
-        "";
-
-
-      if (
-        visibleCount <
-        papers.length
-      ) {
-
-        const button =
-          document.createElement(
-            "button"
-          );
-
-
-        button.textContent =
-          "Load more";
-
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            visibleCount +=
-              PAPERS_PER_LOAD;
-
-
-            render();
-
-          }
-        );
-
-
-        loadMoreArea.appendChild(
-          button
-        );
-
-      }
-
-    }
-
-
-    render();
-
-  }
-
-
-  // ==========================================
-  // SIMPLE PAPER CARD
-  // ==========================================
-
-  function createSimplePaperCard(
-    paper
-  ) {
-
-    const card =
-      document.createElement(
-        "div"
-      );
-
-
-    card.className =
-      "paper";
-
-
-    const title =
-      paper.title ||
-      "Untitled";
-
-
-    const authors =
-      (
-        paper.authorships || []
-      )
-      .slice(0, 3)
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name
-          );
-
-        }
-      )
-      .filter(Boolean)
-      .join(", ") ||
-      "Unknown authors";
-
-
-    const source =
-      paper.primary_location
-        ?.source
-        ?.display_name ||
-      "Unknown source";
-
-
-    const link =
-      paper.primary_location
-        ?.landing_page_url ||
-      paper.doi ||
-      "#";
-
-
-    card.innerHTML = `
-
-      <h2>
-        ${escapeHtml(title)}
-      </h2>
-
-      <p>
-        <strong>
-          Published:
-        </strong>
-
-        ${escapeHtml(
-          paper.publication_date ||
-          "Unknown"
-        )}
-
-      </p>
-
-
-      <p>
-        <strong>
-          Authors:
-        </strong>
-
-        ${escapeHtml(authors)}
-
-      </p>
-
-
-      <p>
-        <strong>
-          Source:
-        </strong>
-
-        ${escapeHtml(source)}
-
-      </p>
-
-
-      <p>
-
-        <a
-          href="${link}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View paper →
-        </a>
-
-      </p>
-
-    `;
-
-
-    return card;
-
-  }
-
-
-  // ==========================================
-  // MESSAGE
-  // ==========================================
-
-  function showMessage(
-    html
-  ) {
-
-    results.innerHTML = `
-
-      <div class="card">
-
-        ${html}
-
-      </div>
-
-    `;
-
-  }
-
-
-  // ==========================================
-  // TODAY
-  // ==========================================
-
-  function getToday() {
-
-    return new Date()
-      .toISOString()
-      .split("T")[0];
-
-  }
-
-
-  // ==========================================
-  // ESCAPE HTML
-  // ==========================================
-
-  function escapeHtml(
-    text
-  ) {
-
-    const div =
-      document.createElement(
-        "div"
-      );
-
-
-    div.textContent =
-      String(text);
-
-
-    return div.innerHTML;
-
-  }
-
-});
+</html>
