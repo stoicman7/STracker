@@ -113,11 +113,11 @@
 
     <div class="search-box">
       <input
-        type="text"
-        id="searchInput"
-        placeholder="Search scientific papers..."
-      >
-
+  type="text"
+  id="searchInput"
+  placeholder="Search scientific papers..."
+  onkeydown="handleKeyPress(event)"
+>
       <button onclick="searchPapers()">
         Search
       </button>
