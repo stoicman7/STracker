@@ -1543,293 +1543,136 @@ document.addEventListener("DOMContentLoaded", () => {
   // ADVANCED FILTERS
   // ==========================================
 
-  function matchesAdvancedCriteria(
-    paper,
-    criteria
-  ) {
+  matchesAdvancedCriteria
+  // ==========================================
+  // RELEVANCE SCORE
+  // ==========================================
 
-    const title =
-      (paper.title || "")
-        .toLowerCase();
+  function calculateScore(paper, criteria) {
 
+  let score = 0;
 
-    const abstract =
-      getAbstract(paper)
-        .toLowerCase();
+  const title =
+    (paper.title || "").toLowerCase();
 
+  const abstract =
+    getAbstract(paper).toLowerCase();
 
-    const authors =
-      getAuthors(paper)
-        .toLowerCase();
+  const concepts =
+    getConcepts(paper).toLowerCase();
 
+  const authors =
+    getAuthors(paper).toLowerCase();
 
-    const journal =
-      getJournal(paper)
-        .toLowerCase();
-
-
-    const concepts =
-      getConcepts(paper)
-        .toLowerCase();
+  const journal =
+    getJournal(paper).toLowerCase();
 
 
-    const text =
-      `${title} ${abstract} ${authors} ${journal} ${concepts}`;
+  // ==========================================
+  // KEYWORD RELEVANCE
+  // ==========================================
+
+  const keywords =
+    Array.isArray(criteria.keywords)
+      ? criteria.keywords
+      : [];
 
 
-    // Excluded keywords.
-    for (
-      const excluded of criteria.excluded
-    ) {
+  if (keywords.length > 0) {
 
-      if (
-        text.includes(
-          excluded.toLowerCase()
-        )
-      ) {
+    let keywordScore = 0;
 
-        return false;
+    for (const keyword of keywords) {
+
+      const k =
+        keyword.toLowerCase().trim();
+
+
+      if (!k) {
+        continue;
+      }
+
+
+      // Strongest match: title
+      if (title.includes(k)) {
+
+        keywordScore += 40;
+
+      }
+
+      // Strong match: abstract
+      else if (abstract.includes(k)) {
+
+        keywordScore += 30;
+
+      }
+
+      // Weaker match: concepts/metadata
+      else if (concepts.includes(k)) {
+
+        keywordScore += 20;
 
       }
 
     }
 
 
-    // Author filter.
-    if (criteria.author) {
+    /*
+      Normalize according to the number of keywords.
 
-      if (
-        !authors.includes(
-          criteria.author.toLowerCase()
-        )
-      ) {
+      Example:
 
-        return false;
+      2 keywords
+      1 title match = ~20 points
+      2 title matches = ~40 points
 
-      }
+      This prevents the score from becoming
+      artificially huge when many keywords exist.
+    */
 
-    }
+    const maxKeywordScore =
+      keywords.length * 40;
 
 
-    // Journal filter.
-    if (criteria.journal) {
+    if (maxKeywordScore > 0) {
 
-      if (
-        !journal.includes(
-          criteria.journal.toLowerCase()
-        )
-      ) {
-
-        return false;
-
-      }
+      score +=
+        (
+          keywordScore /
+          maxKeywordScore
+        ) * 60;
 
     }
-
-
-    // Required keywords.
-    for (
-      const keyword of criteria.keywords
-    ) {
-
-      if (
-        !text.includes(
-          keyword.toLowerCase()
-        )
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-    // Date filter.
-    if (
-      criteria.dateRange !== "all"
-    ) {
-
-      const days =
-        Number(
-          criteria.dateRange
-        );
-
-
-      const cutoff =
-        new Date();
-
-
-      cutoff.setDate(
-        cutoff.getDate() - days
-      );
-
-
-      const publication =
-        new Date(
-          paper.publication_date
-        );
-
-
-      if (
-        publication < cutoff
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-    // Document type.
-    if (
-      criteria.documentType
-    ) {
-
-      const type =
-        (paper.type || "")
-          .toLowerCase();
-
-
-      const requested =
-        criteria.documentType
-          .toLowerCase();
-
-
-      if (
-        requested === "article" &&
-        type !== "article"
-      ) {
-
-        return false;
-
-      }
-
-
-      if (
-        requested === "review" &&
-        !(
-          type === "review" ||
-          text.includes("review")
-        )
-      ) {
-
-        return false;
-
-      }
-
-
-      if (
-        requested === "preprint" &&
-        !text.includes("preprint")
-      ) {
-
-        return false;
-
-      }
-
-
-      if (
-        requested === "dataset" &&
-        type !== "dataset"
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-    return true;
 
   }
 
 
   // ==========================================
-  // RELEVANCE SCORE
+  // AUTHOR
   // ==========================================
 
-  function calculateScore(
-    paper,
-    criteria
-  ) {
+  if (criteria.author) {
 
-    let score = 0;
-
-
-    const title =
-      (paper.title || "")
-        .toLowerCase();
-
-
-    const abstract =
-      getAbstract(paper)
-        .toLowerCase();
-
-
-    const concepts =
-      getConcepts(paper)
-        .toLowerCase();
-
-
-    const authors =
-      getAuthors(paper)
-        .toLowerCase();
-
-
-    const journal =
-      getJournal(paper)
-        .toLowerCase();
-
-
-    // Keywords.
-    for (
-      const keyword of criteria.keywords
-    ) {
-
-      const k =
-        keyword.toLowerCase();
-
-
-      if (title.includes(k)) {
-
-        score += 30;
-
-      } else if (
-        abstract.includes(k)
-      ) {
-
-        score += 20;
-
-      } else if (
-        concepts.includes(k)
-      ) {
-
-        score += 15;
-
-      }
-
-    }
-
-
-    // Author.
     if (
-      criteria.author &&
       authors.includes(
         criteria.author.toLowerCase()
       )
     ) {
 
-      score += 20;
+      score += 15;
 
     }
 
+  }
 
-    // Journal.
+
+  // ==========================================
+  // JOURNAL
+  // ==========================================
+
+  if (criteria.journal) {
+
     if (
-      criteria.journal &&
       journal.includes(
         criteria.journal.toLowerCase()
       )
@@ -1839,66 +1682,92 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // Research field.
-    if (criteria.field) {
-
-      const field =
-        criteria.field.toLowerCase();
+  }
 
 
-      if (
-        title.includes(field) ||
-        abstract.includes(field) ||
-        concepts.includes(field)
-      ) {
+  // ==========================================
+  // FIELD
+  // ==========================================
 
-        score += 10;
+  if (criteria.field) {
 
-      }
+    const field =
+      criteria.field.toLowerCase();
+
+
+    if (
+      title.includes(field)
+    ) {
+
+      score += 15;
 
     }
 
-
-    // Recency bonus.
-    const publication =
-      new Date(
-        paper.publication_date
-      );
-
-
-    const now =
-      new Date();
-
-
-    const days =
-      Math.floor(
-        (now - publication) /
-        86400000
-      );
-
-
-    if (days <= 30) {
+    else if (
+      abstract.includes(field)
+    ) {
 
       score += 10;
 
-    } else if (days <= 90) {
+    }
 
-      score += 7;
+    else if (
+      concepts.includes(field)
+    ) {
 
-    } else if (days <= 365) {
-
-      score += 4;
+      score += 5;
 
     }
 
+  }
 
-    return Math.min(
-      100,
-      score
+
+  // ==========================================
+  // RECENCY
+  // ==========================================
+
+  const publication =
+    new Date(
+      paper.publication_date
     );
 
+
+  const now =
+    new Date();
+
+
+  const days =
+    Math.floor(
+      (now - publication) /
+      86400000
+    );
+
+
+  if (days <= 30) {
+
+    score += 10;
+
   }
+
+  else if (days <= 90) {
+
+    score += 7;
+
+  }
+
+  else if (days <= 365) {
+
+    score += 4;
+
+  }
+
+
+  return Math.min(
+    100,
+    Math.round(score)
+  );
+
+}
 
 
   // ==========================================
