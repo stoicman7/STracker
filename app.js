@@ -1,29 +1,58 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+  // ==========================================
+  // ELEMENTS
+  // ==========================================
+
   const searchInput = document.getElementById("searchInput");
   const searchButton = document.getElementById("searchButton");
 
   const results = document.getElementById("results");
   const trackedTopics = document.getElementById("trackedTopics");
 
-  const keywordContainer = document.getElementById("keywordContainer");
-  const excludeContainer = document.getElementById("excludeContainer");
+  const keywordContainer =
+    document.getElementById("keywordContainer");
 
-  const addKeywordButton = document.getElementById("addKeywordButton");
-  const addExcludeButton = document.getElementById("addExcludeButton");
+  const excludeContainer =
+    document.getElementById("excludeContainer");
 
-  const authorInput = document.getElementById("authorInput");
-  const journalInput = document.getElementById("journalInput");
-  const fieldInput = document.getElementById("fieldInput");
-  const dateRangeInput = document.getElementById("dateRangeInput");
-  const documentTypeInput = document.getElementById("documentTypeInput");
+  const addKeywordButton =
+    document.getElementById("addKeywordButton");
 
-  const accuracyInput = document.getElementById("accuracyInput");
-  const accuracyValue = document.getElementById("accuracyValue");
+  const addExcludeButton =
+    document.getElementById("addExcludeButton");
 
-  const previewButton = document.getElementById("previewButton");
+  const authorInput =
+    document.getElementById("authorInput");
+
+  const journalInput =
+    document.getElementById("journalInput");
+
+  const fieldInput =
+    document.getElementById("fieldInput");
+
+  const dateRangeInput =
+    document.getElementById("dateRangeInput");
+
+  const documentTypeInput =
+    document.getElementById("documentTypeInput");
+
+  const accuracyInput =
+    document.getElementById("accuracyInput");
+
+  const accuracyValue =
+    document.getElementById("accuracyValue");
+
+  const previewButton =
+    document.getElementById("previewButton");
+
   const advancedTrackButton =
     document.getElementById("advancedTrackButton");
+
+
+  // ==========================================
+  // SEARCH STATE
+  // ==========================================
 
   let currentResults = [];
   let currentVisible = 10;
@@ -38,8 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
   searchInput.addEventListener("keydown", (event) => {
 
     if (event.key === "Enter") {
+
       event.preventDefault();
+
       quickSearch();
+
     }
 
   });
@@ -47,21 +79,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function quickSearch() {
 
-    const query = searchInput.value.trim();
+    const query =
+      searchInput.value.trim();
 
     if (!query) {
-      showMessage(
-        "<h2>Please enter a search term.</h2>"
-      );
+
+      showMessage(`
+        <h2>Please enter a search term.</h2>
+        <p>
+          Type a scientific topic and search again.
+        </p>
+      `);
+
       return;
     }
+
 
     results.innerHTML = `
       <div class="card">
         <h2>🔎 Searching...</h2>
-        <p>Searching for <strong>${escapeHtml(query)}</strong></p>
+
+        <p>
+          Searching for
+          <strong>${escapeHtml(query)}</strong>
+        </p>
       </div>
     `;
+
 
     try {
 
@@ -72,36 +116,63 @@ document.addEventListener("DOMContentLoaded", () => {
         "&sort=publication_date:desc" +
         "&per-page=100";
 
-      const response = await fetch(url);
+
+      const response =
+        await fetch(url);
+
 
       if (!response.ok) {
-        throw new Error("OpenAlex returned an error.");
+
+        throw new Error(
+          "OpenAlex request failed."
+        );
+
       }
 
-      const data = await response.json();
 
-      let papers = data.results || [];
+      const data =
+        await response.json();
 
-      papers = papers.filter(isValidDate);
+
+      let papers =
+        data.results || [];
+
+
+      papers =
+        papers.filter(isValidDate);
+
 
       papers.sort((a, b) => {
-        return new Date(b.publication_date) -
-               new Date(a.publication_date);
+
+        return (
+          new Date(b.publication_date) -
+          new Date(a.publication_date)
+        );
+
       });
+
 
       displayResults(
         papers,
         `Latest papers for "${query}"`
       );
 
+
     } catch (error) {
 
       console.error(error);
 
+
       showMessage(`
         <h2>❌ Search failed</h2>
-        <p>${escapeHtml(error.message)}</p>
-        <p>Please try again.</p>
+
+        <p>
+          ${escapeHtml(error.message)}
+        </p>
+
+        <p>
+          Please check your connection and try again.
+        </p>
       `);
 
     }
@@ -110,8 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // ACCURACY
+  // ACCURACY SLIDER
   // ==========================================
+
+  accuracyValue.textContent =
+    accuracyInput.value + "%";
+
 
   accuracyInput.addEventListener("input", () => {
 
@@ -122,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // ADD KEYWORD
+  // ADD REQUIRED KEYWORD
   // ==========================================
 
   addKeywordButton.addEventListener("click", () => {
@@ -137,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // ADD EXCLUSION
+  // ADD EXCLUDED KEYWORD
   // ==========================================
 
   addExcludeButton.addEventListener("click", () => {
@@ -157,28 +232,52 @@ document.addEventListener("DOMContentLoaded", () => {
     placeholder
   ) {
 
-    const row = document.createElement("div");
+    const row =
+      document.createElement("div");
 
-    row.className = "keyword-row";
+    row.className =
+      "keyword-row";
 
-    const input = document.createElement("input");
 
-    input.type = "text";
-    input.className = className;
-    input.placeholder = placeholder;
+    const input =
+      document.createElement("input");
 
-    const button = document.createElement("button");
+    input.type =
+      "text";
 
-    button.type = "button";
-    button.textContent = "×";
-    button.className = "danger";
+    input.className =
+      className;
 
-    button.addEventListener("click", () => {
-      row.remove();
-    });
+    input.placeholder =
+      placeholder;
+
+
+    const removeButton =
+      document.createElement("button");
+
+    removeButton.type =
+      "button";
+
+    removeButton.textContent =
+      "×";
+
+    removeButton.className =
+      "danger";
+
+
+    removeButton.addEventListener(
+      "click",
+      () => {
+
+        row.remove();
+
+      }
+    );
+
 
     row.appendChild(input);
-    row.appendChild(button);
+
+    row.appendChild(removeButton);
 
     container.appendChild(row);
 
@@ -186,26 +285,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // GET CRITERIA
+  // GET ADVANCED CRITERIA
   // ==========================================
 
   function getCriteria() {
 
     const keywords =
-      [...document.querySelectorAll(".required-keyword")]
+      Array.from(
+        document.querySelectorAll(
+          ".required-keyword"
+        )
+      )
         .map(input => input.value.trim())
         .filter(Boolean);
 
+
     const excluded =
-      [...document.querySelectorAll(".excluded-keyword")]
+      Array.from(
+        document.querySelectorAll(
+          ".excluded-keyword"
+        )
+      )
         .map(input => input.value.trim())
         .filter(Boolean);
+
 
     return {
 
-      keywords,
+      keywords: keywords,
 
-      excluded,
+      excluded: excluded,
 
       author:
         authorInput.value.trim(),
@@ -236,7 +345,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   previewButton.addEventListener(
     "click",
-    () => runAdvancedSearch(false)
+    () => {
+
+      runAdvancedSearch(false);
+
+    }
   );
 
 
@@ -246,13 +359,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   advancedTrackButton.addEventListener(
     "click",
-    () => runAdvancedSearch(true)
+    () => {
+
+      runAdvancedSearch(true);
+
+    }
   );
 
 
-  async function runAdvancedSearch(shouldTrack) {
+  // ==========================================
+  // ADVANCED SEARCH
+  // ==========================================
 
-    const criteria = getCriteria();
+  async function runAdvancedSearch(
+    shouldTrack
+  ) {
+
+    const criteria =
+      getCriteria();
+
 
     if (
       criteria.keywords.length === 0 &&
@@ -277,112 +402,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     results.innerHTML = `
       <div class="card">
+
         <h2>🔎 Searching...</h2>
+
         <p>
-          Searching for papers matching your
-          research profile.
+          Searching for papers matching
+          your research profile.
         </p>
+
       </div>
     `;
 
 
     try {
 
-      /*
-       * We deliberately send the main keywords
-       * to OpenAlex rather than every filter.
-       */
-
-      let query =
-        criteria.keywords.join(" ");
-
-
-      if (!query) {
-
-        if (criteria.author) {
-          query = criteria.author;
-        }
-
-        else if (criteria.journal) {
-          query = criteria.journal;
-        }
-
-        else if (criteria.field) {
-          query = criteria.field;
-        }
-
-      }
-
-
-      const url =
-        "https://api.openalex.org/works" +
-        "?search=" +
-        encodeURIComponent(query) +
-        "&sort=publication_date:desc" +
-        "&per-page=100";
-
-
-      const response = await fetch(url);
-
-
-      if (!response.ok) {
-        throw new Error(
-          "OpenAlex request failed."
+      const papers =
+        await searchWithCriteria(
+          criteria
         );
-      }
-
-
-      const data =
-        await response.json();
-
-
-      let papers =
-        data.results || [];
-
-
-      papers =
-        papers.filter(isValidDate);
-
-
-      papers =
-        papers.filter(
-          paper => matchesAdvancedCriteria(
-            paper,
-            criteria
-          )
-        );
-
-
-      papers =
-        papers.map(
-          paper => {
-
-            return {
-              ...paper,
-              strackerScore:
-                calculateScore(
-                  paper,
-                  criteria
-                )
-            };
-
-          }
-        );
-
-
-      papers =
-        papers.filter(
-          paper =>
-            paper.strackerScore >=
-            criteria.accuracy
-        );
-
-
-      papers.sort(
-        (a, b) =>
-          b.strackerScore -
-          a.strackerScore
-      );
 
 
       if (papers.length === 0) {
@@ -396,8 +433,8 @@ document.addEventListener("DOMContentLoaded", () => {
           </p>
 
           <p>
-            Try lowering the accuracy level or
-            making your criteria broader.
+            Try lowering the accuracy level
+            or making your criteria broader.
           </p>
         `);
 
@@ -423,9 +460,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }
 
+
     } catch (error) {
 
       console.error(error);
+
 
       showMessage(`
         <h2>❌ Search failed</h2>
@@ -435,8 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </p>
 
         <p>
-          Check your internet connection and
-          try again.
+          Please try again.
         </p>
       `);
 
@@ -446,29 +484,172 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // VALID DATE
+  // SEARCH WITH CRITERIA
+  // ==========================================
+
+  async function searchWithCriteria(
+    criteria
+  ) {
+
+    let query =
+      criteria.keywords.join(" ");
+
+
+    if (!query) {
+
+      if (criteria.author) {
+
+        query =
+          criteria.author;
+
+      } else if (criteria.journal) {
+
+        query =
+          criteria.journal;
+
+      } else if (criteria.field) {
+
+        query =
+          criteria.field;
+
+      }
+
+    }
+
+
+    const url =
+      "https://api.openalex.org/works" +
+      "?search=" +
+      encodeURIComponent(query) +
+      "&sort=publication_date:desc" +
+      "&per-page=100";
+
+
+    const response =
+      await fetch(url);
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "OpenAlex request failed."
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    let papers =
+      data.results || [];
+
+
+    // Remove invalid/future dates.
+
+    papers =
+      papers.filter(isValidDate);
+
+
+    // Apply advanced filters.
+
+    papers =
+      papers.filter(
+        paper =>
+          matchesAdvancedCriteria(
+            paper,
+            criteria
+          )
+      );
+
+
+    // Calculate relevance.
+
+    papers =
+      papers.map(paper => {
+
+        return {
+
+          ...paper,
+
+          strackerScore:
+            calculateScore(
+              paper,
+              criteria
+            )
+
+        };
+
+      });
+
+
+    // Apply accuracy threshold.
+
+    papers =
+      papers.filter(
+        paper =>
+          paper.strackerScore >=
+          criteria.accuracy
+      );
+
+
+    // Highest relevance first.
+
+    papers.sort((a, b) => {
+
+      return (
+        b.strackerScore -
+        a.strackerScore
+      );
+
+    });
+
+
+    return papers;
+
+  }
+
+
+  // ==========================================
+  // DATE VALIDATION
   // ==========================================
 
   function isValidDate(paper) {
 
     if (!paper.publication_date) {
+
       return false;
+
     }
 
-    const today =
-      new Date();
-
-    today.setHours(23, 59, 59, 999);
 
     const date =
       new Date(
         paper.publication_date
       );
 
-    return (
-      !isNaN(date.getTime()) &&
-      date <= today
+
+    if (isNaN(date.getTime())) {
+
+      return false;
+
+    }
+
+
+    const today =
+      new Date();
+
+
+    today.setHours(
+      23,
+      59,
+      59,
+      999
     );
+
+
+    return date <= today;
 
   }
 
@@ -483,27 +664,39 @@ document.addEventListener("DOMContentLoaded", () => {
   ) {
 
     const title =
-      (paper.title || "").toLowerCase();
+      (paper.title || "")
+        .toLowerCase();
+
 
     const abstract =
-      getAbstract(paper).toLowerCase();
+      getAbstract(paper)
+        .toLowerCase();
+
 
     const authors =
-      getAuthors(paper).toLowerCase();
+      getAuthors(paper)
+        .toLowerCase();
+
 
     const journal =
-      getJournal(paper).toLowerCase();
+      getJournal(paper)
+        .toLowerCase();
+
 
     const concepts =
-      getConcepts(paper).toLowerCase();
+      getConcepts(paper)
+        .toLowerCase();
+
 
     const text =
       `${title} ${abstract} ${authors} ${journal} ${concepts}`;
 
 
-    // Excluded terms
+    // Excluded keywords.
 
-    for (const excluded of criteria.excluded) {
+    for (
+      const excluded of criteria.excluded
+    ) {
 
       if (
         text.includes(
@@ -518,37 +711,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // Author
+    // Author filter.
 
-    if (
-      criteria.author &&
-      !authors.includes(
-        criteria.author.toLowerCase()
-      )
-    ) {
+    if (criteria.author) {
 
-      return false;
+      if (
+        !authors.includes(
+          criteria.author.toLowerCase()
+        )
+      ) {
 
-    }
+        return false;
 
-
-    // Journal
-
-    if (
-      criteria.journal &&
-      !journal.includes(
-        criteria.journal.toLowerCase()
-      )
-    ) {
-
-      return false;
+      }
 
     }
 
 
-    // Required keywords
+    // Journal filter.
 
-    for (const keyword of criteria.keywords) {
+    if (criteria.journal) {
+
+      if (
+        !journal.includes(
+          criteria.journal.toLowerCase()
+        )
+      ) {
+
+        return false;
+
+      }
+
+    }
+
+
+    // Required keywords.
+
+    for (
+      const keyword of criteria.keywords
+    ) {
 
       if (
         !text.includes(
@@ -563,29 +764,100 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // Date
+    // Date filter.
 
     if (
       criteria.dateRange !== "all"
     ) {
 
       const days =
-        Number(criteria.dateRange);
+        Number(
+          criteria.dateRange
+        );
+
 
       const cutoff =
         new Date();
 
+
       cutoff.setDate(
         cutoff.getDate() - days
       );
+
 
       const publication =
         new Date(
           paper.publication_date
         );
 
-      if (publication < cutoff) {
+
+      if (
+        publication < cutoff
+      ) {
+
         return false;
+
+      }
+
+    }
+
+
+    // Document type.
+
+    if (
+      criteria.documentType
+    ) {
+
+      const type =
+        (paper.type || "")
+          .toLowerCase();
+
+
+      const requested =
+        criteria.documentType
+          .toLowerCase();
+
+
+      if (
+        requested === "article" &&
+        type !== "article"
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        requested === "review" &&
+        !(
+          type === "review" ||
+          text.includes("review")
+        )
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        requested === "preprint" &&
+        !text.includes("preprint")
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        requested === "dataset" &&
+        type !== "dataset"
+      ) {
+
+        return false;
+
       }
 
     }
@@ -597,7 +869,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // SCORE
+  // RELEVANCE SCORE
   // ==========================================
 
   function calculateScore(
@@ -607,89 +879,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let score = 0;
 
+
     const title =
-      (paper.title || "").toLowerCase();
+      (paper.title || "")
+        .toLowerCase();
+
 
     const abstract =
-      getAbstract(paper).toLowerCase();
+      getAbstract(paper)
+        .toLowerCase();
+
 
     const concepts =
-      getConcepts(paper).toLowerCase();
+      getConcepts(paper)
+        .toLowerCase();
+
 
     const authors =
-      getAuthors(paper).toLowerCase();
+      getAuthors(paper)
+        .toLowerCase();
+
 
     const journal =
-      getJournal(paper).toLowerCase();
+      getJournal(paper)
+        .toLowerCase();
 
 
-    const keywordCount =
-      criteria.keywords.length;
+    // Keywords.
+
+    for (
+      const keyword of criteria.keywords
+    ) {
+
+      const k =
+        keyword.toLowerCase();
 
 
-    if (keywordCount > 0) {
+      if (title.includes(k)) {
 
-      let matched = 0;
+        score += 30;
 
-      for (
-        const keyword of criteria.keywords
-      ) {
-
-        const k =
-          keyword.toLowerCase();
-
-        if (title.includes(k)) {
-
-          score += 30;
-          matched++;
-
-        }
-
-        else if (abstract.includes(k)) {
-
-          score += 20;
-          matched++;
-
-        }
-
-        else if (concepts.includes(k)) {
-
-          score += 15;
-          matched++;
-
-        }
-
-      }
-
-
-      if (matched === keywordCount) {
-        score += 10;
-      }
-
-    }
-
-
-    if (criteria.author) {
-
-      if (
-        authors.includes(
-          criteria.author.toLowerCase()
-        )
+      } else if (
+        abstract.includes(k)
       ) {
 
         score += 20;
 
-      }
-
-    }
-
-
-    if (criteria.journal) {
-
-      if (
-        journal.includes(
-          criteria.journal.toLowerCase()
-        )
+      } else if (
+        concepts.includes(k)
       ) {
 
         score += 15;
@@ -699,10 +936,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // Author.
+
+    if (
+      criteria.author &&
+      authors.includes(
+        criteria.author.toLowerCase()
+      )
+    ) {
+
+      score += 20;
+
+    }
+
+
+    // Journal.
+
+    if (
+      criteria.journal &&
+      journal.includes(
+        criteria.journal.toLowerCase()
+      )
+    ) {
+
+      score += 15;
+
+    }
+
+
+    // Research field.
+
     if (criteria.field) {
 
       const field =
         criteria.field.toLowerCase();
+
 
       if (
         title.includes(field) ||
@@ -717,15 +985,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // Recent papers get a small bonus.
+    // Recency bonus.
 
     const publication =
       new Date(
         paper.publication_date
       );
 
+
     const now =
       new Date();
+
 
     const days =
       Math.floor(
@@ -735,15 +1005,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (days <= 30) {
+
       score += 10;
-    }
 
-    else if (days <= 90) {
+    } else if (days <= 90) {
+
       score += 7;
-    }
 
-    else if (days <= 365) {
+    } else if (days <= 365) {
+
       score += 4;
+
     }
 
 
@@ -764,23 +1036,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const index =
       paper.abstract_inverted_index;
 
+
     if (!index) {
+
       return "";
+
     }
+
 
     const words = [];
 
-    for (const word in index) {
+
+    for (
+      const word in index
+    ) {
+
+      const positions =
+        index[word];
+
 
       for (
-        const position of index[word]
+        const position of positions
       ) {
 
-        words[position] = word;
+        words[position] =
+          word;
 
       }
 
     }
+
 
     return words.join(" ");
 
@@ -797,8 +1082,8 @@ document.addEventListener("DOMContentLoaded", () => {
       paper.authorships || []
     )
       .map(
-        a =>
-          a.author?.display_name || ""
+        author =>
+          author.author?.display_name || ""
       )
       .join(" ");
 
@@ -830,8 +1115,8 @@ document.addEventListener("DOMContentLoaded", () => {
       paper.concepts || []
     )
       .map(
-        c =>
-          c.display_name || ""
+        concept =>
+          concept.display_name || ""
       )
       .join(" ");
 
@@ -871,8 +1156,8 @@ document.addEventListener("DOMContentLoaded", () => {
       <div
         id="loadMoreArea"
         style="
-          text-align:center;
-          margin:30px 0;
+          text-align: center;
+          margin: 30px 0;
         "
       ></div>
 
@@ -884,6 +1169,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  // ==========================================
+  // RENDER RESULTS
+  // ==========================================
+
   function renderCurrentResults() {
 
     const list =
@@ -891,10 +1180,12 @@ document.addEventListener("DOMContentLoaded", () => {
         "paperList"
       );
 
+
     const loadMoreArea =
       document.getElementById(
         "loadMoreArea"
       );
+
 
     const counter =
       document.getElementById(
@@ -903,11 +1194,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (!list) {
+
       return;
+
     }
 
 
-    list.innerHTML = "";
+    list.innerHTML =
+      "";
 
 
     const visible =
@@ -928,11 +1222,16 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    counter.textContent =
-      `Showing ${visible.length} of ${currentResults.length} papers`;
+    if (counter) {
+
+      counter.textContent =
+        `Showing ${visible.length} of ${currentResults.length} papers`;
+
+    }
 
 
-    loadMoreArea.innerHTML = "";
+    loadMoreArea.innerHTML =
+      "";
 
 
     if (
@@ -941,7 +1240,10 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
 
       const button =
-        document.createElement("button");
+        document.createElement(
+          "button"
+        );
+
 
       button.textContent =
         "Load more";
@@ -977,6 +1279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const card =
       document.createElement("div");
 
+
     card.className =
       "paper";
 
@@ -1007,17 +1310,26 @@ document.addEventListener("DOMContentLoaded", () => {
       paper.strackerScore;
 
 
+    let scoreBadge =
+      "";
+
+
+    if (
+      score !== undefined
+    ) {
+
+      scoreBadge = `
+        <span class="badge">
+          Relevance: ${score}%
+        </span>
+      `;
+
+    }
+
+
     card.innerHTML = `
 
-      ${
-        score !== undefined
-        ? `
-          <span class="badge">
-            Relevance: ${score}%
-          </span>
-        `
-        : ""
-      }
+      ${scoreBadge}
 
       <span class="badge">
         ${escapeHtml(
@@ -1026,26 +1338,22 @@ document.addEventListener("DOMContentLoaded", () => {
         )}
       </span>
 
-
       <h2>
         ${escapeHtml(title)}
       </h2>
-
 
       <p>
         <strong>Authors:</strong>
         ${escapeHtml(authors)}
       </p>
 
-
       <p>
         <strong>Journal:</strong>
         ${escapeHtml(journal)}
       </p>
 
-
       <a
-        href="${link}"
+        href="${escapeAttribute(link)}"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -1061,7 +1369,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // TRACKING
+  // SAVE TRACKER
   // ==========================================
 
   function saveAdvancedTracker(
@@ -1077,16 +1385,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
       id: Date.now(),
 
-      criteria: criteria,
+      criteria: {
+        keywords: [
+          ...criteria.keywords
+        ],
 
-      createdAt: getToday(),
+        excluded: [
+          ...criteria.excluded
+        ],
 
-      lastChecked: getToday(),
+        author:
+          criteria.author,
+
+        journal:
+          criteria.journal,
+
+        field:
+          criteria.field,
+
+        dateRange:
+          criteria.dateRange,
+
+        documentType:
+          criteria.documentType,
+
+        accuracy:
+          criteria.accuracy
+      },
+
+      createdAt:
+        getToday(),
+
+      lastChecked:
+        getToday(),
 
       seenPaperIds:
-        papers.map(
-          paper => paper.id
-        ),
+        papers
+          .map(paper => paper.id),
 
       lastCheckNewPapers:
         papers.length,
@@ -1097,7 +1432,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
 
-    trackers.push(tracker);
+    trackers.push(
+      tracker
+    );
 
 
     localStorage.setItem(
@@ -1108,17 +1445,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  // ==========================================
+  // GET TRACKERS
+  // ==========================================
+
   function getAdvancedTrackers() {
 
     try {
 
-      return JSON.parse(
+      const saved =
         localStorage.getItem(
           "stracker_advanced"
-        ) || "[]"
+        );
+
+
+      if (!saved) {
+
+        return [];
+
+      }
+
+
+      const parsed =
+        JSON.parse(saved);
+
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+
+
+    } catch (error) {
+
+      console.error(
+        "Could not load trackers:",
+        error
       );
 
-    } catch {
 
       return [];
 
@@ -1128,7 +1491,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // TRACKED DISPLAY
+  // DISPLAY TRACKED TOPICS
   // ==========================================
 
   function displayTrackedTopics() {
@@ -1156,14 +1519,29 @@ document.addEventListener("DOMContentLoaded", () => {
         </h2>
 
         ${trackers.map(
-          tracker => {
+          (tracker, index) => {
+
+            const criteria =
+              tracker.criteria;
+
 
             const keywords =
-              tracker.criteria.keywords
+              criteria.keywords
                 .map(
-                  k =>
+                  keyword =>
                     `<span class="badge">
-                      ${escapeHtml(k)}
+                      ${escapeHtml(keyword)}
+                    </span>`
+                )
+                .join("");
+
+
+            const excluded =
+              criteria.excluded
+                .map(
+                  keyword =>
+                    `<span class="badge">
+                      ${escapeHtml(keyword)}
                     </span>`
                 )
                 .join("");
@@ -1171,56 +1549,149 @@ document.addEventListener("DOMContentLoaded", () => {
 
             return `
 
-              <div class="tracked-topic">
+              <div
+                class="tracked-topic"
+                data-tracker-index="${index}"
+              >
 
                 <h3>
-                  🔬 Research profile
+                  🔬 Research profile ${index + 1}
                 </h3>
 
-                <p>
-                  ${keywords}
-                </p>
 
                 ${
-                  tracker.criteria.author
-                  ? `
-                    <p>
-                      👤 Author:
-                      ${escapeHtml(
-                        tracker.criteria.author
-                      )}
-                    </p>
-                  `
-                  : ""
+                  keywords
+                    ? `
+                      <p>
+                        <strong>
+                          Required:
+                        </strong>
+
+                        ${keywords}
+                      </p>
+                    `
+                    : ""
                 }
+
 
                 ${
-                  tracker.criteria.journal
-                  ? `
-                    <p>
-                      📖 Journal:
-                      ${escapeHtml(
-                        tracker.criteria.journal
-                      )}
-                    </p>
-                  `
-                  : ""
+                  excluded
+                    ? `
+                      <p>
+                        <strong>
+                          Excluded:
+                        </strong>
+
+                        ${excluded}
+                      </p>
+                    `
+                    : ""
                 }
 
-                <p>
-                  🎯 Accuracy:
-                  ${tracker.criteria.accuracy}%
-                </p>
+
+                ${
+                  criteria.author
+                    ? `
+                      <p>
+                        👤
+                        <strong>
+                          Author:
+                        </strong>
+                        ${escapeHtml(
+                          criteria.author
+                        )}
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                ${
+                  criteria.journal
+                    ? `
+                      <p>
+                        📖
+                        <strong>
+                          Journal:
+                        </strong>
+                        ${escapeHtml(
+                          criteria.journal
+                        )}
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                ${
+                  criteria.field
+                    ? `
+                      <p>
+                        🧠
+                        <strong>
+                          Field:
+                        </strong>
+                        ${escapeHtml(
+                          criteria.field
+                        )}
+                      </p>
+                    `
+                    : ""
+                }
+
 
                 <p>
-                  📅 Last checked:
-                  ${tracker.lastChecked}
+                  🎯
+                  <strong>
+                    Accuracy:
+                  </strong>
+
+                  ${criteria.accuracy}%
                 </p>
 
+
                 <p>
-                  📚 Papers found:
+                  📅
+                  <strong>
+                    Last checked:
+                  </strong>
+
+                  ${escapeHtml(
+                    tracker.lastChecked
+                  )}
+                </p>
+
+
+                <p>
+                  📚
+                  <strong>
+                    Papers found:
+                  </strong>
+
                   ${tracker.seenPaperIds.length}
                 </p>
+
+
+                <div class="actions">
+
+                  <button
+                    type="button"
+                    class="view-tracker-button"
+                    data-index="${index}"
+                  >
+                    👁️ View
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="delete-tracker-button danger"
+                    data-index="${index}"
+                  >
+                    🗑️ Delete
+                  </button>
+
+                </div>
 
               </div>
 
@@ -1233,6 +1704,201 @@ document.addEventListener("DOMContentLoaded", () => {
 
     `;
 
+
+    // ========================================
+    // VIEW BUTTONS
+    // ========================================
+
+    document
+      .querySelectorAll(
+        ".view-tracker-button"
+      )
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const index =
+              Number(
+                button.dataset.index
+              );
+
+
+            const trackers =
+              getAdvancedTrackers();
+
+
+            const tracker =
+              trackers[index];
+
+
+            if (!tracker) {
+
+              return;
+
+            }
+
+
+            runSavedTracker(
+              tracker.criteria
+            );
+
+          }
+        );
+
+      });
+
+
+    // ========================================
+    // DELETE BUTTONS
+    // ========================================
+
+    document
+      .querySelectorAll(
+        ".delete-tracker-button"
+      )
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const index =
+              Number(
+                button.dataset.index
+              );
+
+
+            const trackers =
+              getAdvancedTrackers();
+
+
+            if (!trackers[index]) {
+
+              return;
+
+            }
+
+
+            const confirmed =
+              window.confirm(
+                "Delete this tracked research profile?"
+              );
+
+
+            if (!confirmed) {
+
+              return;
+
+            }
+
+
+            trackers.splice(
+              index,
+              1
+            );
+
+
+            localStorage.setItem(
+              "stracker_advanced",
+              JSON.stringify(
+                trackers
+              )
+            );
+
+
+            displayTrackedTopics();
+
+          }
+        );
+
+      });
+
+  }
+
+
+  // ==========================================
+  // VIEW SAVED TRACKER
+  // ==========================================
+
+  async function runSavedTracker(
+    criteria
+  ) {
+
+    results.innerHTML = `
+
+      <div class="card">
+
+        <h2>
+          🔎 Checking tracked research...
+        </h2>
+
+        <p>
+          Looking for papers matching
+          your saved criteria.
+        </p>
+
+      </div>
+
+    `;
+
+
+    try {
+
+      const papers =
+        await searchWithCriteria(
+          criteria
+        );
+
+
+      if (!papers.length) {
+
+        showMessage(`
+
+          <h2>
+            🔎 No matching papers
+          </h2>
+
+          <p>
+            No papers currently match
+            this tracking profile.
+          </p>
+
+        `);
+
+        return;
+
+      }
+
+
+      displayResults(
+        papers,
+        "📚 Tracked research results"
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+
+      showMessage(`
+
+        <h2>
+          ❌ Tracking search failed
+        </h2>
+
+        <p>
+          ${escapeHtml(
+            error.message
+          )}
+        </p>
+
+      `);
+
+    }
+
   }
 
 
@@ -1243,9 +1909,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function showMessage(html) {
 
     results.innerHTML = `
+
       <div class="card">
+
         ${html}
+
       </div>
+
     `;
 
   }
@@ -1259,6 +1929,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const date =
       new Date();
+
 
     return (
       date.getFullYear() +
@@ -1282,10 +1953,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function escapeHtml(text) {
 
     const div =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
+
 
     div.textContent =
       String(text);
+
 
     return div.innerHTML;
 
@@ -1293,11 +1968,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // INITIALIZE
+  // ESCAPE ATTRIBUTE
   // ==========================================
 
-  accuracyValue.textContent =
-    accuracyInput.value + "%";
+  function escapeAttribute(text) {
+
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  }
+
+
+  // ==========================================
+  // INITIALIZE
+  // ==========================================
 
   displayTrackedTopics();
 
