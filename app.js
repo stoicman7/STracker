@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("searchInput");
   const results = document.getElementById("results");
   const searchButton = document.getElementById("searchButton");
+  const trackButton = document.getElementById("trackButton");
+  const trackedTopics = document.getElementById("trackedTopics");
 
   const TODAY = "2026-08-13";
   const MIN_DATE = "2020-01-01";
@@ -16,6 +18,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  trackButton.addEventListener("click", trackCurrentTopic);
+
+  displayTrackedTopics();
+
 
   async function searchPapers() {
 
@@ -27,7 +33,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     showMessage(
-      `Searching for recent research about <strong>${escapeHtml(query)}</strong>...`
+      `Searching for recent research about
+      <strong>${escapeHtml(query)}</strong>...`
     );
 
     try {
@@ -49,29 +56,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const data = await response.json();
 
-
-      // --------------------------------------------------
-      // 1. Remove papers with invalid/future dates
-      // --------------------------------------------------
-
       const validPapers = (data.results || []).filter(function (paper) {
 
         if (!paper.publication_date) {
           return false;
         }
 
-        const date = paper.publication_date;
-
         return (
-          date >= MIN_DATE &&
-          date <= TODAY
+          paper.publication_date >= MIN_DATE &&
+          paper.publication_date <= TODAY
         );
+
       });
-
-
-      // --------------------------------------------------
-      // 2. Sort ourselves — newest first
-      // --------------------------------------------------
 
       validPapers.sort(function (a, b) {
 
@@ -82,24 +78,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
       });
 
-
-      // --------------------------------------------------
-      // 3. Display results
-      // --------------------------------------------------
-
       if (validPapers.length === 0) {
 
         showMessage(`
           <h2>No valid papers found</h2>
-          <p>
-            No papers with valid publication dates were found
-            for this search.
-          </p>
+          <p>Try another research topic.</p>
         `);
 
         return;
       }
-
 
       results.innerHTML = `
         <div class="welcome">
@@ -112,21 +99,16 @@ document.addEventListener("DOMContentLoaded", function () {
           </p>
 
           <p>
-            Showing papers published between
-            ${MIN_DATE}
-            and
-            ${TODAY}.
+            Showing the newest papers first.
           </p>
 
         </div>
       `;
 
-
       validPapers.slice(0, 20).forEach(function (paper) {
 
         const title =
           paper.title || "Untitled";
-
 
         const authors =
           paper.authorships
@@ -138,32 +120,25 @@ document.addEventListener("DOMContentLoaded", function () {
             .join(", ")
           || "Unknown authors";
 
-
         const date =
           paper.publication_date;
-
 
         const journal =
           paper.primary_location?.source?.display_name
           || "Unknown source";
-
 
         const paperUrl =
           paper.primary_location?.landing_page_url
           || paper.doi
           || "#";
 
-
         const abstract =
           getAbstract(paper);
-
 
         const paperElement =
           document.createElement("div");
 
-
         paperElement.className = "paper";
-
 
         paperElement.innerHTML = `
 
@@ -209,14 +184,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         `;
 
-
         results.appendChild(paperElement);
 
       });
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
       console.error(error);
 
@@ -227,14 +199,136 @@ document.addEventListener("DOMContentLoaded", function () {
           Something went wrong while retrieving
           the papers.
         </p>
+      `);
+    }
+  }
+
+
+  function trackCurrentTopic() {
+
+    const topic =
+      searchInput.value.trim();
+
+    if (!topic) {
+
+      showMessage(
+        "Enter a topic before tracking it."
+      );
+
+      return;
+    }
+
+    const topics =
+      getTrackedTopics();
+
+    const exists =
+      topics.some(function (item) {
+        return item.name.toLowerCase() === topic.toLowerCase();
+      });
+
+    if (exists) {
+
+      showMessage(`
+        <h2>Already tracking</h2>
 
         <p>
-          Please try again.
+          STracker is already tracking
+          <strong>${escapeHtml(topic)}</strong>.
         </p>
       `);
 
+      return;
     }
 
+    topics.push({
+
+      name: topic,
+
+      addedAt: TODAY,
+
+      lastChecked: TODAY
+
+    });
+
+    localStorage.setItem(
+      "stracker_topics",
+      JSON.stringify(topics)
+    );
+
+    displayTrackedTopics();
+
+    showMessage(`
+      <h2>Topic tracked ✓</h2>
+
+      <p>
+        STracker is now tracking
+        <strong>${escapeHtml(topic)}</strong>.
+      </p>
+
+      <p>
+        Next we'll make STracker detect
+        papers that are new since your
+        last check.
+      </p>
+    `);
+  }
+
+
+  function getTrackedTopics() {
+
+    try {
+
+      const saved =
+        localStorage.getItem(
+          "stracker_topics"
+        );
+
+      return saved
+        ? JSON.parse(saved)
+        : [];
+
+    } catch (error) {
+
+      return [];
+    }
+  }
+
+
+  function displayTrackedTopics() {
+
+    const topics =
+      getTrackedTopics();
+
+    if (topics.length === 0) {
+
+      trackedTopics.innerHTML = "";
+
+      return;
+    }
+
+    trackedTopics.innerHTML = `
+      <div class="welcome">
+
+        <h3>Tracked topics</h3>
+
+        ${topics.map(function (topic) {
+
+          return `
+            <div>
+              <strong>
+                ${escapeHtml(topic.name)}
+              </strong>
+
+              <small>
+                Added ${escapeHtml(topic.addedAt)}
+              </small>
+            </div>
+          `;
+
+        }).join("")}
+
+      </div>
+    `;
   }
 
 
@@ -245,7 +339,6 @@ document.addEventListener("DOMContentLoaded", function () {
         ${message}
       </div>
     `;
-
   }
 
 
@@ -270,11 +363,9 @@ document.addEventListener("DOMContentLoaded", function () {
         words[position] = word;
 
       });
-
     }
 
     return words.join(" ");
-
   }
 
 
@@ -286,7 +377,6 @@ document.addEventListener("DOMContentLoaded", function () {
     div.textContent = text;
 
     return div.innerHTML;
-
   }
 
 });
