@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const searchInput = document.getElementById("searchInput");
   const results = document.getElementById("results");
-  const searchButton = document.querySelector("button");
+  const searchButton = document.getElementById("searchButton");
 
   searchButton.addEventListener("click", searchPapers);
 
@@ -13,7 +13,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+
   async function searchPapers() {
+
     const query = searchInput.value.trim();
 
     if (!query) {
@@ -27,16 +29,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     results.innerHTML = `
       <div class="welcome">
-        <p>Searching for the latest papers about
-        <strong>${escapeHtml(query)}</strong>...</p>
+        <p>
+          Searching for the latest papers about
+          <strong>${escapeHtml(query)}</strong>...
+        </p>
       </div>
     `;
 
     try {
+
+      // Today's date
+      const today = new Date().toISOString().split("T")[0];
+
       const url =
         "https://api.openalex.org/works?" +
         "search=" + encodeURIComponent(query) +
-        "&filter=from_publication_date:2020-01-01" +
+        "&filter=" +
+        "from_publication_date:2020-01-01," +
+        "to_publication_date:" + today +
         "&sort=publication_date:desc" +
         "&per-page=20";
 
@@ -49,56 +59,98 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
 
       if (!data.results || data.results.length === 0) {
+
         results.innerHTML = `
           <div class="welcome">
             <h2>No papers found</h2>
-            <p>Try another research topic.</p>
+            <p>
+              Try another research topic.
+            </p>
           </div>
         `;
+
         return;
       }
+
+
+      // Extra safety:
+      // Remove anything dated in the future.
+      const validPapers = data.results.filter(function (paper) {
+
+        if (!paper.publication_date) {
+          return false;
+        }
+
+        return paper.publication_date <= today;
+      });
+
 
       results.innerHTML = `
         <div class="welcome">
           <h2>Latest papers</h2>
+
           <p>
-            Showing the newest results for
+            Showing the newest papers for
             <strong>${escapeHtml(query)}</strong>.
+          </p>
+
+          <p>
+            ${validPapers.length} papers found.
           </p>
         </div>
       `;
 
-      data.results.forEach(function (paper) {
 
-        const title = paper.title || "Untitled";
+      validPapers.forEach(function (paper) {
 
-        const authors = paper.authorships
-          ?.slice(0, 3)
-          .map(function (author) {
-            return author.author?.display_name;
-          })
-          .filter(Boolean)
-          .join(", ") || "Unknown authors";
+        const title =
+          paper.title || "Untitled";
 
-        const date = paper.publication_date || "Unknown date";
+
+        const authors =
+          paper.authorships
+            ?.slice(0, 3)
+            .map(function (author) {
+              return author.author?.display_name;
+            })
+            .filter(Boolean)
+            .join(", ") ||
+          "Unknown authors";
+
+
+        const date =
+          paper.publication_date ||
+          "Unknown date";
+
 
         const journal =
           paper.primary_location?.source?.display_name ||
           "Unknown journal";
+
 
         const paperUrl =
           paper.primary_location?.landing_page_url ||
           paper.doi ||
           "#";
 
-        const abstract = getAbstract(paper);
 
-        const paperElement = document.createElement("div");
+        const abstract =
+          getAbstract(paper);
 
-        paperElement.className = "paper";
+
+        const paperElement =
+          document.createElement("div");
+
+
+        paperElement.className =
+          "paper";
+
 
         paperElement.innerHTML = `
-          <h2>${escapeHtml(title)}</h2>
+
+          <h2>
+            ${escapeHtml(title)}
+          </h2>
 
           <p>
             <strong>Published:</strong>
@@ -117,8 +169,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
           ${
             abstract
-              ? `<p><strong>Abstract:</strong>
-                 ${escapeHtml(abstract)}</p>`
+              ? `
+                <p>
+                  <strong>Abstract:</strong>
+                  ${escapeHtml(abstract)}
+                </p>
+              `
               : ""
           }
 
@@ -129,10 +185,14 @@ document.addEventListener("DOMContentLoaded", function () {
           >
             View paper →
           </a>
+
         `;
 
+
         results.appendChild(paperElement);
+
       });
+
 
     } catch (error) {
 
@@ -140,11 +200,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       results.innerHTML = `
         <div class="welcome">
+
           <h2>Search error</h2>
+
           <p>
             We couldn't retrieve the papers right now.
             Please try again.
           </p>
+
         </div>
       `;
     }
@@ -153,7 +216,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function getAbstract(paper) {
 
-    const invertedIndex = paper.abstract_inverted_index;
+    const invertedIndex =
+      paper.abstract_inverted_index;
 
     if (!invertedIndex) {
       return "";
@@ -163,10 +227,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     for (const word in invertedIndex) {
 
-      const positions = invertedIndex[word];
+      const positions =
+        invertedIndex[word];
 
       positions.forEach(function (position) {
+
         words[position] = word;
+
       });
     }
 
@@ -176,7 +243,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function escapeHtml(text) {
 
-    const div = document.createElement("div");
+    const div =
+      document.createElement("div");
 
     div.textContent = text;
 
