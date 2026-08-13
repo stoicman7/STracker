@@ -1551,7 +1551,219 @@ accuracyInput.addEventListener(
   // ADVANCED FILTERS
   // ==========================================
 
-  matchesAdvancedCriteria
+  // ==========================================
+// ADVANCED FILTERS
+// ==========================================
+
+function matchesAdvancedCriteria(
+  paper,
+  criteria
+) {
+
+  const title =
+    (paper.title || "")
+      .toLowerCase();
+
+  const abstract =
+    getAbstract(paper)
+      .toLowerCase();
+
+  const authors =
+    getAuthors(paper)
+      .toLowerCase();
+
+  const journal =
+    getJournal(paper)
+      .toLowerCase();
+
+  const concepts =
+    getConcepts(paper)
+      .toLowerCase();
+
+  const text =
+    `${title} ${abstract} ${authors} ${journal} ${concepts}`;
+
+
+  // ==========================================
+  // EXCLUDED KEYWORDS
+  // ==========================================
+
+  for (
+    const excluded of
+    (criteria.excluded || [])
+  ) {
+
+    if (
+      text.includes(
+        excluded.toLowerCase()
+      )
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ==========================================
+  // AUTHOR
+  // ==========================================
+
+  if (criteria.author) {
+
+    if (
+      !authors.includes(
+        criteria.author.toLowerCase()
+      )
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ==========================================
+  // JOURNAL
+  // ==========================================
+
+  if (criteria.journal) {
+
+    if (
+      !journal.includes(
+        criteria.journal.toLowerCase()
+      )
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ==========================================
+  // REQUIRED KEYWORDS
+  // ==========================================
+
+  for (
+    const keyword of
+    (criteria.keywords || [])
+  ) {
+
+    if (
+      !text.includes(
+        keyword.toLowerCase()
+      )
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ==========================================
+  // DATE RANGE
+  // ==========================================
+
+  if (
+    criteria.dateRange &&
+    criteria.dateRange !== "all"
+  ) {
+
+    const days =
+      Number(criteria.dateRange);
+
+    const cutoff =
+      new Date();
+
+    cutoff.setDate(
+      cutoff.getDate() - days
+    );
+
+    const publication =
+      new Date(
+        paper.publication_date
+      );
+
+    if (
+      publication < cutoff
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ==========================================
+  // DOCUMENT TYPE
+  // ==========================================
+
+  if (
+    criteria.documentType
+  ) {
+
+    const type =
+      (paper.type || "")
+        .toLowerCase();
+
+    const requested =
+      criteria.documentType
+        .toLowerCase();
+
+
+    if (
+      requested === "article" &&
+      type !== "article"
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      requested === "review" &&
+      type !== "review" &&
+      !text.includes("review")
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      requested === "preprint" &&
+      !text.includes("preprint")
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      requested === "dataset" &&
+      type !== "dataset"
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  return true;
+
+}
   // ==========================================
   // RELEVANCE SCORE
   // ==========================================
