@@ -1,126 +1,233 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
-  const searchInput =
-    document.getElementById("searchInput");
+  const searchInput = document.getElementById("searchInput");
+  const searchButton = document.getElementById("searchButton");
 
-  const searchButton =
-    document.getElementById("searchButton");
+  const results = document.getElementById("results");
+  const trackedTopics = document.getElementById("trackedTopics");
 
-  const trackedTopics =
-    document.getElementById("trackedTopics");
+  const keywordContainer = document.getElementById("keywordContainer");
+  const excludeContainer = document.getElementById("excludeContainer");
 
-  const results =
-    document.getElementById("results");
+  const addKeywordButton = document.getElementById("addKeywordButton");
+  const addExcludeButton = document.getElementById("addExcludeButton");
 
-  const keywordContainer =
-    document.getElementById("keywordContainer");
+  const authorInput = document.getElementById("authorInput");
+  const journalInput = document.getElementById("journalInput");
+  const fieldInput = document.getElementById("fieldInput");
+  const dateRangeInput = document.getElementById("dateRangeInput");
+  const documentTypeInput = document.getElementById("documentTypeInput");
 
-  const excludeContainer =
-    document.getElementById("excludeContainer");
+  const accuracyInput = document.getElementById("accuracyInput");
+  const accuracyValue = document.getElementById("accuracyValue");
 
-  const addKeywordButton =
-    document.getElementById("addKeywordButton");
-
-  const addExcludeButton =
-    document.getElementById("addExcludeButton");
-
-  const accuracyInput =
-    document.getElementById("accuracyInput");
-
-  const accuracyValue =
-    document.getElementById("accuracyValue");
-
-  const previewButton =
-    document.getElementById("previewButton");
-
+  const previewButton = document.getElementById("previewButton");
   const advancedTrackButton =
     document.getElementById("advancedTrackButton");
 
-
-  const API_LIMIT = 100;
-
-  const PAPERS_PER_LOAD = 20;
+  let currentResults = [];
+  let currentVisible = 10;
 
 
   // ==========================================
   // QUICK SEARCH
   // ==========================================
 
-  searchButton.addEventListener(
-    "click",
-    function () {
+  searchButton.addEventListener("click", quickSearch);
 
+  searchInput.addEventListener("keydown", (event) => {
+
+    if (event.key === "Enter") {
+      event.preventDefault();
       quickSearch();
-
     }
-  );
+
+  });
 
 
-  searchInput.addEventListener(
-    "keydown",
-    function (event) {
+  async function quickSearch() {
 
-      if (event.key === "Enter") {
+    const query = searchInput.value.trim();
 
-        event.preventDefault();
+    if (!query) {
+      showMessage(
+        "<h2>Please enter a search term.</h2>"
+      );
+      return;
+    }
 
-        quickSearch();
+    results.innerHTML = `
+      <div class="card">
+        <h2>🔎 Searching...</h2>
+        <p>Searching for <strong>${escapeHtml(query)}</strong></p>
+      </div>
+    `;
 
+    try {
+
+      const url =
+        "https://api.openalex.org/works" +
+        "?search=" +
+        encodeURIComponent(query) +
+        "&sort=publication_date:desc" +
+        "&per-page=100";
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("OpenAlex returned an error.");
       }
 
+      const data = await response.json();
+
+      let papers = data.results || [];
+
+      papers = papers.filter(isValidDate);
+
+      papers.sort((a, b) => {
+        return new Date(b.publication_date) -
+               new Date(a.publication_date);
+      });
+
+      displayResults(
+        papers,
+        `Latest papers for "${query}"`
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      showMessage(`
+        <h2>❌ Search failed</h2>
+        <p>${escapeHtml(error.message)}</p>
+        <p>Please try again.</p>
+      `);
+
     }
-  );
+
+  }
 
 
   // ==========================================
-  // ACCURACY SLIDER
+  // ACCURACY
   // ==========================================
 
-  accuracyInput.addEventListener(
-    "input",
-    function () {
+  accuracyInput.addEventListener("input", () => {
 
-      accuracyValue.textContent =
-        accuracyInput.value + "%";
+    accuracyValue.textContent =
+      accuracyInput.value + "%";
 
-    }
-  );
+  });
 
 
   // ==========================================
   // ADD KEYWORD
   // ==========================================
 
-  addKeywordButton.addEventListener(
-    "click",
-    function () {
+  addKeywordButton.addEventListener("click", () => {
 
-      addInputRow(
-        keywordContainer,
-        "required-keyword",
-        "Example: memory formation"
-      );
+    createInputRow(
+      keywordContainer,
+      "required-keyword",
+      "Example: memory formation"
+    );
 
-    }
-  );
+  });
 
 
   // ==========================================
   // ADD EXCLUSION
   // ==========================================
 
-  addExcludeButton.addEventListener(
-    "click",
-    function () {
+  addExcludeButton.addEventListener("click", () => {
 
-      addInputRow(
-        excludeContainer,
-        "excluded-keyword",
-        "Example: animal studies"
-      );
+    createInputRow(
+      excludeContainer,
+      "excluded-keyword",
+      "Example: animal studies"
+    );
 
-    }
-  );
+  });
+
+
+  function createInputRow(
+    container,
+    className,
+    placeholder
+  ) {
+
+    const row = document.createElement("div");
+
+    row.className = "keyword-row";
+
+    const input = document.createElement("input");
+
+    input.type = "text";
+    input.className = className;
+    input.placeholder = placeholder;
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.textContent = "×";
+    button.className = "danger";
+
+    button.addEventListener("click", () => {
+      row.remove();
+    });
+
+    row.appendChild(input);
+    row.appendChild(button);
+
+    container.appendChild(row);
+
+  }
+
+
+  // ==========================================
+  // GET CRITERIA
+  // ==========================================
+
+  function getCriteria() {
+
+    const keywords =
+      [...document.querySelectorAll(".required-keyword")]
+        .map(input => input.value.trim())
+        .filter(Boolean);
+
+    const excluded =
+      [...document.querySelectorAll(".excluded-keyword")]
+        .map(input => input.value.trim())
+        .filter(Boolean);
+
+    return {
+
+      keywords,
+
+      excluded,
+
+      author:
+        authorInput.value.trim(),
+
+      journal:
+        journalInput.value.trim(),
+
+      field:
+        fieldInput.value,
+
+      dateRange:
+        dateRangeInput.value,
+
+      documentType:
+        documentTypeInput.value,
+
+      accuracy:
+        Number(accuracyInput.value)
+
+    };
+
+  }
 
 
   // ==========================================
@@ -129,11 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   previewButton.addEventListener(
     "click",
-    function () {
-
-      runAdvancedSearch(false);
-
-    }
+    () => runAdvancedSearch(false)
   );
 
 
@@ -143,157 +246,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   advancedTrackButton.addEventListener(
     "click",
-    function () {
-
-      runAdvancedSearch(true);
-
-    }
+    () => runAdvancedSearch(true)
   );
 
 
-  displayTrackedTopics();
+  async function runAdvancedSearch(shouldTrack) {
 
-
-  // ==========================================
-  // ADD INPUT ROW
-  // ==========================================
-
-  function addInputRow(
-    container,
-    className,
-    placeholder
-  ) {
-
-    const row =
-      document.createElement("div");
-
-    row.className =
-      "keyword-row";
-
-
-    row.innerHTML = `
-
-      <input
-        type="text"
-        class="${className}"
-        placeholder="${placeholder}"
-      >
-
-      <button
-        type="button"
-        class="remove-keyword"
-      >
-        ×
-      </button>
-
-    `;
-
-
-    row
-      .querySelector("button")
-      .addEventListener(
-        "click",
-        function () {
-
-          row.remove();
-
-        }
-      );
-
-
-    container.appendChild(row);
-
-  }
-
-
-  // ==========================================
-  // GET ADVANCED CRITERIA
-  // ==========================================
-
-  function getCriteria() {
-
-    const keywords =
-      Array.from(
-        document.querySelectorAll(
-          ".required-keyword"
-        )
-      )
-      .map(function (input) {
-
-        return input.value.trim();
-
-      })
-      .filter(Boolean);
-
-
-    const excluded =
-      Array.from(
-        document.querySelectorAll(
-          ".excluded-keyword"
-        )
-      )
-      .map(function (input) {
-
-        return input.value.trim();
-
-      })
-      .filter(Boolean);
-
-
-    return {
-
-      keywords: keywords,
-
-      excluded: excluded,
-
-      author:
-        document
-          .getElementById("authorInput")
-          .value
-          .trim(),
-
-      journal:
-        document
-          .getElementById("journalInput")
-          .value
-          .trim(),
-
-      field:
-        document
-          .getElementById("fieldInput")
-          .value,
-
-      dateRange:
-        document
-          .getElementById("dateRangeInput")
-          .value,
-
-      documentType:
-        document
-          .getElementById("documentTypeInput")
-          .value,
-
-      accuracy:
-        Number(
-          accuracyInput.value
-        )
-
-    };
-
-  }
-
-
-  // ==========================================
-  // ADVANCED SEARCH
-  // ==========================================
-
-  async function runAdvancedSearch(
-    shouldTrack
-  ) {
-
-    const criteria =
-      getCriteria();
-
+    const criteria = getCriteria();
 
     if (
       criteria.keywords.length === 0 &&
@@ -303,16 +262,12 @@ document.addEventListener("DOMContentLoaded", function () {
     ) {
 
       showMessage(`
-
-        <h2>
-          Add a research criterion
-        </h2>
+        <h2>🔬 Add some criteria first</h2>
 
         <p>
-          Enter at least one keyword,
-          author, journal, or research field.
+          Add at least one keyword, author,
+          journal, or research field.
         </p>
-
       `);
 
       return;
@@ -320,111 +275,60 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    const query =
-      criteria.keywords.join(" ");
-
-
-    showMessage(`
-
-      <h2>
-        🔎 Analyzing research...
-      </h2>
-
-      <p>
-        Building your research profile
-        and finding matching papers.
-      </p>
-
-    `);
+    results.innerHTML = `
+      <div class="card">
+        <h2>🔎 Searching...</h2>
+        <p>
+          Searching for papers matching your
+          research profile.
+        </p>
+      </div>
+    `;
 
 
     try {
 
-      let apiQuery =
-        query;
+      /*
+       * We deliberately send the main keywords
+       * to OpenAlex rather than every filter.
+       */
+
+      let query =
+        criteria.keywords.join(" ");
 
 
-      // --------------------------------------
-      // Add author/journal to broad query
-      // --------------------------------------
+      if (!query) {
 
-      if (criteria.author) {
+        if (criteria.author) {
+          query = criteria.author;
+        }
 
-        apiQuery +=
-          " " +
-          criteria.author;
+        else if (criteria.journal) {
+          query = criteria.journal;
+        }
 
-      }
-
-
-      if (criteria.journal) {
-
-        apiQuery +=
-          " " +
-          criteria.journal;
-
-      }
-
-
-      if (criteria.field) {
-
-        apiQuery +=
-          " " +
-          criteria.field;
+        else if (criteria.field) {
+          query = criteria.field;
+        }
 
       }
 
 
-      if (!apiQuery.trim()) {
-
-        apiQuery = "*";
-
-      }
-
-
-      let url =
+      const url =
         "https://api.openalex.org/works" +
-
         "?search=" +
-        encodeURIComponent(
-          apiQuery
-        ) +
-
+        encodeURIComponent(query) +
         "&sort=publication_date:desc" +
-
-        "&per-page=" +
-        API_LIMIT;
+        "&per-page=100";
 
 
-      // --------------------------------------
-      // Date filter
-      // --------------------------------------
-
-      const dateFilter =
-        buildDateFilter(
-          criteria.dateRange
-        );
-
-
-      if (dateFilter) {
-
-        url +=
-          "&filter=" +
-          dateFilter;
-
-      }
-
-
-      const response =
-        await fetch(url);
+      const response = await fetch(url);
 
 
       if (!response.ok) {
-
         throw new Error(
-          "OpenAlex request failed"
+          "OpenAlex request failed."
         );
-
       }
 
 
@@ -437,130 +341,64 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
       papers =
-        papers.filter(
-          function (paper) {
+        papers.filter(isValidDate);
 
-            return (
-              paper.id &&
-              paper.publication_date &&
-              paper.publication_date <=
-              getToday()
-            );
-
-          }
-        );
-
-
-      // ======================================
-      // LOCAL FILTERING
-      // ======================================
 
       papers =
         papers.filter(
-          function (paper) {
-
-            return matchesCriteria(
-              paper,
-              criteria
-            );
-
-          }
+          paper => matchesAdvancedCriteria(
+            paper,
+            criteria
+          )
         );
 
-
-      // ======================================
-      // SCORE
-      // ======================================
 
       papers =
         papers.map(
-          function (paper) {
-
-            const score =
-              calculateRelevance(
-                paper,
-                criteria
-              );
-
+          paper => {
 
             return {
-
               ...paper,
-
               strackerScore:
-                score
-
+                calculateScore(
+                  paper,
+                  criteria
+                )
             };
 
           }
         );
 
 
-      // ======================================
-      // THRESHOLD
-      // ======================================
-
       papers =
         papers.filter(
-          function (paper) {
-
-            return (
-              paper.strackerScore >=
-              criteria.accuracy
-            );
-
-          }
+          paper =>
+            paper.strackerScore >=
+            criteria.accuracy
         );
 
 
-      // ======================================
-      // SORT BY SCORE
-      // ======================================
-
       papers.sort(
-        function (a, b) {
-
-          if (
-            b.strackerScore !==
-            a.strackerScore
-          ) {
-
-            return (
-              b.strackerScore -
-              a.strackerScore
-            );
-
-          }
-
-
-          return (
-            new Date(
-              b.publication_date
-            ) -
-
-            new Date(
-              a.publication_date
-            )
-          );
-
-        }
+        (a, b) =>
+          b.strackerScore -
+          a.strackerScore
       );
 
 
-      if (!papers.length) {
+      if (papers.length === 0) {
 
         showMessage(`
-
-          <h2>
-            No papers matched
-          </h2>
+          <h2>🔎 No matching papers</h2>
 
           <p>
-            Try lowering the relevance
-            threshold or broadening your
-            criteria.
+            No papers passed your
+            ${criteria.accuracy}% relevance threshold.
           </p>
 
+          <p>
+            Try lowering the accuracy level or
+            making your criteria broader.
+          </p>
         `);
 
         return;
@@ -568,9 +406,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
 
-      displayAdvancedResults(
+      displayResults(
         papers,
-        criteria
+        "🎯 Matching research"
       );
 
 
@@ -581,30 +419,25 @@ document.addEventListener("DOMContentLoaded", function () {
           papers
         );
 
+        displayTrackedTopics();
+
       }
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
       console.error(error);
 
-
       showMessage(`
-
-        <h2>
-          Search failed
-        </h2>
+        <h2>❌ Search failed</h2>
 
         <p>
-          STracker couldn't connect to
-          OpenAlex.
+          ${escapeHtml(error.message)}
         </p>
 
         <p>
-          Please try again.
+          Check your internet connection and
+          try again.
         </p>
-
       `);
 
     }
@@ -613,306 +446,67 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   // ==========================================
-  // QUICK SEARCH
+  // VALID DATE
   // ==========================================
 
-  async function quickSearch() {
+  function isValidDate(paper) {
 
-    const query =
-      searchInput.value.trim();
-
-
-    if (!query) {
-
-      showMessage(`
-
-        <h2>
-          No search term
-        </h2>
-
-        <p>
-          Enter a scientific topic.
-        </p>
-
-      `);
-
-      return;
-
+    if (!paper.publication_date) {
+      return false;
     }
 
-
-    showMessage(`
-
-      <h2>
-        🔎 Searching...
-      </h2>
-
-      <p>
-        Searching for
-        <strong>
-          ${escapeHtml(query)}
-        </strong>
-      </p>
-
-    `);
-
-
-    try {
-
-      const url =
-        "https://api.openalex.org/works" +
-
-        "?search=" +
-        encodeURIComponent(query) +
-
-        "&sort=publication_date:desc" +
-
-        "&per-page=" +
-        API_LIMIT;
-
-
-      const response =
-        await fetch(url);
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          "OpenAlex request failed"
-        );
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      let papers =
-        data.results || [];
-
-
-      papers =
-        papers.filter(
-          function (paper) {
-
-            return (
-              paper.id &&
-              paper.publication_date &&
-              paper.publication_date <=
-              getToday()
-            );
-
-          }
-        );
-
-
-      papers.sort(
-        function (a, b) {
-
-          return (
-            new Date(
-              b.publication_date
-            ) -
-
-            new Date(
-              a.publication_date
-            );
-
-          );
-
-        }
-      );
-
-
-      if (!papers.length) {
-
-        showMessage(`
-
-          <h2>
-            No papers found
-          </h2>
-
-        `);
-
-        return;
-
-      }
-
-
-      displayPapers(
-        papers,
-        "Latest research",
-        query
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-
-      showMessage(`
-
-        <h2>
-          Search failed
-        </h2>
-
-        <p>
-          Please try again.
-        </p>
-
-      `);
-
-    }
-
-  }
-
-
-  // ==========================================
-  // BUILD DATE FILTER
-  // ==========================================
-
-  function buildDateFilter(
-    range
-  ) {
-
-    if (
-      !range ||
-      range === "all"
-    ) {
-
-      return "";
-
-    }
-
-
-    const date =
+    const today =
       new Date();
 
+    today.setHours(23, 59, 59, 999);
 
-    date.setDate(
-      date.getDate() -
-      Number(range)
-    );
-
-
-    const year =
-      date.getFullYear();
-
-
-    const month =
-      String(
-        date.getMonth() + 1
-      ).padStart(2, "0");
-
-
-    const day =
-      String(
-        date.getDate()
-      ).padStart(2, "0");
-
-
-    const from =
-      `${year}-${month}-${day}`;
-
+    const date =
+      new Date(
+        paper.publication_date
+      );
 
     return (
-      "from_publication_date:" +
-      from
+      !isNaN(date.getTime()) &&
+      date <= today
     );
 
   }
 
 
   // ==========================================
-  // CRITERIA MATCH
+  // ADVANCED FILTERS
   // ==========================================
 
-  function matchesCriteria(
+  function matchesAdvancedCriteria(
     paper,
     criteria
   ) {
 
     const title =
-      (
-        paper.title || ""
-      ).toLowerCase();
-
+      (paper.title || "").toLowerCase();
 
     const abstract =
-      getAbstractText(
-        paper
-      ).toLowerCase();
-
+      getAbstract(paper).toLowerCase();
 
     const authors =
-      (
-        paper.authorships || []
-      )
-      .map(
-        function (a) {
+      getAuthors(paper).toLowerCase();
 
-          return (
-            a.author?.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
-
-
-    const source =
-      (
-        paper.primary_location
-          ?.source
-          ?.display_name || ""
-      ).toLowerCase();
-
+    const journal =
+      getJournal(paper).toLowerCase();
 
     const concepts =
-      (
-        paper.concepts || []
-      )
-      .map(
-        function (c) {
+      getConcepts(paper).toLowerCase();
 
-          return (
-            c.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
+    const text =
+      `${title} ${abstract} ${authors} ${journal} ${concepts}`;
 
 
-    const searchable =
-      title +
-      " " +
-      abstract +
-      " " +
-      authors +
-      " " +
-      source +
-      " " +
-      concepts;
+    // Excluded terms
 
-
-    // --------------------------------------
-    // Exclusions
-    // --------------------------------------
-
-    for (
-      const excluded of criteria.excluded
-    ) {
+    for (const excluded of criteria.excluded) {
 
       if (
-        searchable.includes(
+        text.includes(
           excluded.toLowerCase()
         )
       ) {
@@ -924,9 +518,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------
     // Author
-    // --------------------------------------
 
     if (
       criteria.author &&
@@ -940,13 +532,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------
     // Journal
-    // --------------------------------------
 
     if (
       criteria.journal &&
-      !source.includes(
+      !journal.includes(
         criteria.journal.toLowerCase()
       )
     ) {
@@ -956,16 +546,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------
     // Required keywords
-    // --------------------------------------
 
-    for (
-      const keyword of criteria.keywords
-    ) {
+    for (const keyword of criteria.keywords) {
 
       if (
-        !searchable.includes(
+        !text.includes(
           keyword.toLowerCase()
         )
       ) {
@@ -977,158 +563,113 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
+    // Date
+
+    if (
+      criteria.dateRange !== "all"
+    ) {
+
+      const days =
+        Number(criteria.dateRange);
+
+      const cutoff =
+        new Date();
+
+      cutoff.setDate(
+        cutoff.getDate() - days
+      );
+
+      const publication =
+        new Date(
+          paper.publication_date
+        );
+
+      if (publication < cutoff) {
+        return false;
+      }
+
+    }
+
+
     return true;
 
   }
 
 
   // ==========================================
-  // RELEVANCE SCORE
+  // SCORE
   // ==========================================
 
-  function calculateRelevance(
+  function calculateScore(
     paper,
     criteria
   ) {
 
     let score = 0;
 
-
     const title =
-      (
-        paper.title || ""
-      ).toLowerCase();
-
+      (paper.title || "").toLowerCase();
 
     const abstract =
-      getAbstractText(
-        paper
-      ).toLowerCase();
-
-
-    const authors =
-      (
-        paper.authorships || []
-      )
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name ||
-            ""
-          );
-
-        }
-      )
-      .join(" ")
-      .toLowerCase();
-
-
-    const source =
-      (
-        paper.primary_location
-          ?.source
-          ?.display_name || ""
-      ).toLowerCase();
-
+      getAbstract(paper).toLowerCase();
 
     const concepts =
-      (
-        paper.concepts || []
-      )
-      .map(
-        function (c) {
+      getConcepts(paper).toLowerCase();
 
-          return (
-            c.display_name ||
-            ""
-          );
+    const authors =
+      getAuthors(paper).toLowerCase();
 
-        }
-      )
-      .join(" ")
-      .toLowerCase();
+    const journal =
+      getJournal(paper).toLowerCase();
 
 
-    const searchable =
-      title +
-      " " +
-      abstract +
-      " " +
-      concepts;
+    const keywordCount =
+      criteria.keywords.length;
 
 
-    // ======================================
-    // KEYWORD SCORE
-    // ======================================
-
-    if (
-      criteria.keywords.length
-    ) {
+    if (keywordCount > 0) {
 
       let matched = 0;
 
-
-      criteria.keywords.forEach(
-        function (keyword) {
-
-          const k =
-            keyword.toLowerCase();
-
-
-          if (
-            title.includes(k)
-          ) {
-
-            score += 30;
-
-            matched++;
-
-          }
-
-          else if (
-            abstract.includes(k)
-          ) {
-
-            score += 20;
-
-            matched++;
-
-          }
-
-          else if (
-            concepts.includes(k)
-          ) {
-
-            score += 15;
-
-            matched++;
-
-          }
-
-        }
-      );
-
-
-      if (
-        matched ===
-        criteria.keywords.length
+      for (
+        const keyword of criteria.keywords
       ) {
 
-        score += 10;
+        const k =
+          keyword.toLowerCase();
 
+        if (title.includes(k)) {
+
+          score += 30;
+          matched++;
+
+        }
+
+        else if (abstract.includes(k)) {
+
+          score += 20;
+          matched++;
+
+        }
+
+        else if (concepts.includes(k)) {
+
+          score += 15;
+          matched++;
+
+        }
+
+      }
+
+
+      if (matched === keywordCount) {
+        score += 10;
       }
 
     }
 
 
-    // ======================================
-    // AUTHOR
-    // ======================================
-
-    if (
-      criteria.author
-    ) {
+    if (criteria.author) {
 
       if (
         authors.includes(
@@ -1143,16 +684,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // ======================================
-    // JOURNAL
-    // ======================================
-
-    if (
-      criteria.journal
-    ) {
+    if (criteria.journal) {
 
       if (
-        source.includes(
+        journal.includes(
           criteria.journal.toLowerCase()
         )
       ) {
@@ -1164,18 +699,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // ======================================
-    // FIELD
-    // ======================================
+    if (criteria.field) {
 
-    if (
-      criteria.field
-    ) {
+      const field =
+        criteria.field.toLowerCase();
 
       if (
-        searchable.includes(
-          criteria.field.toLowerCase()
-        )
+        title.includes(field) ||
+        abstract.includes(field) ||
+        concepts.includes(field)
       ) {
 
         score += 10;
@@ -1185,57 +717,33 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // ======================================
-    // RECENCY
-    // ======================================
+    // Recent papers get a small bonus.
 
-    if (
-      paper.publication_date
-    ) {
+    const publication =
+      new Date(
+        paper.publication_date
+      );
 
-      const publication =
-        new Date(
-          paper.publication_date
-        );
+    const now =
+      new Date();
 
-
-      const today =
-        new Date();
-
-
-      const days =
-        Math.floor(
-          (
-            today -
-            publication
-          ) /
-          (
-            1000 *
-            60 *
-            60 *
-            24
-          )
-        );
+    const days =
+      Math.floor(
+        (now - publication) /
+        86400000
+      );
 
 
-      if (days <= 30) {
+    if (days <= 30) {
+      score += 10;
+    }
 
-        score += 10;
+    else if (days <= 90) {
+      score += 7;
+    }
 
-      }
-
-      else if (days <= 90) {
-
-        score += 7;
-
-      }
-
-      else if (days <= 365) {
-
-        score += 4;
-
-      }
-
+    else if (days <= 365) {
+      score += 4;
     }
 
 
@@ -1248,46 +756,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   // ==========================================
-  // ABSTRACT TEXT
+  // ABSTRACT
   // ==========================================
 
-  function getAbstractText(
-    paper
-  ) {
-
-    if (
-      !paper.abstract_inverted_index
-    ) {
-
-      return "";
-
-    }
-
+  function getAbstract(paper) {
 
     const index =
       paper.abstract_inverted_index;
 
+    if (!index) {
+      return "";
+    }
 
     const words = [];
 
+    for (const word in index) {
 
-    Object.keys(index)
-      .forEach(
-        function (word) {
+      for (
+        const position of index[word]
+      ) {
 
-          index[word]
-            .forEach(
-              function (position) {
+        words[position] = word;
 
-                words[position] =
-                  word;
+      }
 
-              }
-            );
-
-        }
-      );
-
+    }
 
     return words.join(" ");
 
@@ -1295,16 +788,70 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   // ==========================================
-  // DISPLAY ADVANCED RESULTS
+  // AUTHORS
   // ==========================================
 
-  function displayAdvancedResults(
+  function getAuthors(paper) {
+
+    return (
+      paper.authorships || []
+    )
+      .map(
+        a =>
+          a.author?.display_name || ""
+      )
+      .join(" ");
+
+  }
+
+
+  // ==========================================
+  // JOURNAL
+  // ==========================================
+
+  function getJournal(paper) {
+
+    return (
+      paper.primary_location
+        ?.source
+        ?.display_name || ""
+    );
+
+  }
+
+
+  // ==========================================
+  // CONCEPTS
+  // ==========================================
+
+  function getConcepts(paper) {
+
+    return (
+      paper.concepts || []
+    )
+      .map(
+        c =>
+          c.display_name || ""
+      )
+      .join(" ");
+
+  }
+
+
+  // ==========================================
+  // DISPLAY RESULTS
+  // ==========================================
+
+  function displayResults(
     papers,
-    criteria
+    title
   ) {
 
-    const heading =
-      "🎯 Ranked research results";
+    currentResults =
+      papers;
+
+    currentVisible =
+      10;
 
 
     results.innerHTML = `
@@ -1312,62 +859,123 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="card">
 
         <h2>
-          ${heading}
+          ${escapeHtml(title)}
         </h2>
 
-        <p>
-          Found
-          <strong>
-            ${papers.length}
-          </strong>
-          papers meeting your
-          <strong>
-            ${criteria.accuracy}%
-          </strong>
-          relevance threshold.
-        </p>
+        <p id="resultCounter"></p>
 
       </div>
 
-      <div id="advancedPaperList"></div>
+      <div id="paperList"></div>
+
+      <div
+        id="loadMoreArea"
+        style="
+          text-align:center;
+          margin:30px 0;
+        "
+      ></div>
 
     `;
 
 
+    renderCurrentResults();
+
+  }
+
+
+  function renderCurrentResults() {
+
     const list =
       document.getElementById(
-        "advancedPaperList"
+        "paperList"
+      );
+
+    const loadMoreArea =
+      document.getElementById(
+        "loadMoreArea"
+      );
+
+    const counter =
+      document.getElementById(
+        "resultCounter"
       );
 
 
-    papers.forEach(
-      function (paper) {
-
-        const card =
-          createAdvancedPaperCard(
-            paper
-          );
+    if (!list) {
+      return;
+    }
 
 
-        list.appendChild(card);
+    list.innerHTML = "";
+
+
+    const visible =
+      currentResults.slice(
+        0,
+        currentVisible
+      );
+
+
+    visible.forEach(
+      paper => {
+
+        list.appendChild(
+          createPaperCard(paper)
+        );
 
       }
     );
+
+
+    counter.textContent =
+      `Showing ${visible.length} of ${currentResults.length} papers`;
+
+
+    loadMoreArea.innerHTML = "";
+
+
+    if (
+      currentVisible <
+      currentResults.length
+    ) {
+
+      const button =
+        document.createElement("button");
+
+      button.textContent =
+        "Load more";
+
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          currentVisible += 10;
+
+          renderCurrentResults();
+
+        }
+      );
+
+
+      loadMoreArea.appendChild(
+        button
+      );
+
+    }
 
   }
 
 
   // ==========================================
-  // ADVANCED PAPER CARD
+  // PAPER CARD
   // ==========================================
 
-  function createAdvancedPaperCard(
-    paper
-  ) {
+  function createPaperCard(paper) {
 
     const card =
       document.createElement("div");
-
 
     card.className =
       "paper";
@@ -1379,28 +987,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     const authors =
-      (
-        paper.authorships || []
-      )
-      .slice(0, 5)
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name
-          );
-
-        }
-      )
-      .filter(Boolean)
-      .join(", ") ||
+      getAuthors(paper) ||
       "Unknown authors";
 
 
-    const source =
-      paper.primary_location
-        ?.source
-        ?.display_name ||
+    const journal =
+      getJournal(paper) ||
       "Unknown source";
 
 
@@ -1411,69 +1003,54 @@ document.addEventListener("DOMContentLoaded", function () {
       "#";
 
 
+    const score =
+      paper.strackerScore;
+
+
     card.innerHTML = `
 
-      <div>
+      ${
+        score !== undefined
+        ? `
+          <span class="badge">
+            Relevance: ${score}%
+          </span>
+        `
+        : ""
+      }
 
-        <span class="badge">
-
-          Relevance:
-          ${paper.strackerScore}%
-
-        </span>
-
-        <span class="badge">
-
-          ${escapeHtml(
-            paper.publication_date ||
-            "Unknown date"
-          )}
-
-        </span>
-
-      </div>
+      <span class="badge">
+        ${escapeHtml(
+          paper.publication_date ||
+          "Unknown date"
+        )}
+      </span>
 
 
       <h2>
-
         ${escapeHtml(title)}
-
       </h2>
 
 
       <p>
-
-        <strong>
-          Authors:
-        </strong>
-
+        <strong>Authors:</strong>
         ${escapeHtml(authors)}
-
       </p>
 
 
       <p>
-
-        <strong>
-          Journal:
-        </strong>
-
-        ${escapeHtml(source)}
-
+        <strong>Journal:</strong>
+        ${escapeHtml(journal)}
       </p>
 
 
-      <p>
-
-        <a
-          href="${link}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View paper →
-        </a>
-
-      </p>
+      <a
+        href="${link}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        View paper →
+      </a>
 
     `;
 
@@ -1484,7 +1061,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   // ==========================================
-  // SAVE ADVANCED TRACKER
+  // TRACKING
   // ==========================================
 
   function saveAdvancedTracker(
@@ -1498,72 +1075,69 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const tracker = {
 
-      id:
-        Date.now(),
+      id: Date.now(),
 
-      criteria:
-        criteria,
+      criteria: criteria,
 
-      createdAt:
-        getToday(),
+      createdAt: getToday(),
 
-      lastChecked:
-        getToday(),
+      lastChecked: getToday(),
 
       seenPaperIds:
         papers.map(
-          function (paper) {
-
-            return paper.id;
-
-          }
+          paper => paper.id
         ),
 
       lastCheckNewPapers:
-        0,
+        papers.length,
 
       totalNewPapers:
-        0
+        papers.length
 
     };
 
 
-    trackers.push(
-      tracker
-    );
+    trackers.push(tracker);
 
 
     localStorage.setItem(
       "stracker_advanced",
-      JSON.stringify(
-        trackers
-      )
+      JSON.stringify(trackers)
     );
 
+  }
 
-    displayTrackedTopics();
+
+  function getAdvancedTrackers() {
+
+    try {
+
+      return JSON.parse(
+        localStorage.getItem(
+          "stracker_advanced"
+        ) || "[]"
+      );
+
+    } catch {
+
+      return [];
+
+    }
 
   }
 
 
   // ==========================================
-  // DISPLAY TRACKERS
+  // TRACKED DISPLAY
   // ==========================================
 
   function displayTrackedTopics() {
 
-    const basicTopics =
-      getTrackedTopics();
-
-
-    const advancedTrackers =
+    const trackers =
       getAdvancedTrackers();
 
 
-    if (
-      basicTopics.length === 0 &&
-      advancedTrackers.length === 0
-    ) {
+    if (!trackers.length) {
 
       trackedTopics.innerHTML =
         "";
@@ -1581,168 +1155,71 @@ document.addEventListener("DOMContentLoaded", function () {
           📚 My tracked research
         </h2>
 
+        ${trackers.map(
+          tracker => {
 
-        ${basicTopics.map(
-          function (topic) {
+            const keywords =
+              tracker.criteria.keywords
+                .map(
+                  k =>
+                    `<span class="badge">
+                      ${escapeHtml(k)}
+                    </span>`
+                )
+                .join("");
+
 
             return `
 
               <div class="tracked-topic">
 
                 <h3>
-                  ${escapeHtml(
-                    topic.name
-                  )}
+                  🔬 Research profile
                 </h3>
 
                 <p>
-                  📅 Last checked:
-                  ${escapeHtml(
-                    topic.lastChecked ||
-                    "Never"
-                  )}
+                  ${keywords}
                 </p>
-
-                <p>
-                  📚 Papers tracked:
-                  ${
-                    topic.seenPaperIds
-                      ?.length || 0
-                  }
-                </p>
-
-                <p>
-                  🟢 New since last check:
-                  ${
-                    topic.lastCheckNewPapers ||
-                    0
-                  }
-                </p>
-
-                <p>
-                  📈 Total new:
-                  ${
-                    topic.totalNewPapers ||
-                    0
-                  }
-                </p>
-
-              </div>
-
-            `;
-
-          }
-        ).join("")}
-
-
-        ${advancedTrackers.map(
-          function (tracker) {
-
-            return `
-
-              <div class="tracked-topic">
-
-                <h3>
-                  🔬 Advanced research profile
-                </h3>
-
-                <p>
-
-                  🔑 Keywords:
-
-                  ${tracker.criteria.keywords
-                    .map(
-                      function (k) {
-
-                        return `
-                          <span class="badge">
-                            ${escapeHtml(k)}
-                          </span>
-                        `;
-
-                      }
-                    )
-                    .join("")
-                  }
-
-                </p>
-
 
                 ${
                   tracker.criteria.author
-                    ? `
-                      <p>
-                        👤 Author:
-                        <strong>
-                          ${escapeHtml(
-                            tracker.criteria.author
-                          )}
-                        </strong>
-                      </p>
-                    `
-                    : ""
+                  ? `
+                    <p>
+                      👤 Author:
+                      ${escapeHtml(
+                        tracker.criteria.author
+                      )}
+                    </p>
+                  `
+                  : ""
                 }
-
 
                 ${
                   tracker.criteria.journal
-                    ? `
-                      <p>
-                        📖 Journal:
-                        <strong>
-                          ${escapeHtml(
-                            tracker.criteria.journal
-                          )}
-                        </strong>
-                      </p>
-                    `
-                    : ""
+                  ? `
+                    <p>
+                      📖 Journal:
+                      ${escapeHtml(
+                        tracker.criteria.journal
+                      )}
+                    </p>
+                  `
+                  : ""
                 }
 
-
                 <p>
-                  🎯 Threshold:
-                  <strong>
-                    ${tracker.criteria.accuracy}%
-                  </strong>
+                  🎯 Accuracy:
+                  ${tracker.criteria.accuracy}%
                 </p>
-
 
                 <p>
                   📅 Last checked:
-                  <strong>
-                    ${tracker.lastChecked}
-                  </strong>
+                  ${tracker.lastChecked}
                 </p>
 
-
                 <p>
-                  📚 Papers tracked:
-                  <strong>
-                    ${
-                      tracker.seenPaperIds.length
-                    }
-                  </strong>
-                </p>
-
-
-                <p>
-                  🟢 New since last check:
-                  <strong>
-                    ${
-                      tracker.lastCheckNewPapers
-                    }
-                  </strong>
-                </p>
-
-
-                <p>
-                  📈 Total new:
-                  <strong>
-                    ${
-                      tracker.totalNewPapers
-                    }
-                  </strong>
+                  📚 Papers found:
+                  ${tracker.seenPaperIds.length}
                 </p>
 
               </div>
@@ -1755,320 +1232,6 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
 
     `;
-
-  }
-
-
-  // ==========================================
-  // GET ADVANCED TRACKERS
-  // ==========================================
-
-  function getAdvancedTrackers() {
-
-    try {
-
-      return JSON.parse(
-        localStorage.getItem(
-          "stracker_advanced"
-        ) || "[]"
-      );
-
-    }
-
-    catch (error) {
-
-      return [];
-
-    }
-
-  }
-
-
-  // ==========================================
-  // BASIC TRACKERS
-  // ==========================================
-
-  function getTrackedTopics() {
-
-    try {
-
-      return JSON.parse(
-        localStorage.getItem(
-          "stracker_topics"
-        ) || "[]"
-      );
-
-    }
-
-    catch (error) {
-
-      return [];
-
-    }
-
-  }
-
-
-  // ==========================================
-  // DISPLAY PAPERS
-  // ==========================================
-
-  function displayPapers(
-    papers,
-    heading,
-    query
-  ) {
-
-    let visibleCount =
-      PAPERS_PER_LOAD;
-
-
-    results.innerHTML = `
-
-      <div class="card">
-
-        <h2>
-          ${heading}
-        </h2>
-
-        <p>
-
-          Topic:
-          <strong>
-            ${escapeHtml(query)}
-          </strong>
-
-        </p>
-
-        <p id="counter"></p>
-
-      </div>
-
-
-      <div id="paperList"></div>
-
-
-      <div
-        id="loadMoreArea"
-        style="
-          text-align:center;
-          margin:30px 0;
-        "
-      ></div>
-
-    `;
-
-
-    const list =
-      document.getElementById(
-        "paperList"
-      );
-
-
-    const counter =
-      document.getElementById(
-        "counter"
-      );
-
-
-    const loadMoreArea =
-      document.getElementById(
-        "loadMoreArea"
-      );
-
-
-    function render() {
-
-      list.innerHTML =
-        "";
-
-
-      const visible =
-        papers.slice(
-          0,
-          visibleCount
-        );
-
-
-      visible.forEach(
-        function (paper) {
-
-          list.appendChild(
-            createSimplePaperCard(
-              paper
-            )
-          );
-
-        }
-      );
-
-
-      counter.textContent =
-        "Showing " +
-        visible.length +
-        " of " +
-        papers.length +
-        " papers";
-
-
-      loadMoreArea.innerHTML =
-        "";
-
-
-      if (
-        visibleCount <
-        papers.length
-      ) {
-
-        const button =
-          document.createElement(
-            "button"
-          );
-
-
-        button.textContent =
-          "Load more";
-
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            visibleCount +=
-              PAPERS_PER_LOAD;
-
-
-            render();
-
-          }
-        );
-
-
-        loadMoreArea.appendChild(
-          button
-        );
-
-      }
-
-    }
-
-
-    render();
-
-  }
-
-
-  // ==========================================
-  // SIMPLE PAPER CARD
-  // ==========================================
-
-  function createSimplePaperCard(
-    paper
-  ) {
-
-    const card =
-      document.createElement(
-        "div"
-      );
-
-
-    card.className =
-      "paper";
-
-
-    const title =
-      paper.title ||
-      "Untitled";
-
-
-    const authors =
-      (
-        paper.authorships || []
-      )
-      .slice(0, 3)
-      .map(
-        function (a) {
-
-          return (
-            a.author?.display_name
-          );
-
-        }
-      )
-      .filter(Boolean)
-      .join(", ") ||
-      "Unknown authors";
-
-
-    const source =
-      paper.primary_location
-        ?.source
-        ?.display_name ||
-      "Unknown source";
-
-
-    const link =
-      paper.primary_location
-        ?.landing_page_url ||
-      paper.doi ||
-      "#";
-
-
-    card.innerHTML = `
-
-      <h2>
-        ${escapeHtml(title)}
-      </h2>
-
-      <p>
-        <strong>
-          Published:
-        </strong>
-
-        ${escapeHtml(
-          paper.publication_date ||
-          "Unknown"
-        )}
-
-      </p>
-
-
-      <p>
-        <strong>
-          Authors:
-        </strong>
-
-        ${escapeHtml(authors)}
-
-      </p>
-
-
-      <p>
-        <strong>
-          Source:
-        </strong>
-
-        ${escapeHtml(source)}
-
-      </p>
-
-
-      <p>
-
-        <a
-          href="${link}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View paper →
-        </a>
-
-      </p>
-
-    `;
-
-
-    return card;
 
   }
 
@@ -2077,18 +1240,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // MESSAGE
   // ==========================================
 
-  function showMessage(
-    html
-  ) {
+  function showMessage(html) {
 
     results.innerHTML = `
-
       <div class="card">
-
         ${html}
-
       </div>
-
     `;
 
   }
@@ -2100,9 +1257,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function getToday() {
 
-    return new Date()
-      .toISOString()
-      .split("T")[0];
+    const date =
+      new Date();
+
+    return (
+      date.getFullYear() +
+      "-" +
+      String(
+        date.getMonth() + 1
+      ).padStart(2, "0") +
+      "-" +
+      String(
+        date.getDate()
+      ).padStart(2, "0")
+    );
 
   }
 
@@ -2111,22 +1279,26 @@ document.addEventListener("DOMContentLoaded", function () {
   // ESCAPE HTML
   // ==========================================
 
-  function escapeHtml(
-    text
-  ) {
+  function escapeHtml(text) {
 
     const div =
-      document.createElement(
-        "div"
-      );
-
+      document.createElement("div");
 
     div.textContent =
       String(text);
 
-
     return div.innerHTML;
 
   }
+
+
+  // ==========================================
+  // INITIALIZE
+  // ==========================================
+
+  accuracyValue.textContent =
+    accuracyInput.value + "%";
+
+  displayTrackedTopics();
 
 });
