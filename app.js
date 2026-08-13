@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <h2>🔎 Searching...</h2>
 
         <p>
-          Searching for
+          Searching free research sources for
           <strong>${escapeHtml(query)}</strong>
         </p>
 
@@ -127,72 +127,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
 
-      const url =
-        "https://api.openalex.org/works" +
-        "?search=" +
-        encodeURIComponent(query) +
-        "&sort=publication_date:desc" +
-        "&per-page=100";
-
-
-      const response =
-        await fetch(url);
-
-
-      if (!response.ok) {
-
-        let errorMessage =
-          `OpenAlex request failed (${response.status}).`;
-
-
-        try {
-
-          const errorData =
-            await response.json();
-
-
-          if (errorData?.error) {
-
-            errorMessage =
-              typeof errorData.error === "string"
-                ? errorData.error
-                : errorData.error?.message ||
-                  errorMessage;
-
-          }
-
-
-          if (errorData?.message) {
-
-            errorMessage =
-              errorData.message;
-
-          }
-
-        } catch (_) {
-
-          // Ignore JSON parsing errors.
-
-        }
-
-
-        throw new Error(
-          errorMessage
+      const papers =
+        await searchFreeSources(
+          query
         );
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      let papers =
-        data.results || [];
-
-
-      papers =
-        papers.filter(isValidDate);
 
 
       papers.sort((a, b) => {
@@ -213,14 +151,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Free research search error:",
+        error
+      );
 
 
       showMessage(`
         <h2>❌ Search failed</h2>
 
         <p>
-          ${escapeHtml(error.message)}
+          ${escapeHtml(
+            error?.message ||
+            "Could not search the free research sources."
+          )}
         </p>
 
         <p>
@@ -595,93 +539,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // Build the OpenAlex request safely.
-    const params =
-      new URLSearchParams();
-
-
-    params.set(
-      "search",
-      query
-    );
-
-
-    params.set(
-      "sort",
-      "publication_date:desc"
-    );
-
-
-    params.set(
-      "per-page",
-      "100"
-    );
-
-
-    const url =
-      "https://api.openalex.org/works?" +
-      params.toString();
-
-
-    const response =
-      await fetch(url);
-
-
-    if (!response.ok) {
-
-      let errorMessage =
-        `OpenAlex request failed (${response.status}).`;
-
-
-      try {
-
-        const errorData =
-          await response.json();
-
-
-        if (errorData?.error) {
-
-          errorMessage =
-            typeof errorData.error === "string"
-              ? errorData.error
-              : errorData.error?.message ||
-                errorMessage;
-
-        }
-
-
-        if (errorData?.message) {
-
-          errorMessage =
-            errorData.message;
-
-        }
-
-      } catch (_) {
-
-        // Ignore JSON parsing errors.
-
-      }
-
-
-      throw new Error(
-        errorMessage
-      );
-
-    }
-
-
-    const data =
-      await response.json();
-
-
+    // Search free sources instead of OpenAlex.
     let papers =
-      data.results || [];
-
-
-    // Remove invalid/future dates.
-    papers =
-      papers.filter(isValidDate);
+      await searchFreeSources(
+        query
+      );
 
 
     // Apply advanced filters.
@@ -735,6 +597,901 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     return papers;
+
+  }
+
+
+  // ==========================================
+  // FREE RESEARCH SOURCES
+  // ==========================================
+
+  async function searchFreeSources(
+    query
+  ) {
+
+    /*
+      Europe PMC is the primary source.
+
+      PubMed is used as a second source.
+
+      Results from both sources are merged and
+      duplicate records are removed.
+
+      No OpenAlex request is used.
+    */
+
+
+    const resultsById =
+      new Map();
+
+
+    let europePapers = [];
+
+
+    try {
+
+      europePapers =
+        await searchEuropePMC(
+          query
+        );
+
+
+      europePapers.forEach(
+        paper => {
+
+          const key =
+            getPaperDeduplicationKey(
+              paper
+            );
+
+
+          resultsById.set(
+            key,
+            paper
+          );
+
+        }
+      );
+
+
+    } catch (error) {
+
+      console.warn(
+        "Europe PMC search failed:",
+        error
+      );
+
+    }
+
+
+    // PubMed is attempted as a second free source.
+    // If it fails, Europe PMC results are still usable.
+    try {
+
+      const pubmedPapers =
+        await searchPubMed(
+          query
+        );
+
+
+      pubmedPapers.forEach(
+        paper => {
+
+          const key =
+            getPaperDeduplicationKey(
+              paper
+            );
+
+
+          if (
+            !resultsById.has(key)
+          ) {
+
+            resultsById.set(
+              key,
+              paper
+            );
+
+          } else {
+
+            // Prefer the richer Europe PMC record,
+            // but fill missing metadata from PubMed.
+            const existing =
+              resultsById.get(key);
+
+
+            resultsById.set(
+              key,
+              mergePaperRecords(
+                existing,
+                paper
+              )
+            );
+
+          }
+
+        }
+      );
+
+
+    } catch (error) {
+
+      console.warn(
+        "PubMed search failed:",
+        error
+      );
+
+    }
+
+
+    const papers =
+      Array.from(
+        resultsById.values()
+      )
+        .filter(isValidDate);
+
+
+    if (!papers.length) {
+
+      throw new Error(
+        "No results were returned from Europe PMC or PubMed."
+      );
+
+    }
+
+
+    return papers;
+
+  }
+
+
+  // ==========================================
+  // EUROPE PMC
+  // ==========================================
+
+  async function searchEuropePMC(
+    query
+  ) {
+
+    const params =
+      new URLSearchParams();
+
+
+    params.set(
+      "query",
+      query
+    );
+
+
+    params.set(
+      "format",
+      "json"
+    );
+
+
+    params.set(
+      "resultType",
+      "core"
+    );
+
+
+    params.set(
+      "pageSize",
+      "100"
+    );
+
+
+    const url =
+      "https://www.ebi.ac.uk/europepmc/webservices/rest/search?" +
+      params.toString();
+
+
+    const response =
+      await fetch(url);
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `Europe PMC request failed (${response.status}).`
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    const results =
+      Array.isArray(data?.resultList?.result)
+        ? data.resultList.result
+        : [];
+
+
+    return results.map(
+      mapEuropePMCRecord
+    );
+
+  }
+
+
+  function mapEuropePMCRecord(
+    record
+  ) {
+
+    const pmid =
+      record.pmid ||
+      "";
+
+
+    const doi =
+      record.doi ||
+      "";
+
+
+    const id =
+      pmid
+        ? `pubmed:${pmid}`
+        : doi
+          ? `doi:${doi}`
+          : `europepmc:${record.id || Date.now()}`;
+
+
+    const authors =
+      Array.isArray(record.authorList?.author)
+        ? record.authorList.author
+            .map(
+              author =>
+                author.fullName ||
+                [
+                  author.firstName,
+                  author.lastName
+                ]
+                  .filter(Boolean)
+                  .join(" ")
+            )
+            .filter(Boolean)
+            .join(" ")
+        : "";
+
+
+    let abstract =
+      record.abstractText ||
+      "";
+
+
+    if (typeof abstract !== "string") {
+
+      abstract =
+        String(abstract || "");
+
+    }
+
+
+    const journal =
+      record.journalTitle ||
+      record.journalInfo?.journal?.title ||
+      "";
+
+
+    const publicationDate =
+      record.firstPublicationDate ||
+      (
+        record.pubYear
+          ? `${record.pubYear}-01-01`
+          : ""
+      );
+
+
+    const landingPage =
+      pmid
+        ? `https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(pmid)}/`
+        : doi
+          ? `https://doi.org/${encodeURIComponent(doi)}`
+          : record.fullTextUrlList?.fullTextUrl?.[0]?.url ||
+            "#";
+
+
+    return {
+
+      id: id,
+
+      title:
+        record.title ||
+        "Untitled",
+
+      publication_date:
+        publicationDate,
+
+      authorship: authors,
+
+      journal_name:
+        journal,
+
+      abstract_text:
+        abstract,
+
+      source_name:
+        "Europe PMC",
+
+      primary_location: {
+
+        landing_page_url:
+          landingPage,
+
+        source: {
+
+          display_name:
+            journal
+
+        }
+
+      },
+
+      authorships:
+        authors
+          ? authors
+              .split(" ")
+              .map(name => ({
+                author: {
+                  display_name: name
+                }
+              }))
+          : [],
+
+      concepts:
+        [],
+
+      type:
+        normalizeDocumentType(
+          record.pubTypeList?.pubType
+        ),
+
+      doi:
+        doi
+          ? `https://doi.org/${doi}`
+          : "",
+
+      pmid:
+        pmid
+
+    };
+
+  }
+
+
+  // ==========================================
+  // PUBMED
+  // ==========================================
+
+  async function searchPubMed(
+    query
+  ) {
+
+    const searchParams =
+      new URLSearchParams();
+
+
+    searchParams.set(
+      "db",
+      "pubmed"
+    );
+
+
+    searchParams.set(
+      "term",
+      query
+    );
+
+
+    searchParams.set(
+      "retmode",
+      "json"
+    );
+
+
+    searchParams.set(
+      "retmax",
+      "100"
+    );
+
+
+    searchParams.set(
+      "sort",
+      "pub date"
+    );
+
+
+    const searchUrl =
+      "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?" +
+      searchParams.toString();
+
+
+    const searchResponse =
+      await fetch(searchUrl);
+
+
+    if (!searchResponse.ok) {
+
+      throw new Error(
+        `PubMed search failed (${searchResponse.status}).`
+      );
+
+    }
+
+
+    const searchData =
+      await searchResponse.json();
+
+
+    const ids =
+      searchData?.esearchresult?.idlist || [];
+
+
+    if (!ids.length) {
+
+      return [];
+
+    }
+
+
+    const summaryParams =
+      new URLSearchParams();
+
+
+    summaryParams.set(
+      "db",
+      "pubmed"
+    );
+
+
+    summaryParams.set(
+      "id",
+      ids.join(",")
+    );
+
+
+    summaryParams.set(
+      "retmode",
+      "json"
+    );
+
+
+    const summaryUrl =
+      "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" +
+      summaryParams.toString();
+
+
+    const summaryResponse =
+      await fetch(summaryUrl);
+
+
+    if (!summaryResponse.ok) {
+
+      throw new Error(
+        `PubMed metadata request failed (${summaryResponse.status}).`
+      );
+
+    }
+
+
+    const summaryData =
+      await summaryResponse.json();
+
+
+    const records = [];
+
+
+    ids.forEach(
+      pmid => {
+
+        const record =
+          summaryData?.result?.[pmid];
+
+
+        if (!record) {
+
+          return;
+
+        }
+
+
+        records.push(
+          mapPubMedRecord(
+            record,
+            pmid
+          )
+        );
+
+      }
+    );
+
+
+    return records;
+
+  }
+
+
+  function mapPubMedRecord(
+    record,
+    pmid
+  ) {
+
+    const authors =
+      Array.isArray(record.authors)
+        ? record.authors
+            .map(
+              author =>
+                author.name || ""
+            )
+            .filter(Boolean)
+            .join(" ")
+        : "";
+
+
+    let doi = "";
+
+
+    if (
+      Array.isArray(
+        record.articleids
+      )
+    ) {
+
+      const doiObject =
+        record.articleids.find(
+          item =>
+            item.idtype === "doi"
+        );
+
+
+      if (doiObject) {
+
+        doi =
+          doiObject.value || "";
+
+      }
+
+    }
+
+
+    const journal =
+      record.fulljournalname ||
+      record.source ||
+      "";
+
+
+    const publicationDate =
+      record.pubdate ||
+      record.epubdate ||
+      "";
+
+
+    return {
+
+      id:
+        `pubmed:${pmid}`,
+
+      title:
+        record.title ||
+        "Untitled",
+
+      publication_date:
+        normalizePubMedDate(
+          publicationDate
+        ),
+
+      authorship:
+        authors,
+
+      authorships:
+        authors
+          ? authors
+              .split(" ")
+              .map(name => ({
+                author: {
+                  display_name: name
+                }
+              }))
+          : [],
+
+      journal_name:
+        journal,
+
+      abstract_text:
+        "",
+
+      source_name:
+        "PubMed",
+
+      primary_location: {
+
+        landing_page_url:
+          `https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(pmid)}/`,
+
+        source: {
+
+          display_name:
+            journal
+
+        }
+
+      },
+
+      concepts:
+        [],
+
+      type:
+        "article",
+
+      doi:
+        doi
+          ? `https://doi.org/${doi}`
+          : "",
+
+      pmid:
+        pmid
+
+    };
+
+  }
+
+
+  function normalizePubMedDate(
+    value
+  ) {
+
+    if (!value) {
+
+      return "";
+
+    }
+
+
+    const match =
+      String(value).match(
+        /(\d{4})(?:\s+([A-Za-z]{3}))?(?:\s+(\d{1,2}))?/
+      );
+
+
+    if (!match) {
+
+      return "";
+
+    }
+
+
+    const year =
+      match[1];
+
+
+    const monthNames = {
+
+      Jan: "01",
+      Feb: "02",
+      Mar: "03",
+      Apr: "04",
+      May: "05",
+      Jun: "06",
+      Jul: "07",
+      Aug: "08",
+      Sep: "09",
+      Oct: "10",
+      Nov: "11",
+      Dec: "12"
+
+    };
+
+
+    const month =
+      monthNames[match[2]] ||
+      "01";
+
+
+    const day =
+      match[3]
+        ? String(
+            Number(match[3])
+          ).padStart(2, "0")
+        : "01";
+
+
+    return (
+      `${year}-${month}-${day}`
+    );
+
+  }
+
+
+  function normalizeDocumentType(
+    types
+  ) {
+
+    if (!Array.isArray(types)) {
+
+      return "article";
+
+    }
+
+
+    const text =
+      types
+        .join(" ")
+        .toLowerCase();
+
+
+    if (
+      text.includes("review")
+    ) {
+
+      return "review";
+
+    }
+
+
+    if (
+      text.includes("dataset")
+    ) {
+
+      return "dataset";
+
+    }
+
+
+    if (
+      text.includes("preprint")
+    ) {
+
+      return "preprint";
+
+    }
+
+
+    return "article";
+
+  }
+
+
+  // ==========================================
+  // PAPER NORMALIZATION / DEDUPLICATION
+  // ==========================================
+
+  function getPaperDeduplicationKey(
+    paper
+  ) {
+
+    if (paper.pmid) {
+
+      return (
+        `pmid:${String(
+          paper.pmid
+        ).toLowerCase()}`
+      );
+
+    }
+
+
+    if (paper.doi) {
+
+      return (
+        `doi:${String(
+          paper.doi
+        )
+          .replace(
+            /^https?:\/\/doi\.org\//i,
+            ""
+          )
+          .toLowerCase()}`
+      );
+
+    }
+
+
+    return (
+      `title:${String(
+        paper.title || ""
+      )
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]+/g,
+          " "
+        )
+        .trim()}`
+    );
+
+  }
+
+
+  function mergePaperRecords(
+    first,
+    second
+  ) {
+
+    const merged = {
+      ...second,
+      ...first
+    };
+
+
+    if (
+      !first.abstract_text &&
+      second.abstract_text
+    ) {
+
+      merged.abstract_text =
+        second.abstract_text;
+
+    }
+
+
+    if (
+      !first.pmid &&
+      second.pmid
+    ) {
+
+      merged.pmid =
+        second.pmid;
+
+    }
+
+
+    if (
+      !first.doi &&
+      second.doi
+    ) {
+
+      merged.doi =
+        second.doi;
+
+    }
+
+
+    if (
+      !first.publication_date &&
+      second.publication_date
+    ) {
+
+      merged.publication_date =
+        second.publication_date;
+
+    }
+
+
+    if (
+      !first.journal_name &&
+      second.journal_name
+    ) {
+
+      merged.journal_name =
+        second.journal_name;
+
+    }
+
+
+    if (
+      !first.authorship &&
+      second.authorship
+    ) {
+
+      merged.authorship =
+        second.authorship;
+
+    }
+
+
+    if (
+      !first.primary_location ||
+      !first.primary_location.landing_page_url
+    ) {
+
+      merged.primary_location =
+        second.primary_location;
+
+    }
+
+
+    return merged;
 
   }
 
@@ -1150,6 +1907,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getAbstract(paper) {
 
+    // Free-source records already contain a normal
+    // abstract string. Keep support for the old
+    // inverted-index format as a fallback.
+    if (
+      typeof paper.abstract_text === "string" &&
+      paper.abstract_text.trim()
+    ) {
+
+      return paper.abstract_text;
+
+    }
+
+
     const index =
       paper.abstract_inverted_index;
 
@@ -1195,6 +1965,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getAuthors(paper) {
 
+    if (
+      typeof paper.authorship === "string" &&
+      paper.authorship.trim()
+    ) {
+
+      return paper.authorship;
+
+    }
+
+
     return (
       paper.authorships || []
     )
@@ -1214,9 +1994,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function getJournal(paper) {
 
     return (
+      paper.journal_name ||
       paper.primary_location
         ?.source
-        ?.display_name || ""
+        ?.display_name ||
+      ""
     );
 
   }
@@ -1227,6 +2009,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   function getConcepts(paper) {
+
+    if (
+      typeof paper.concepts_text === "string"
+    ) {
+
+      return paper.concepts_text;
+
+    }
+
 
     return (
       paper.concepts || []
@@ -2132,7 +2923,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <p>
           ${escapeHtml(
             error?.message ||
-            "Unknown error while contacting OpenAlex."
+            "Unknown error while contacting the free research sources."
           )}
         </p>
 
