@@ -1,164 +1,1177 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+document.addEventListener("DOMContentLoaded", function () {
 
-  <title>STracker - Scientific Paper Discovery</title>
+  const searchInput = document.getElementById("searchInput");
+  const searchButton = document.getElementById("searchButton");
+  const trackButton = document.getElementById("trackButton");
+  const results = document.getElementById("results");
+  const trackedTopics = document.getElementById("trackedTopics");
 
-  <style>
-    * {
-      box-sizing: border-box;
+  const PAPERS_PER_LOAD = 20;
+  const API_LIMIT = 100;
+
+
+  // ==========================================
+  // BUTTONS
+  // ==========================================
+
+  searchButton.addEventListener("click", searchPapers);
+
+  trackButton.addEventListener("click", trackTopic);
+
+
+  // ==========================================
+  // ENTER KEY
+  // ==========================================
+
+  searchInput.addEventListener("keydown", function (event) {
+
+    if (event.key === "Enter") {
+
+      event.preventDefault();
+
+      searchPapers();
+
     }
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f5f7fa;
-      color: #222;
+  });
+
+
+  // ==========================================
+  // INITIAL LOAD
+  // ==========================================
+
+  displayTrackedTopics();
+
+
+  // ==========================================
+  // TODAY
+  // ==========================================
+
+  function getToday() {
+
+    return new Date()
+      .toISOString()
+      .split("T")[0];
+
+  }
+
+
+  // ==========================================
+  // NORMAL SEARCH
+  // ==========================================
+
+  async function searchPapers() {
+
+    const query =
+      searchInput.value.trim();
+
+
+    if (!query) {
+
+      showMessage(`
+        <h2>No search term</h2>
+
+        <p>
+          Please enter a scientific topic.
+        </p>
+      `);
+
+      return;
+
     }
 
-    header {
-      background: #111827;
-      color: white;
-      padding: 30px 20px;
-      text-align: center;
-    }
 
-    header h1 {
-      margin: 0 0 8px;
-    }
+    await fetchPapers(
+      query,
+      null,
+      false
+    );
 
-    header p {
-      margin: 0;
-      color: #d1d5db;
-    }
+  }
 
-    main {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 20px;
-    }
 
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
+  // ==========================================
+  // FETCH OPENALEX
+  // ==========================================
 
-    input {
-      flex: 1;
-      padding: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
+  async function fetchPapers(
+    query,
+    fromDate,
+    tracking
+  ) {
 
-    input:focus {
-      outline: none;
-      border-color: #2563eb;
-    }
+    showMessage(`
+      <h2>Searching...</h2>
 
-    button {
-      padding: 14px 22px;
-      border: none;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-    }
+      <p>
+        Searching for
+        <strong>
+          ${escapeHtml(query)}
+        </strong>
+      </p>
+    `);
 
-    button:hover {
-      background: #1d4ed8;
-    }
 
-    .welcome,
-    .paper {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
-    }
+    try {
 
-    .paper h2 {
-      margin-top: 0;
-    }
+      let url =
+        "https://api.openalex.org/works" +
 
-    .paper a {
-      color: #2563eb;
-      font-weight: bold;
-      text-decoration: none;
-    }
+        "?search=" +
+        encodeURIComponent(query) +
 
-    .paper a:hover {
-      text-decoration: underline;
-    }
+        "&sort=publication_date:desc" +
 
-    @media (max-width: 600px) {
-      .search-box {
-        flex-direction: column;
+        "&per-page=" +
+        API_LIMIT;
+
+
+      if (fromDate) {
+
+        url +=
+          "&filter=from_publication_date:" +
+          encodeURIComponent(fromDate) +
+
+          ",to_publication_date:" +
+          getToday();
+
       }
 
-      button {
-        width: 100%;
+
+      const response =
+        await fetch(url);
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "OpenAlex error: " +
+          response.status
+        );
+
       }
+
+
+      const data =
+        await response.json();
+
+
+      let papers =
+        data.results || [];
+
+
+      const today =
+        getToday();
+
+
+      // ----------------------------------------
+      // Remove future-dated records
+      // ----------------------------------------
+
+      papers =
+        papers.filter(function (paper) {
+
+          return (
+            paper.id &&
+            paper.publication_date &&
+            paper.publication_date <= today
+          );
+
+        });
+
+
+      // ----------------------------------------
+      // Newest first
+      // ----------------------------------------
+
+      papers.sort(function (a, b) {
+
+        return (
+          new Date(b.publication_date) -
+          new Date(a.publication_date)
+        );
+
+      });
+
+
+      if (tracking) {
+
+        return papers;
+
+      }
+
+
+      if (!papers.length) {
+
+        showMessage(`
+          <h2>No papers found</h2>
+
+          <p>
+            Try another search term.
+          </p>
+        `);
+
+        return;
+
+      }
+
+
+      displayPapers(
+        query,
+        papers,
+        "Latest research"
+      );
+
     }
-  </style>
-</head>
 
-<body>
+    catch (error) {
 
-  <header>
-    <h1>STracker</h1>
-    <p>Scientific Paper Discovery & Tracking</p>
-  </header>
+      console.error(error);
 
-  <main>
 
-    <div class="search-box">
+      showMessage(`
+        <h2>Search failed</h2>
 
-  <input
-    type="text"
-    id="searchInput"
-    placeholder="Search scientific papers..."
-  >
+        <p>
+          STracker couldn't connect to
+          OpenAlex.
+        </p>
 
-  <button id="searchButton">
-    Search
-  </button>
+        <p>
+          Please try again.
+        </p>
+      `);
 
-  <button id="trackButton">
-    Track topic
-  </button>
+    }
 
-</div>
+  }
 
-<div id="trackedTopics"></div>
 
-    <div id="results">
+  // ==========================================
+  // TRACK TOPIC
+  // ==========================================
+
+  async function trackTopic() {
+
+    const name =
+      searchInput.value.trim();
+
+
+    if (!name) {
+
+      showMessage(`
+        <h2>No topic</h2>
+
+        <p>
+          Enter a topic first.
+        </p>
+      `);
+
+      return;
+
+    }
+
+
+    const topics =
+      getTrackedTopics();
+
+
+    let topic =
+      topics.find(function (item) {
+
+        return (
+          item.name.toLowerCase() ===
+          name.toLowerCase()
+        );
+
+      });
+
+
+    // ========================================
+    // CREATE NEW TOPIC
+    // ========================================
+
+    if (!topic) {
+
+      topic = {
+
+        name: name,
+
+        createdAt: getToday(),
+
+        lastChecked: null,
+
+        seenPaperIds: [],
+
+        lastCheckNewPapers: 0,
+
+        totalNewPapers: 0
+
+      };
+
+
+      topics.push(topic);
+
+    }
+
+
+    // ========================================
+    // FIRST CHECK
+    // ========================================
+
+    if (!topic.lastChecked) {
+
+      const papers =
+        await fetchPapers(
+          name,
+          null,
+          true
+        );
+
+
+      if (!papers.length) {
+
+        showMessage(`
+          <h2>No papers found</h2>
+
+          <p>
+            No papers were found for
+            <strong>
+              ${escapeHtml(name)}
+            </strong>.
+          </p>
+        `);
+
+        return;
+
+      }
+
+
+      // --------------------------------------
+      // Establish the initial baseline
+      // --------------------------------------
+
+      topic.seenPaperIds =
+        papers.map(function (paper) {
+
+          return paper.id;
+
+        });
+
+
+      topic.lastChecked =
+        getToday();
+
+
+      // First check doesn't count as
+      // "new" because these papers existed
+      // before STracker started tracking.
+
+      topic.lastCheckNewPapers =
+        0;
+
+
+      topic.totalNewPapers =
+        0;
+
+
+      saveTrackedTopics(topics);
+
+
+      displayTrackedTopics();
+
+
+      displayPapers(
+        name,
+        papers,
+        "First check"
+      );
+
+
+      return;
+
+    }
+
+
+    // ========================================
+    // DETERMINE NEXT DATE
+    // ========================================
+
+    const fromDate =
+      addOneDay(
+        topic.lastChecked
+      );
+
+
+    // ========================================
+    // SAME-DAY CHECK
+    // ========================================
+
+    if (
+      fromDate > getToday()
+    ) {
+
+      showMessage(`
+
+        <h2>
+          Already checked today
+        </h2>
+
+        <p>
+          <strong>
+            ${escapeHtml(name)}
+          </strong>
+          was already checked today.
+        </p>
+
+      `);
+
+      return;
+
+    }
+
+
+    // ========================================
+    // FETCH PAPERS SINCE LAST CHECK
+    // ========================================
+
+    const papers =
+      await fetchPapers(
+        name,
+        fromDate,
+        true
+      );
+
+
+    // ========================================
+    // FIND PAPERS WE HAVE NEVER SEEN
+    // ========================================
+
+    const newPapers =
+      papers.filter(function (paper) {
+
+        return !topic.seenPaperIds.includes(
+          paper.id
+        );
+
+      });
+
+
+    // ========================================
+    // ADD NEW IDS TO MEMORY
+    // ========================================
+
+    papers.forEach(function (paper) {
+
+      if (
+        !topic.seenPaperIds.includes(
+          paper.id
+        )
+      ) {
+
+        topic.seenPaperIds.push(
+          paper.id
+        );
+
+      }
+
+    });
+
+
+    // ========================================
+    // UPDATE HISTORY
+    // ========================================
+
+    topic.lastCheckNewPapers =
+      newPapers.length;
+
+
+    topic.totalNewPapers =
+      (topic.totalNewPapers || 0) +
+      newPapers.length;
+
+
+    topic.lastChecked =
+      getToday();
+
+
+    saveTrackedTopics(topics);
+
+
+    displayTrackedTopics();
+
+
+    // ========================================
+    // NO NEW PAPERS
+    // ========================================
+
+    if (!newPapers.length) {
+
+      showMessage(`
+
+        <h2>
+          No new papers
+        </h2>
+
+        <p>
+          No new papers were found since
+          the previous check.
+        </p>
+
+        <p>
+          Total new papers since tracking
+          began:
+          <strong>
+            ${topic.totalNewPapers}
+          </strong>
+        </p>
+
+      `);
+
+      return;
+
+    }
+
+
+    // ========================================
+    // SHOW NEW PAPERS
+    // ========================================
+
+    displayPapers(
+      name,
+      newPapers,
+      "🟢 New papers"
+    );
+
+  }
+
+
+  // ==========================================
+  // CHECK EXISTING TOPIC
+  // ==========================================
+
+  async function checkTopic(
+    topicName
+  ) {
+
+    searchInput.value =
+      topicName;
+
+
+    await trackTopic();
+
+  }
+
+
+  // ==========================================
+  // REMOVE TOPIC
+  // ==========================================
+
+  function removeTopic(
+    topicName
+  ) {
+
+    const confirmed =
+      confirm(
+        "Remove tracking for " +
+        topicName +
+        "?"
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    const topics =
+      getTrackedTopics();
+
+
+    const filtered =
+      topics.filter(function (topic) {
+
+        return (
+          topic.name.toLowerCase() !==
+          topicName.toLowerCase()
+        );
+
+      });
+
+
+    saveTrackedTopics(
+      filtered
+    );
+
+
+    displayTrackedTopics();
+
+
+    showMessage(`
+      <h2>
+        Topic removed
+      </h2>
+
+      <p>
+        Tracking has been removed for
+        <strong>
+          ${escapeHtml(topicName)}
+        </strong>.
+      </p>
+    `);
+
+  }
+
+
+  // ==========================================
+  // DISPLAY TRACKED TOPICS
+  // ==========================================
+
+  function displayTrackedTopics() {
+
+    const topics =
+      getTrackedTopics();
+
+
+    if (!topics.length) {
+
+      trackedTopics.innerHTML =
+        "";
+
+      return;
+
+    }
+
+
+    trackedTopics.innerHTML = `
 
       <div class="welcome">
 
-        <h2>Welcome to STracker</h2>
+        <h2>
+          📚 My tracked research
+        </h2>
 
-        <p>
-          Discover, search, and explore scientific research
-          from around the world.
-        </p>
+        ${topics.map(function (topic) {
 
-        <p>
-          Enter a topic above to find scientific papers.
-        </p>
+          const paperCount =
+            topic.seenPaperIds
+              ? topic.seenPaperIds.length
+              : 0;
+
+
+          const lastNew =
+            topic.lastCheckNewPapers || 0;
+
+
+          const totalNew =
+            topic.totalNewPapers || 0;
+
+
+          return `
+
+            <div
+              style="
+                padding:18px 0;
+                border-bottom:
+                  1px solid #e5e7eb;
+              "
+            >
+
+              <h3
+                style="
+                  margin:0 0 10px;
+                "
+              >
+                ${escapeHtml(
+                  topic.name
+                )}
+              </h3>
+
+
+              <p>
+                📅 Last checked:
+                <strong>
+                  ${
+                    escapeHtml(
+                      topic.lastChecked ||
+                      "Never"
+                    )
+                  }
+                </strong>
+              </p>
+
+
+              <p>
+                📚 Papers tracked:
+                <strong>
+                  ${paperCount}
+                </strong>
+              </p>
+
+
+              <p>
+                🟢 New since last check:
+                <strong>
+                  ${lastNew}
+                </strong>
+              </p>
+
+
+              <p>
+                📈 Total new since tracking:
+                <strong>
+                  ${totalNew}
+                </strong>
+              </p>
+
+
+              <button
+                type="button"
+                data-action="check"
+                data-topic="${escapeHtml(
+                  topic.name
+                )}"
+              >
+                Check now
+              </button>
+
+
+              <button
+                type="button"
+                data-action="remove"
+                data-topic="${escapeHtml(
+                  topic.name
+                )}"
+                style="
+                  background:#dc2626;
+                  margin-left:8px;
+                "
+              >
+                Remove
+              </button>
+
+            </div>
+
+          `;
+
+        }).join("")}
 
       </div>
 
-    </div>
+    `;
 
-  </main>
 
-  <script src="app.js"></script>
+    // ========================================
+    // BUTTON EVENTS
+    // ========================================
 
-</body>
-</html>
+    trackedTopics
+      .querySelectorAll(
+        "button[data-action]"
+      )
+      .forEach(function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const action =
+              button.dataset.action;
+
+
+            const topic =
+              button.dataset.topic;
+
+
+            if (
+              action === "check"
+            ) {
+
+              checkTopic(topic);
+
+            }
+
+
+            if (
+              action === "remove"
+            ) {
+
+              removeTopic(topic);
+
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  // ==========================================
+  // DISPLAY PAPERS
+  // ==========================================
+
+  function displayPapers(
+    query,
+    papers,
+    heading
+  ) {
+
+    let visibleCount =
+      PAPERS_PER_LOAD;
+
+
+    results.innerHTML = `
+
+      <div class="welcome">
+
+        <h2>
+          ${escapeHtml(heading)}
+        </h2>
+
+        <p>
+          Topic:
+          <strong>
+            ${escapeHtml(query)}
+          </strong>
+        </p>
+
+        <p id="resultCounter"></p>
+
+      </div>
+
+      <div id="paperList"></div>
+
+      <div
+        id="loadMoreArea"
+        style="
+          text-align:center;
+          margin:30px 0;
+        "
+      ></div>
+
+    `;
+
+
+    const paperList =
+      document.getElementById(
+        "paperList"
+      );
+
+
+    const counter =
+      document.getElementById(
+        "resultCounter"
+      );
+
+
+    const loadMoreArea =
+      document.getElementById(
+        "loadMoreArea"
+      );
+
+
+    function render() {
+
+      paperList.innerHTML =
+        "";
+
+
+      const visible =
+        papers.slice(
+          0,
+          visibleCount
+        );
+
+
+      visible.forEach(function (paper) {
+
+        paperList.appendChild(
+          createPaperCard(paper)
+        );
+
+      });
+
+
+      counter.textContent =
+        "Showing " +
+        visible.length +
+        " of " +
+        papers.length +
+        " papers";
+
+
+      loadMoreArea.innerHTML =
+        "";
+
+
+      if (
+        visibleCount <
+        papers.length
+      ) {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.type =
+          "button";
+
+
+        button.textContent =
+          "Load more";
+
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            visibleCount +=
+              PAPERS_PER_LOAD;
+
+
+            render();
+
+          }
+        );
+
+
+        loadMoreArea.appendChild(
+          button
+        );
+
+      }
+
+    }
+
+
+    render();
+
+  }
+
+
+  // ==========================================
+  // PAPER CARD
+  // ==========================================
+
+  function createPaperCard(
+    paper
+  ) {
+
+    const title =
+      paper.title ||
+      "Untitled";
+
+
+    const authors =
+      paper.authorships
+        ?.slice(0, 3)
+        .map(function (item) {
+
+          return item.author?.display_name;
+
+        })
+        .filter(Boolean)
+        .join(", ")
+
+      || "Unknown authors";
+
+
+    const date =
+      paper.publication_date ||
+      "Unknown date";
+
+
+    const source =
+      paper.primary_location
+        ?.source
+        ?.display_name
+
+      || "Unknown source";
+
+
+    const link =
+      paper.primary_location
+        ?.landing_page_url
+
+      || paper.doi
+
+      || "#";
+
+
+    const card =
+      document.createElement("div");
+
+
+    card.className =
+      "paper";
+
+
+    card.innerHTML = `
+
+      <h2>
+        ${escapeHtml(title)}
+      </h2>
+
+      <p>
+        <strong>
+          Published:
+        </strong>
+
+        ${escapeHtml(date)}
+      </p>
+
+      <p>
+        <strong>
+          Authors:
+        </strong>
+
+        ${escapeHtml(authors)}
+      </p>
+
+      <p>
+        <strong>
+          Source:
+        </strong>
+
+        ${escapeHtml(source)}
+      </p>
+
+      <p>
+
+        <a
+          href="${link}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View paper →
+        </a>
+
+      </p>
+
+    `;
+
+
+    return card;
+
+  }
+
+
+  // ==========================================
+  // LOCAL STORAGE
+  // ==========================================
+
+  function getTrackedTopics() {
+
+    try {
+
+      return JSON.parse(
+        localStorage.getItem(
+          "stracker_topics"
+        ) || "[]"
+      );
+
+    }
+
+    catch (error) {
+
+      return [];
+
+    }
+
+  }
+
+
+  function saveTrackedTopics(
+    topics
+  ) {
+
+    localStorage.setItem(
+      "stracker_topics",
+      JSON.stringify(
+        topics
+      )
+    );
+
+  }
+
+
+  // ==========================================
+  // ADD ONE DAY
+  // ==========================================
+
+  function addOneDay(
+    dateString
+  ) {
+
+    const date =
+      new Date(
+        dateString + "T00:00:00"
+      );
+
+
+    date.setDate(
+      date.getDate() + 1
+    );
+
+
+    return (
+      date.getFullYear() +
+      "-" +
+      String(
+        date.getMonth() + 1
+      ).padStart(2, "0") +
+      "-" +
+      String(
+        date.getDate()
+      ).padStart(2, "0")
+    );
+
+  }
+
+
+  // ==========================================
+  // MESSAGE
+  // ==========================================
+
+  function showMessage(
+    html
+  ) {
+
+    results.innerHTML = `
+
+      <div class="welcome">
+        ${html}
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================
+  // ESCAPE HTML
+  // ==========================================
+
+  function escapeHtml(
+    text
+  ) {
+
+    const div =
+      document.createElement(
+        "div"
+      );
+
+
+    div.textContent =
+      String(text);
+
+
+    return div.innerHTML;
+
+  }
+
+});
