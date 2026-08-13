@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const results = document.getElementById("results");
   const searchButton = document.getElementById("searchButton");
 
+  const TODAY = "2026-08-13";
+  const MIN_DATE = "2020-01-01";
+
   searchButton.addEventListener("click", searchPapers);
 
   searchInput.addEventListener("keydown", function (event) {
@@ -19,36 +22,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const query = searchInput.value.trim();
 
     if (!query) {
-      results.innerHTML = `
-        <div class="welcome">
-          <p>Please enter a research topic.</p>
-        </div>
-      `;
+      showMessage("Please enter a research topic.");
       return;
     }
 
-    results.innerHTML = `
-      <div class="welcome">
-        <p>
-          Searching for the latest papers about
-          <strong>${escapeHtml(query)}</strong>...
-        </p>
-      </div>
-    `;
+    showMessage(
+      `Searching for recent research about <strong>${escapeHtml(query)}</strong>...`
+    );
 
     try {
-
-      // Today's date
-      const today = new Date().toISOString().split("T")[0];
 
       const url =
         "https://api.openalex.org/works?" +
         "search=" + encodeURIComponent(query) +
         "&filter=" +
-        "from_publication_date:2020-01-01," +
-        "to_publication_date:" + today +
+        "from_publication_date:" + MIN_DATE +
+        ",to_publication_date:" + TODAY +
         "&sort=publication_date:desc" +
-        "&per-page=20";
+        "&per-page=100";
 
       const response = await fetch(url);
 
@@ -58,50 +49,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const data = await response.json();
 
-      if (!data.results || data.results.length === 0) {
 
-        results.innerHTML = `
-          <div class="welcome">
-            <h2>No papers found</h2>
-            <p>
-              Try another research topic.
-            </p>
-          </div>
-        `;
+      // --------------------------------------------------
+      // 1. Remove papers with invalid/future dates
+      // --------------------------------------------------
 
-        return;
-      }
-
-
-      // Extra safety:
-      // Remove anything dated in the future.
-      const validPapers = data.results.filter(function (paper) {
+      const validPapers = (data.results || []).filter(function (paper) {
 
         if (!paper.publication_date) {
           return false;
         }
 
-        return paper.publication_date <= today;
+        const date = paper.publication_date;
+
+        return (
+          date >= MIN_DATE &&
+          date <= TODAY
+        );
       });
+
+
+      // --------------------------------------------------
+      // 2. Sort ourselves — newest first
+      // --------------------------------------------------
+
+      validPapers.sort(function (a, b) {
+
+        return (
+          new Date(b.publication_date) -
+          new Date(a.publication_date)
+        );
+
+      });
+
+
+      // --------------------------------------------------
+      // 3. Display results
+      // --------------------------------------------------
+
+      if (validPapers.length === 0) {
+
+        showMessage(`
+          <h2>No valid papers found</h2>
+          <p>
+            No papers with valid publication dates were found
+            for this search.
+          </p>
+        `);
+
+        return;
+      }
 
 
       results.innerHTML = `
         <div class="welcome">
-          <h2>Latest papers</h2>
+
+          <h2>Latest research</h2>
 
           <p>
-            Showing the newest papers for
-            <strong>${escapeHtml(query)}</strong>.
+            Search:
+            <strong>${escapeHtml(query)}</strong>
           </p>
 
           <p>
-            ${validPapers.length} papers found.
+            Showing papers published between
+            ${MIN_DATE}
+            and
+            ${TODAY}.
           </p>
+
         </div>
       `;
 
 
-      validPapers.forEach(function (paper) {
+      validPapers.slice(0, 20).forEach(function (paper) {
 
         const title =
           paper.title || "Untitled";
@@ -114,24 +135,23 @@ document.addEventListener("DOMContentLoaded", function () {
               return author.author?.display_name;
             })
             .filter(Boolean)
-            .join(", ") ||
-          "Unknown authors";
+            .join(", ")
+          || "Unknown authors";
 
 
         const date =
-          paper.publication_date ||
-          "Unknown date";
+          paper.publication_date;
 
 
         const journal =
-          paper.primary_location?.source?.display_name ||
-          "Unknown journal";
+          paper.primary_location?.source?.display_name
+          || "Unknown source";
 
 
         const paperUrl =
-          paper.primary_location?.landing_page_url ||
-          paper.doi ||
-          "#";
+          paper.primary_location?.landing_page_url
+          || paper.doi
+          || "#";
 
 
         const abstract =
@@ -142,8 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
           document.createElement("div");
 
 
-        paperElement.className =
-          "paper";
+        paperElement.className = "paper";
 
 
         paperElement.innerHTML = `
@@ -178,13 +197,15 @@ document.addEventListener("DOMContentLoaded", function () {
               : ""
           }
 
-          <a
-            href="${paperUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View paper →
-          </a>
+          <p>
+            <a
+              href="${paperUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View paper →
+            </a>
+          </p>
 
         `;
 
@@ -193,24 +214,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
       });
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
       console.error(error);
 
-      results.innerHTML = `
-        <div class="welcome">
+      showMessage(`
+        <h2>Search error</h2>
 
-          <h2>Search error</h2>
+        <p>
+          Something went wrong while retrieving
+          the papers.
+        </p>
 
-          <p>
-            We couldn't retrieve the papers right now.
-            Please try again.
-          </p>
+        <p>
+          Please try again.
+        </p>
+      `);
 
-        </div>
-      `;
     }
+
+  }
+
+
+  function showMessage(message) {
+
+    results.innerHTML = `
+      <div class="welcome">
+        ${message}
+      </div>
+    `;
+
   }
 
 
@@ -235,9 +270,11 @@ document.addEventListener("DOMContentLoaded", function () {
         words[position] = word;
 
       });
+
     }
 
     return words.join(" ");
+
   }
 
 
@@ -249,6 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
     div.textContent = text;
 
     return div.innerHTML;
+
   }
 
 });
