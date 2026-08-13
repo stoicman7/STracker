@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>STracker - Scientific Paper Discovery</title>
 
   <style>
@@ -51,6 +52,11 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 16px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2563eb;
     }
 
     button {
@@ -112,20 +118,23 @@
   <main>
 
     <div class="search-box">
+
       <input
-  type="text"
-  id="searchInput"
-  placeholder="Search scientific papers..."
-  onkeydown="handleKeyPress(event)"
->
-      <button onclick="searchPapers()">
+        type="text"
+        id="searchInput"
+        placeholder="Search scientific papers..."
+      >
+
+      <button id="searchButton">
         Search
       </button>
+
     </div>
 
     <div id="results">
 
       <div class="welcome">
+
         <h2>Welcome to STracker</h2>
 
         <p>
@@ -136,6 +145,7 @@
         <p>
           Enter a topic above to find scientific papers.
         </p>
+
       </div>
 
     </div>
