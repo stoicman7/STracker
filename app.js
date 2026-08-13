@@ -6,28 +6,36 @@ document.addEventListener("DOMContentLoaded", function () {
   const trackButton = document.getElementById("trackButton");
   const trackedTopics = document.getElementById("trackedTopics");
 
-  const TODAY = "2026-08-13";
-  const MIN_DATE = "2020-01-01";
+  const RESULTS_PER_LOAD = 20;
+  const API_RESULTS = 100;
 
-  const PAPERS_PER_LOAD = 20;
-  const API_LIMIT = 100;
+  // ==========================================
+  // CURRENT DATE
+  // ==========================================
 
-  // -----------------------------
-  // BUTTONS
-  // -----------------------------
+  function getToday() {
+
+    const date = new Date();
+
+    return date.toISOString().split("T")[0];
+
+  }
+
+
+  // ==========================================
+  // SEARCH BUTTON
+  // ==========================================
 
   searchButton.addEventListener("click", function () {
+
     searchPapers();
-  });
 
-  trackButton.addEventListener("click", function () {
-    trackCurrentTopic();
   });
 
 
-  // -----------------------------
+  // ==========================================
   // ENTER KEY
-  // -----------------------------
+  // ==========================================
 
   searchInput.addEventListener("keydown", function (event) {
 
@@ -42,12 +50,27 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 
+  // ==========================================
+  // TRACK BUTTON
+  // ==========================================
+
+  trackButton.addEventListener("click", function () {
+
+    trackTopic();
+
+  });
+
+
+  // ==========================================
+  // INITIALIZE
+  // ==========================================
+
   displayTrackedTopics();
 
 
-  // =====================================================
-  // SEARCH
-  // =====================================================
+  // ==========================================
+  // NORMAL SEARCH
+  // ==========================================
 
   async function searchPapers() {
 
@@ -59,61 +82,84 @@ document.addEventListener("DOMContentLoaded", function () {
 
       showMessage(`
         <h2>No search term</h2>
-        <p>Please enter a research topic.</p>
+
+        <p>
+          Enter a scientific topic first.
+        </p>
       `);
 
       return;
     }
 
 
-    await fetchPapers(
-      query,
-      false
+    await searchOpenAlex(
+      query
     );
 
   }
 
 
-  // =====================================================
-  // FETCH PAPERS
-  // =====================================================
+  // ==========================================
+  // SEARCH OPENALEX
+  // ==========================================
 
-  async function fetchPapers(
+  async function searchOpenAlex(
     query,
-    trackingMode
+    startDate = null
   ) {
 
     showMessage(`
       <p>
         Searching for
-        <strong>${escapeHtml(query)}</strong>...
+        <strong>
+          ${escapeHtml(query)}
+        </strong>
+        ...
       </p>
     `);
 
 
     try {
 
-      const apiUrl =
+      let filter =
+        "to_publication_date:" +
+        getToday();
+
+
+      // ----------------------------------------
+      // If tracking, only search after the
+      // previous check date.
+      // ----------------------------------------
+
+      if (startDate) {
+
+        filter =
+          "from_publication_date:" +
+          startDate +
+
+          ",to_publication_date:" +
+          getToday();
+
+      }
+
+
+      const url =
         "https://api.openalex.org/works?" +
 
         "search=" +
         encodeURIComponent(query) +
 
         "&filter=" +
-        "from_publication_date:" +
-        MIN_DATE +
-
-        ",to_publication_date:" +
-        TODAY +
+        filter +
 
         "&sort=publication_date:desc" +
 
         "&per-page=" +
-        API_LIMIT;
+        API_RESULTS;
 
 
       const response =
-        await fetch(apiUrl);
+        await fetch(url);
 
 
       if (!response.ok) {
@@ -129,49 +175,145 @@ document.addEventListener("DOMContentLoaded", function () {
         await response.json();
 
 
-      // -----------------------------
-      // Validate dates
-      // -----------------------------
-
       let papers =
-        (data.results || [])
-          .filter(function (paper) {
-
-            if (
-              !paper.id ||
-              !paper.publication_date
-            ) {
-
-              return false;
-
-            }
+        data.results || [];
 
 
-            return (
-              paper.publication_date >= MIN_DATE &&
-              paper.publication_date <= TODAY
-            );
+      // ----------------------------------------
+      // Remove invalid dates
+      // ----------------------------------------
 
-          });
+      papers =
+        papers.filter(function (paper) {
+
+          return (
+            paper.id &&
+            paper.publication_date &&
+            paper.publication_date <=
+              getToday()
+          );
+
+        });
 
 
-      // -----------------------------
+      // ----------------------------------------
       // Newest first
-      // -----------------------------
+      // ----------------------------------------
 
       papers.sort(function (a, b) {
 
         return (
-          new Date(
-            b.publication_date
-          ) -
-
-          new Date(
-            a.publication_date
-          )
+          new Date(b.publication_date) -
+          new Date(a.publication_date)
         );
 
       });
+
+
+      return papers;
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      showMessage(`
+        <h2>Search error</h2>
+
+        <p>
+          We couldn't retrieve the papers.
+        </p>
+
+        <p>
+          Please try again.
+        </p>
+      `);
+
+      return [];
+
+    }
+
+  }
+
+
+  // ==========================================
+  // TRACK A TOPIC
+  // ==========================================
+
+  async function trackTopic() {
+
+    const topicName =
+      searchInput.value.trim();
+
+
+    if (!topicName) {
+
+      showMessage(`
+        <h2>No topic entered</h2>
+
+        <p>
+          Enter a scientific topic first.
+        </p>
+      `);
+
+      return;
+
+    }
+
+
+    const topics =
+      getTrackedTopics();
+
+
+    let topic =
+      topics.find(function (item) {
+
+        return (
+          item.name.toLowerCase() ===
+          topicName.toLowerCase()
+        );
+
+      });
+
+
+    // ========================================
+    // NEW TRACKED TOPIC
+    // ========================================
+
+    if (!topic) {
+
+      topic = {
+
+        name: topicName,
+
+        createdAt: getToday(),
+
+        lastChecked: null,
+
+        seenPaperIds: []
+
+      };
+
+
+      topics.push(topic);
+
+
+      saveTrackedTopics(topics);
+
+    }
+
+
+    // ========================================
+    // FIRST CHECK
+    // ========================================
+
+    if (!topic.lastChecked) {
+
+      const papers =
+        await searchOpenAlex(
+          topic.name
+        );
 
 
       if (papers.length === 0) {
@@ -180,7 +322,10 @@ document.addEventListener("DOMContentLoaded", function () {
           <h2>No papers found</h2>
 
           <p>
-            Try another research topic.
+            We couldn't find papers for
+            <strong>
+              ${escapeHtml(topic.name)}
+            </strong>.
           </p>
         `);
 
@@ -189,56 +334,271 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
 
-      // -----------------------------
-      // Tracking mode
-      // -----------------------------
+      // Remember everything from
+      // the first check.
 
-      if (trackingMode) {
+      topic.seenPaperIds =
+        papers.map(function (paper) {
 
-        processTrackedTopic(
-          query,
-          papers
-        );
+          return paper.id;
 
-        return;
-
-      }
+        });
 
 
-      // -----------------------------
-      // Normal search
-      // -----------------------------
+      topic.lastChecked =
+        getToday();
+
+
+      saveTrackedTopics(topics);
+
+
+      displayTrackedTopics();
+
 
       displayPapers(
-        query,
+        topic.name,
         papers,
-        "Latest research"
+        "First check"
       );
 
+
+      return;
+
     }
 
-    catch (error) {
 
-      console.error(error);
+    // ========================================
+    // FUTURE CHECK
+    // ========================================
 
+    /*
+      Publication dates are day-based.
+
+      Therefore we start searching from
+      the day AFTER the previous check.
+    */
+
+    const nextDate =
+      addOneDay(
+        topic.lastChecked
+      );
+
+
+    const today =
+      getToday();
+
+
+    // ========================================
+    // SAME-DAY CHECK
+    // ========================================
+
+    if (
+      nextDate > today
+    ) {
 
       showMessage(`
-        <h2>Search error</h2>
+
+        <h2>
+          Already checked today
+        </h2>
 
         <p>
-          Something went wrong while
-          retrieving the papers.
+          <strong>
+            ${escapeHtml(topic.name)}
+          </strong>
+          was already checked today.
         </p>
+
+        <p>
+          Last checked:
+          ${escapeHtml(topic.lastChecked)}
+        </p>
+
+        <p>
+          Check again tomorrow for
+          papers published after this
+          check.
+        </p>
+
       `);
 
+      return;
+
     }
+
+
+    // ========================================
+    // SEARCH ONLY NEW DATE RANGE
+    // ========================================
+
+    const newPapers =
+      await searchOpenAlex(
+        topic.name,
+        nextDate
+      );
+
+
+    // ========================================
+    // REMOVE ALREADY-SEEN PAPERS
+    // ========================================
+
+    const unseenPapers =
+      newPapers.filter(function (paper) {
+
+        return !topic.seenPaperIds.includes(
+          paper.id
+        );
+
+      });
+
+
+    // ========================================
+    // SAVE NEW PAPER IDS
+    // ========================================
+
+    const newIds =
+      newPapers.map(function (paper) {
+
+        return paper.id;
+
+      });
+
+
+    topic.seenPaperIds =
+      Array.from(
+        new Set(
+          topic.seenPaperIds.concat(
+            newIds
+          )
+        )
+      );
+
+
+    // ========================================
+    // UPDATE LAST CHECK
+    // ========================================
+
+    topic.lastChecked =
+      today;
+
+
+    saveTrackedTopics(topics);
+
+
+    displayTrackedTopics();
+
+
+    // ========================================
+    // NOTHING NEW
+    // ========================================
+
+    if (unseenPapers.length === 0) {
+
+      showMessage(`
+
+        <h2>
+          No new papers
+        </h2>
+
+        <p>
+          No new papers were found for:
+        </p>
+
+        <p>
+          <strong>
+            ${escapeHtml(topic.name)}
+          </strong>
+        </p>
+
+        <p>
+          Last checked:
+          ${escapeHtml(topic.lastChecked)}
+        </p>
+
+      `);
+
+      return;
+
+    }
+
+
+    // ========================================
+    // SHOW NEW PAPERS
+    // ========================================
+
+    displayPapers(
+      topic.name,
+      unseenPapers,
+      "🟢 New papers"
+    );
+
+
+    const notice =
+      document.createElement("div");
+
+
+    notice.className =
+      "welcome";
+
+
+    notice.innerHTML = `
+
+      <h2>
+        🟢 ${unseenPapers.length}
+        new paper(s)
+      </h2>
+
+      <p>
+        These papers were published
+        after your previous check.
+      </p>
+
+    `;
+
+
+    results.insertBefore(
+      notice,
+      results.firstChild
+    );
 
   }
 
 
-  // =====================================================
-  // DISPLAY PAPERS + LOAD MORE
-  // =====================================================
+  // ==========================================
+  // ADD ONE DAY
+  // ==========================================
+
+  function addOneDay(dateString) {
+
+    const date =
+      new Date(
+        dateString + "T00:00:00"
+      );
+
+
+    date.setDate(
+      date.getDate() + 1
+    );
+
+
+    return (
+      date.getFullYear() +
+      "-" +
+      String(
+        date.getMonth() + 1
+      ).padStart(2, "0") +
+      "-" +
+      String(
+        date.getDate()
+      ).padStart(2, "0")
+    );
+
+  }
+
+
+  // ==========================================
+  // DISPLAY PAPERS
+  // ==========================================
 
   function displayPapers(
     query,
@@ -247,7 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
   ) {
 
     let visibleCount =
-      PAPERS_PER_LOAD;
+      RESULTS_PER_LOAD;
 
 
     results.innerHTML = `
@@ -265,16 +625,14 @@ document.addEventListener("DOMContentLoaded", function () {
           </strong>
         </p>
 
-        <p id="resultCount"></p>
+        <p id="resultCounter"></p>
 
       </div>
 
-
       <div id="paperList"></div>
 
-
       <div
-        id="loadMoreContainer"
+        id="loadMoreArea"
         style="
           text-align:center;
           margin:30px 0;
@@ -290,71 +648,48 @@ document.addEventListener("DOMContentLoaded", function () {
       );
 
 
-    const resultCount =
+    const counter =
       document.getElementById(
-        "resultCount"
+        "resultCounter"
       );
 
 
-    const loadMoreContainer =
+    const loadMoreArea =
       document.getElementById(
-        "loadMoreContainer"
+        "loadMoreArea"
       );
 
 
-    function renderPapers() {
+    function render() {
 
       paperList.innerHTML = "";
 
 
-      const visiblePapers =
+      const visible =
         papers.slice(
           0,
           visibleCount
         );
 
 
-      visiblePapers.forEach(
-        function (paper) {
+      visible.forEach(function (paper) {
 
-          const paperElement =
-            createPaperElement(
-              paper
-            );
+        paperList.appendChild(
+          createPaperCard(paper)
+        );
 
-
-          paperList.appendChild(
-            paperElement
-          );
-
-        }
-      );
+      });
 
 
-      // -----------------------------
-      // Result counter
-      // -----------------------------
-
-      resultCount.textContent =
+      counter.textContent =
         "Showing " +
-
-        Math.min(
-          visibleCount,
-          papers.length
-        ) +
-
+        visible.length +
         " of " +
-
         papers.length +
-
         " papers";
 
 
-      // -----------------------------
-      // Load more button
-      // -----------------------------
-
-      loadMoreContainer.innerHTML =
+      loadMoreArea.innerHTML =
         "";
 
 
@@ -363,45 +698,36 @@ document.addEventListener("DOMContentLoaded", function () {
         papers.length
       ) {
 
-        const loadMoreButton =
+        const button =
           document.createElement(
             "button"
           );
 
 
-        loadMoreButton.textContent =
-          "Load more";
-
-
-        loadMoreButton.type =
+        button.type =
           "button";
 
 
-        loadMoreButton.addEventListener(
+        button.textContent =
+          "Load more";
+
+
+        button.addEventListener(
           "click",
           function () {
 
             visibleCount +=
-              PAPERS_PER_LOAD;
+              RESULTS_PER_LOAD;
 
 
-            renderPapers();
-
-
-            // Scroll slightly toward
-            // the newly loaded results.
-
-            loadMoreButton.scrollIntoView({
-              behavior: "smooth",
-              block: "center"
-            });
+            render();
 
           }
         );
 
 
-        loadMoreContainer.appendChild(
-          loadMoreButton
+        loadMoreArea.appendChild(
+          button
         );
 
       }
@@ -409,16 +735,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    renderPapers();
+    render();
 
   }
 
 
-  // =====================================================
+  // ==========================================
   // CREATE PAPER CARD
-  // =====================================================
+  // ==========================================
 
-  function createPaperElement(
+  function createPaperCard(
     paper
   ) {
 
@@ -430,12 +756,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const authors =
       paper.authorships
         ?.slice(0, 3)
-        .map(function (author) {
+        .map(function (item) {
 
-          return (
-            author.author
-              ?.display_name
-          );
+          return item.author?.display_name;
 
         })
         .filter(Boolean)
@@ -449,7 +772,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "Unknown date";
 
 
-    const journal =
+    const source =
       paper.primary_location
         ?.source
         ?.display_name
@@ -457,7 +780,7 @@ document.addEventListener("DOMContentLoaded", function () {
       || "Unknown source";
 
 
-    const paperUrl =
+    const link =
       paper.primary_location
         ?.landing_page_url
 
@@ -470,22 +793,21 @@ document.addEventListener("DOMContentLoaded", function () {
       getAbstract(paper);
 
 
-    const element =
+    const card =
       document.createElement(
         "div"
       );
 
 
-    element.className =
+    card.className =
       "paper";
 
 
-    element.innerHTML = `
+    card.innerHTML = `
 
       <h2>
         ${escapeHtml(title)}
       </h2>
-
 
       <p>
         <strong>
@@ -495,7 +817,6 @@ document.addEventListener("DOMContentLoaded", function () {
         ${escapeHtml(date)}
       </p>
 
-
       <p>
         <strong>
           Authors:
@@ -504,318 +825,49 @@ document.addEventListener("DOMContentLoaded", function () {
         ${escapeHtml(authors)}
       </p>
 
-
       <p>
         <strong>
           Source:
         </strong>
 
-        ${escapeHtml(journal)}
+        ${escapeHtml(source)}
       </p>
-
 
       ${
         abstract
           ? `
-
             <p>
               <strong>
                 Abstract:
               </strong>
 
-              ${escapeHtml(
-                abstract
-              )}
+              ${escapeHtml(abstract)}
             </p>
-
           `
           : ""
       }
 
-
       <p>
-
         <a
-          href="${paperUrl}"
+          href="${link}"
           target="_blank"
           rel="noopener noreferrer"
         >
           View paper →
         </a>
-
       </p>
 
     `;
 
 
-    return element;
+    return card;
 
   }
 
 
-  // =====================================================
-  // TRACK TOPIC
-  // =====================================================
-
-  async function trackCurrentTopic() {
-
-    const topic =
-      searchInput.value.trim();
-
-
-    if (!topic) {
-
-      showMessage(`
-        <h2>No topic entered</h2>
-
-        <p>
-          Enter a research topic first.
-        </p>
-      `);
-
-      return;
-
-    }
-
-
-    const topics =
-      getTrackedTopics();
-
-
-    const existingTopic =
-      topics.find(function (item) {
-
-        return (
-          item.name.toLowerCase() ===
-          topic.toLowerCase()
-        );
-
-      });
-
-
-    if (existingTopic) {
-
-      await fetchPapers(
-        existingTopic.name,
-        true
-      );
-
-      return;
-
-    }
-
-
-    topics.push({
-
-      name: topic,
-
-      addedAt: TODAY,
-
-      lastChecked: null,
-
-      seenPaperIds: []
-
-    });
-
-
-    saveTrackedTopics(
-      topics
-    );
-
-
-    displayTrackedTopics();
-
-
-    await fetchPapers(
-      topic,
-      true
-    );
-
-  }
-
-
-  // =====================================================
-  // PROCESS TRACKED TOPIC
-  // =====================================================
-
-  function processTrackedTopic(
-    topicName,
-    papers
-  ) {
-
-    const topics =
-      getTrackedTopics();
-
-
-    const topic =
-      topics.find(function (item) {
-
-        return (
-          item.name.toLowerCase() ===
-          topicName.toLowerCase()
-        );
-
-      });
-
-
-    if (!topic) {
-      return;
-    }
-
-
-    const oldIds =
-      topic.seenPaperIds || [];
-
-
-    const newPapers =
-      papers.filter(function (paper) {
-
-        return !oldIds.includes(
-          paper.id
-        );
-
-      });
-
-
-    const previousCount =
-      oldIds.length;
-
-
-    // Save the papers we just saw.
-
-    const currentIds =
-      papers.map(function (paper) {
-
-        return paper.id;
-
-      });
-
-
-    topic.seenPaperIds =
-      Array.from(
-        new Set(
-          oldIds.concat(
-            currentIds
-          )
-        )
-      );
-
-
-    topic.lastChecked =
-      TODAY;
-
-
-    saveTrackedTopics(
-      topics
-    );
-
-
-    displayTrackedTopics();
-
-
-    // -----------------------------
-    // First check
-    // -----------------------------
-
-    if (previousCount === 0) {
-
-      displayPapers(
-        topicName,
-        papers,
-        "First check"
-      );
-
-      return;
-
-    }
-
-
-    // -----------------------------
-    // No new papers
-    // -----------------------------
-
-    if (newPapers.length === 0) {
-
-      showMessage(`
-
-        <h2>
-          No new papers
-        </h2>
-
-        <p>
-          STracker didn't find any
-          papers that it hasn't seen
-          before.
-        </p>
-
-        <p>
-          Previously seen:
-          <strong>
-            ${previousCount}
-          </strong>
-        </p>
-
-      `);
-
-      return;
-
-    }
-
-
-    // -----------------------------
-    // New papers
-    // -----------------------------
-
-    displayPapers(
-      topicName,
-      newPapers,
-      "🟢 New papers"
-    );
-
-
-    const notice =
-      document.createElement(
-        "div"
-      );
-
-
-    notice.className =
-      "welcome";
-
-
-    notice.innerHTML = `
-
-      <h2>
-        🟢 ${newPapers.length}
-        new paper(s)
-      </h2>
-
-      <p>
-        These papers were not
-        seen during previous checks.
-      </p>
-
-      <p>
-        Previously seen:
-        <strong>
-          ${previousCount}
-        </strong>
-      </p>
-
-    `;
-
-
-    results.insertBefore(
-      notice,
-      results.firstChild
-    );
-
-  }
-
-
-  // =====================================================
-  // LOCAL STORAGE
-  // =====================================================
+  // ==========================================
+  // TRACKED TOPICS
+  // ==========================================
 
   function getTrackedTopics() {
 
@@ -832,7 +884,6 @@ document.addEventListener("DOMContentLoaded", function () {
         : [];
 
     }
-
     catch (error) {
 
       return [];
@@ -848,19 +899,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     localStorage.setItem(
       "stracker_topics",
-      JSON.stringify(
-        topics
-      )
+      JSON.stringify(topics)
     );
 
   }
 
 
-  // =====================================================
+  // ==========================================
   // DISPLAY TRACKED TOPICS
-  // =====================================================
+  // ==========================================
 
   function displayTrackedTopics() {
+
+    if (!trackedTopics) {
+      return;
+    }
+
 
     const topics =
       getTrackedTopics();
@@ -886,47 +940,42 @@ document.addEventListener("DOMContentLoaded", function () {
           Tracked topics
         </h3>
 
+        ${topics.map(function (topic) {
 
-        ${topics.map(
-          function (topic) {
+          return `
 
-            const lastChecked =
-              topic.lastChecked
-              || "Not checked yet";
+            <div
+              style="
+                margin-bottom:12px;
+                padding:10px;
+                border-bottom:
+                  1px solid #eee;
+              "
+            >
 
+              <strong>
+                ${escapeHtml(
+                  topic.name
+                )}
+              </strong>
 
-            return `
+              <br>
 
-              <div
-                style="
-                  margin-bottom:12px;
-                  padding:10px;
-                  border-bottom:
-                    1px solid #eee;
-                "
-              >
+              <small>
+                Last checked:
+                ${
+                  escapeHtml(
+                    topic.lastChecked ||
+                    "Not checked yet"
+                  )
+                }
+              </small>
 
-                <strong>
-                  ${escapeHtml(
-                    topic.name
-                  )}
-                </strong>
+            </div>
 
-                <br>
+          `;
 
-                <small>
-                  Last checked:
-                  ${escapeHtml(
-                    lastChecked
-                  )}
-                </small>
-
-              </div>
-
-            `;
-
-          }
-        ).join("")}
+        }).join("")}
 
       </div>
 
@@ -935,19 +984,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
 
-  // =====================================================
+  // ==========================================
   // ABSTRACT
-  // =====================================================
+  // ==========================================
 
   function getAbstract(
     paper
   ) {
 
-    const invertedIndex =
+    const index =
       paper.abstract_inverted_index;
 
 
-    if (!invertedIndex) {
+    if (!index) {
       return "";
     }
 
@@ -956,14 +1005,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     for (
-      const word in invertedIndex
+      const word in index
     ) {
 
-      const positions =
-        invertedIndex[word];
-
-
-      positions.forEach(
+      index[word].forEach(
         function (position) {
 
           words[position] =
@@ -975,16 +1020,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    return words.join(
-      " "
-    );
+    return words.join(" ");
 
   }
 
 
-  // =====================================================
+  // ==========================================
   // MESSAGE
-  // =====================================================
+  // ==========================================
 
   function showMessage(
     message
@@ -1001,9 +1044,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
 
-  // =====================================================
-  // SECURITY
-  // =====================================================
+  // ==========================================
+  // ESCAPE HTML
+  // ==========================================
 
   function escapeHtml(
     text
