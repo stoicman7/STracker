@@ -4,11 +4,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // ELEMENTS
   // ==========================================
 
-  const searchInput = document.getElementById("searchInput");
-  const searchButton = document.getElementById("searchButton");
+  const searchInput =
+    document.getElementById("searchInput");
 
-  const results = document.getElementById("results");
-  const trackedTopics = document.getElementById("trackedTopics");
+  const searchButton =
+    document.getElementById("searchButton");
+
+  const results =
+    document.getElementById("results");
+
+  const trackedTopics =
+    document.getElementById("trackedTopics");
 
   const keywordContainer =
     document.getElementById("keywordContainer");
@@ -62,19 +68,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // QUICK SEARCH
   // ==========================================
 
-  searchButton.addEventListener("click", quickSearch);
+  searchButton.addEventListener(
+    "click",
+    quickSearch
+  );
 
-  searchInput.addEventListener("keydown", (event) => {
 
-    if (event.key === "Enter") {
+  searchInput.addEventListener(
+    "keydown",
+    (event) => {
 
-      event.preventDefault();
+      if (event.key === "Enter") {
 
-      quickSearch();
+        event.preventDefault();
+
+        quickSearch();
+
+      }
 
     }
-
-  });
+  );
 
 
   async function quickSearch() {
@@ -82,27 +95,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const query =
       searchInput.value.trim();
 
+
     if (!query) {
 
       showMessage(`
         <h2>Please enter a search term.</h2>
+
         <p>
           Type a scientific topic and search again.
         </p>
       `);
 
       return;
+
     }
 
 
     results.innerHTML = `
       <div class="card">
+
         <h2>🔎 Searching...</h2>
 
         <p>
           Searching for
           <strong>${escapeHtml(query)}</strong>
         </p>
+
       </div>
     `;
 
@@ -123,8 +141,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!response.ok) {
 
+        let errorMessage =
+          `OpenAlex request failed (${response.status}).`;
+
+
+        try {
+
+          const errorData =
+            await response.json();
+
+
+          if (errorData?.error) {
+
+            errorMessage =
+              typeof errorData.error === "string"
+                ? errorData.error
+                : errorData.error?.message ||
+                  errorMessage;
+
+          }
+
+
+          if (errorData?.message) {
+
+            errorMessage =
+              errorData.message;
+
+          }
+
+        } catch (_) {
+
+          // Ignore JSON parsing errors.
+
+        }
+
+
         throw new Error(
-          "OpenAlex request failed."
+          errorMessage
         );
 
       }
@@ -188,42 +241,51 @@ document.addEventListener("DOMContentLoaded", () => {
     accuracyInput.value + "%";
 
 
-  accuracyInput.addEventListener("input", () => {
+  accuracyInput.addEventListener(
+    "input",
+    () => {
 
-    accuracyValue.textContent =
-      accuracyInput.value + "%";
+      accuracyValue.textContent =
+        accuracyInput.value + "%";
 
-  });
+    }
+  );
 
 
   // ==========================================
   // ADD REQUIRED KEYWORD
   // ==========================================
 
-  addKeywordButton.addEventListener("click", () => {
+  addKeywordButton.addEventListener(
+    "click",
+    () => {
 
-    createInputRow(
-      keywordContainer,
-      "required-keyword",
-      "Example: memory formation"
-    );
+      createInputRow(
+        keywordContainer,
+        "required-keyword",
+        "Example: memory formation"
+      );
 
-  });
+    }
+  );
 
 
   // ==========================================
   // ADD EXCLUDED KEYWORD
   // ==========================================
 
-  addExcludeButton.addEventListener("click", () => {
+  addExcludeButton.addEventListener(
+    "click",
+    () => {
 
-    createInputRow(
-      excludeContainer,
-      "excluded-keyword",
-      "Example: animal studies"
-    );
+      createInputRow(
+        excludeContainer,
+        "excluded-keyword",
+        "Example: animal studies"
+      );
 
-  });
+    }
+  );
 
 
   function createInputRow(
@@ -235,6 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const row =
       document.createElement("div");
 
+
     row.className =
       "keyword-row";
 
@@ -242,11 +305,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const input =
       document.createElement("input");
 
+
     input.type =
       "text";
 
+
     input.className =
       className;
+
 
     input.placeholder =
       placeholder;
@@ -255,11 +321,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const removeButton =
       document.createElement("button");
 
+
     removeButton.type =
       "button";
 
+
     removeButton.textContent =
       "×";
+
 
     removeButton.className =
       "danger";
@@ -517,12 +586,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    if (!query) {
+
+      throw new Error(
+        "No searchable criteria were provided."
+      );
+
+    }
+
+
+    // Build the OpenAlex request safely.
+    const params =
+      new URLSearchParams();
+
+
+    params.set(
+      "search",
+      query
+    );
+
+
+    params.set(
+      "sort",
+      "publication_date:desc"
+    );
+
+
+    params.set(
+      "per-page",
+      "100"
+    );
+
+
     const url =
-      "https://api.openalex.org/works" +
-      "?search=" +
-      encodeURIComponent(query) +
-      "&sort=publication_date:desc" +
-      "&per-page=100";
+      "https://api.openalex.org/works?" +
+      params.toString();
 
 
     const response =
@@ -531,8 +629,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
 
+      let errorMessage =
+        `OpenAlex request failed (${response.status}).`;
+
+
+      try {
+
+        const errorData =
+          await response.json();
+
+
+        if (errorData?.error) {
+
+          errorMessage =
+            typeof errorData.error === "string"
+              ? errorData.error
+              : errorData.error?.message ||
+                errorMessage;
+
+        }
+
+
+        if (errorData?.message) {
+
+          errorMessage =
+            errorData.message;
+
+        }
+
+      } catch (_) {
+
+        // Ignore JSON parsing errors.
+
+      }
+
+
       throw new Error(
-        "OpenAlex request failed."
+        errorMessage
       );
 
     }
@@ -547,13 +680,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Remove invalid/future dates.
-
     papers =
       papers.filter(isValidDate);
 
 
     // Apply advanced filters.
-
     papers =
       papers.filter(
         paper =>
@@ -565,7 +696,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Calculate relevance.
-
     papers =
       papers.map(paper => {
 
@@ -585,7 +715,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Apply accuracy threshold.
-
     papers =
       papers.filter(
         paper =>
@@ -595,7 +724,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Highest relevance first.
-
     papers.sort((a, b) => {
 
       return (
@@ -693,7 +821,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Excluded keywords.
-
     for (
       const excluded of criteria.excluded
     ) {
@@ -712,7 +839,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Author filter.
-
     if (criteria.author) {
 
       if (
@@ -729,7 +855,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Journal filter.
-
     if (criteria.journal) {
 
       if (
@@ -746,7 +871,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Required keywords.
-
     for (
       const keyword of criteria.keywords
     ) {
@@ -765,7 +889,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Date filter.
-
     if (
       criteria.dateRange !== "all"
     ) {
@@ -803,7 +926,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Document type.
-
     if (
       criteria.documentType
     ) {
@@ -906,7 +1028,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Keywords.
-
     for (
       const keyword of criteria.keywords
     ) {
@@ -937,7 +1058,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Author.
-
     if (
       criteria.author &&
       authors.includes(
@@ -951,7 +1071,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Journal.
-
     if (
       criteria.journal &&
       journal.includes(
@@ -965,7 +1084,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Research field.
-
     if (criteria.field) {
 
       const field =
@@ -986,7 +1104,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Recency bonus.
-
     const publication =
       new Date(
         paper.publication_date
@@ -1383,9 +1500,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const tracker = {
 
-      id: Date.now(),
+      id:
+        Date.now(),
 
       criteria: {
+
         keywords: [
           ...criteria.keywords
         ],
@@ -1411,6 +1530,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         accuracy:
           criteria.accuracy
+
       },
 
       createdAt:
@@ -1522,29 +1642,33 @@ document.addEventListener("DOMContentLoaded", () => {
           (tracker, index) => {
 
             const criteria =
-              tracker.criteria;
+              tracker.criteria || {};
 
 
             const keywords =
-              criteria.keywords
-                .map(
-                  keyword =>
-                    `<span class="badge">
-                      ${escapeHtml(keyword)}
-                    </span>`
-                )
-                .join("");
+              Array.isArray(criteria.keywords)
+                ? criteria.keywords
+                    .map(
+                      keyword =>
+                        `<span class="badge">
+                          ${escapeHtml(keyword)}
+                        </span>`
+                    )
+                    .join("")
+                : "";
 
 
             const excluded =
-              criteria.excluded
-                .map(
-                  keyword =>
-                    `<span class="badge">
-                      ${escapeHtml(keyword)}
-                    </span>`
-                )
-                .join("");
+              Array.isArray(criteria.excluded)
+                ? criteria.excluded
+                    .map(
+                      keyword =>
+                        `<span class="badge">
+                          ${escapeHtml(keyword)}
+                        </span>`
+                    )
+                    .join("")
+                : "";
 
 
             return `
@@ -1597,6 +1721,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <strong>
                           Author:
                         </strong>
+
                         ${escapeHtml(
                           criteria.author
                         )}
@@ -1614,6 +1739,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <strong>
                           Journal:
                         </strong>
+
                         ${escapeHtml(
                           criteria.journal
                         )}
@@ -1631,6 +1757,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <strong>
                           Field:
                         </strong>
+
                         ${escapeHtml(
                           criteria.field
                         )}
@@ -1646,7 +1773,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     Accuracy:
                   </strong>
 
-                  ${criteria.accuracy}%
+                  ${Number(
+                    criteria.accuracy || 0
+                  )}%
                 </p>
 
 
@@ -1657,7 +1786,8 @@ document.addEventListener("DOMContentLoaded", () => {
                   </strong>
 
                   ${escapeHtml(
-                    tracker.lastChecked
+                    tracker.lastChecked ||
+                    "Unknown"
                   )}
                 </p>
 
@@ -1668,7 +1798,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     Papers found:
                   </strong>
 
-                  ${tracker.seenPaperIds.length}
+                  ${
+                    Array.isArray(
+                      tracker.seenPaperIds
+                    )
+                      ? tracker.seenPaperIds.length
+                      : 0
+                  }
                 </p>
 
 
@@ -1735,13 +1871,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!tracker) {
 
+              showMessage(`
+                <h2>❌ Tracker not found</h2>
+
+                <p>
+                  This tracking profile no longer exists.
+                </p>
+              `);
+
               return;
 
             }
 
 
             runSavedTracker(
-              tracker.criteria
+              tracker.criteria || {}
             );
 
           }
@@ -1826,8 +1970,97 @@ document.addEventListener("DOMContentLoaded", () => {
     criteria
   ) {
 
-    results.innerHTML = `
+    // Normalize saved criteria so older/incomplete
+    // trackers cannot break the search.
+    const safeCriteria = {
 
+      keywords:
+        Array.isArray(criteria?.keywords)
+          ? criteria.keywords
+              .map(
+                keyword =>
+                  String(keyword).trim()
+              )
+              .filter(Boolean)
+          : [],
+
+      excluded:
+        Array.isArray(criteria?.excluded)
+          ? criteria.excluded
+              .map(
+                keyword =>
+                  String(keyword).trim()
+              )
+              .filter(Boolean)
+          : [],
+
+      author:
+        typeof criteria?.author === "string"
+          ? criteria.author.trim()
+          : "",
+
+      journal:
+        typeof criteria?.journal === "string"
+          ? criteria.journal.trim()
+          : "",
+
+      field:
+        typeof criteria?.field === "string"
+          ? criteria.field.trim()
+          : "",
+
+      dateRange:
+        criteria?.dateRange !== undefined &&
+        criteria?.dateRange !== null &&
+        criteria?.dateRange !== ""
+          ? String(criteria.dateRange)
+          : "all",
+
+      documentType:
+        typeof criteria?.documentType === "string"
+          ? criteria.documentType.trim()
+          : "",
+
+      accuracy:
+        Number.isFinite(
+          Number(criteria?.accuracy)
+        )
+          ? Number(criteria.accuracy)
+          : 0
+
+    };
+
+
+    // Make sure the saved tracker contains
+    // at least one searchable criterion.
+    const hasCriteria =
+      safeCriteria.keywords.length > 0 ||
+      safeCriteria.author ||
+      safeCriteria.journal ||
+      safeCriteria.field;
+
+
+    if (!hasCriteria) {
+
+      showMessage(`
+        <h2>⚠️ Invalid tracking profile</h2>
+
+        <p>
+          This saved tracking profile does not contain
+          any searchable criteria.
+        </p>
+
+        <p>
+          Delete this profile and create a new one.
+        </p>
+      `);
+
+      return;
+
+    }
+
+
+    results.innerHTML = `
       <div class="card">
 
         <h2>
@@ -1840,7 +2073,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </p>
 
       </div>
-
     `;
 
 
@@ -1848,7 +2080,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const papers =
         await searchWithCriteria(
-          criteria
+          safeCriteria
         );
 
 
@@ -1863,6 +2095,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>
             No papers currently match
             this tracking profile.
+          </p>
+
+          <p>
+            Try lowering the accuracy level
+            or broadening the search criteria.
           </p>
 
         `);
@@ -1880,7 +2117,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Tracking search error:",
+        error
+      );
 
 
       showMessage(`
@@ -1891,8 +2131,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <p>
           ${escapeHtml(
-            error.message
+            error?.message ||
+            "Unknown error while contacting OpenAlex."
           )}
+        </p>
+
+        <p>
+          Please try again in a few seconds.
         </p>
 
       `);
@@ -1974,10 +2219,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function escapeAttribute(text) {
 
     return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      );
 
   }
 
