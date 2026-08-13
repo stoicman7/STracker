@@ -1,148 +1,186 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STracker - Scientific Paper Discovery</title>
+document.addEventListener("DOMContentLoaded", function () {
 
-  <style>
-    * {
-      box-sizing: border-box;
+  const searchInput = document.getElementById("searchInput");
+  const results = document.getElementById("results");
+  const searchButton = document.querySelector("button");
+
+  searchButton.addEventListener("click", searchPapers);
+
+  searchInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      searchPapers();
+    }
+  });
+
+  async function searchPapers() {
+    const query = searchInput.value.trim();
+
+    if (!query) {
+      results.innerHTML = `
+        <div class="welcome">
+          <p>Please enter a research topic.</p>
+        </div>
+      `;
+      return;
     }
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f5f7fa;
-      color: #222;
-    }
-
-    header {
-      background: #111827;
-      color: white;
-      padding: 30px 20px;
-      text-align: center;
-    }
-
-    header h1 {
-      margin: 0 0 8px;
-    }
-
-    header p {
-      margin: 0;
-      color: #d1d5db;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 20px;
-    }
-
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-
-    input {
-      flex: 1;
-      padding: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 14px 22px;
-      border: none;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
-    .welcome,
-    .paper {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
-    }
-
-    .paper h2 {
-      margin-top: 0;
-    }
-
-    .paper a {
-      color: #2563eb;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .paper a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 600px) {
-      .search-box {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <header>
-    <h1>STracker</h1>
-    <p>Scientific Paper Discovery & Tracking</p>
-  </header>
-
-  <main>
-
-    <div class="search-box">
-      <input
-  type="text"
-  id="searchInput"
-  placeholder="Search scientific papers..."
-  onkeydown="handleKeyPress(event)"
->
-      <button onclick="searchPapers()">
-        Search
-      </button>
-    </div>
-
-    <div id="results">
-
+    results.innerHTML = `
       <div class="welcome">
-        <h2>Welcome to STracker</h2>
-
-        <p>
-          Discover, search, and explore scientific research
-          from around the world.
-        </p>
-
-        <p>
-          Enter a topic above to find scientific papers.
-        </p>
+        <p>Searching for the latest papers about
+        <strong>${escapeHtml(query)}</strong>...</p>
       </div>
+    `;
 
-    </div>
+    try {
+      const url =
+        "https://api.openalex.org/works?" +
+        "search=" + encodeURIComponent(query) +
+        "&filter=from_publication_date:2020-01-01" +
+        "&sort=publication_date:desc" +
+        "&per-page=20";
 
-  </main>
+      const response = await fetch(url);
 
-  <script src="app.js"></script>
+      if (!response.ok) {
+        throw new Error("OpenAlex request failed");
+      }
 
-</body>
-</html>
+      const data = await response.json();
+
+      if (!data.results || data.results.length === 0) {
+        results.innerHTML = `
+          <div class="welcome">
+            <h2>No papers found</h2>
+            <p>Try another research topic.</p>
+          </div>
+        `;
+        return;
+      }
+
+      results.innerHTML = `
+        <div class="welcome">
+          <h2>Latest papers</h2>
+          <p>
+            Showing the newest results for
+            <strong>${escapeHtml(query)}</strong>.
+          </p>
+        </div>
+      `;
+
+      data.results.forEach(function (paper) {
+
+        const title = paper.title || "Untitled";
+
+        const authors = paper.authorships
+          ?.slice(0, 3)
+          .map(function (author) {
+            return author.author?.display_name;
+          })
+          .filter(Boolean)
+          .join(", ") || "Unknown authors";
+
+        const date = paper.publication_date || "Unknown date";
+
+        const journal =
+          paper.primary_location?.source?.display_name ||
+          "Unknown journal";
+
+        const paperUrl =
+          paper.primary_location?.landing_page_url ||
+          paper.doi ||
+          "#";
+
+        const abstract = getAbstract(paper);
+
+        const paperElement = document.createElement("div");
+
+        paperElement.className = "paper";
+
+        paperElement.innerHTML = `
+          <h2>${escapeHtml(title)}</h2>
+
+          <p>
+            <strong>Published:</strong>
+            ${escapeHtml(date)}
+          </p>
+
+          <p>
+            <strong>Authors:</strong>
+            ${escapeHtml(authors)}
+          </p>
+
+          <p>
+            <strong>Source:</strong>
+            ${escapeHtml(journal)}
+          </p>
+
+          ${
+            abstract
+              ? `<p><strong>Abstract:</strong>
+                 ${escapeHtml(abstract)}</p>`
+              : ""
+          }
+
+          <a
+            href="${paperUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View paper →
+          </a>
+        `;
+
+        results.appendChild(paperElement);
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+      results.innerHTML = `
+        <div class="welcome">
+          <h2>Search error</h2>
+          <p>
+            We couldn't retrieve the papers right now.
+            Please try again.
+          </p>
+        </div>
+      `;
+    }
+  }
+
+
+  function getAbstract(paper) {
+
+    const invertedIndex = paper.abstract_inverted_index;
+
+    if (!invertedIndex) {
+      return "";
+    }
+
+    const words = [];
+
+    for (const word in invertedIndex) {
+
+      const positions = invertedIndex[word];
+
+      positions.forEach(function (position) {
+        words[position] = word;
+      });
+    }
+
+    return words.join(" ");
+  }
+
+
+  function escapeHtml(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+  }
+
+});
