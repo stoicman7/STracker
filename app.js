@@ -181,19 +181,27 @@ document.addEventListener("DOMContentLoaded", () => {
   // ACCURACY SLIDER
   // ==========================================
 
-  accuracyValue.textContent =
-    accuracyInput.value + "%";
+  // ==========================================
+// ACCURACY SLIDER
+// ==========================================
+
+accuracyInput.min = "0";
+accuracyInput.max = "100";
+accuracyInput.step = "1";
+
+accuracyValue.textContent =
+  accuracyInput.value + "%";
 
 
-  accuracyInput.addEventListener(
-    "input",
-    () => {
+accuracyInput.addEventListener(
+  "input",
+  () => {
 
-      accuracyValue.textContent =
-        accuracyInput.value + "%";
+    accuracyValue.textContent =
+      accuracyInput.value + "%";
 
-    }
-  );
+  }
+);
 
 
   // ==========================================
