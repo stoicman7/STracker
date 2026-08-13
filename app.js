@@ -32,10 +32,18 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    showMessage(
-      `Searching for recent research about
-      <strong>${escapeHtml(query)}</strong>...`
-    );
+    await fetchAndDisplayPapers(query, false);
+  }
+
+
+  async function fetchAndDisplayPapers(query, trackingMode) {
+
+    showMessage(`
+      <p>
+        Searching for recent research about
+        <strong>${escapeHtml(query)}</strong>...
+      </p>
+    `);
 
     try {
 
@@ -58,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const validPapers = (data.results || []).filter(function (paper) {
 
-        if (!paper.publication_date) {
+        if (!paper.id || !paper.publication_date) {
           return false;
         }
 
@@ -88,27 +96,315 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      results.innerHTML = `
-        <div class="welcome">
 
-          <h2>Latest research</h2>
+      if (trackingMode) {
 
-          <p>
-            Search:
-            <strong>${escapeHtml(query)}</strong>
-          </p>
+        await processTrackedTopic(
+          query,
+          validPapers
+        );
 
-          <p>
-            Showing the newest papers first.
-          </p>
+        return;
+      }
 
-        </div>
-      `;
 
-      validPapers.slice(0, 20).forEach(function (paper) {
+      displayPapers(
+        query,
+        validPapers,
+        "Latest research"
+      );
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      showMessage(`
+        <h2>Search error</h2>
+
+        <p>
+          Something went wrong while retrieving
+          the papers.
+        </p>
+      `);
+    }
+  }
+
+
+  async function trackCurrentTopic() {
+
+    const topic =
+      searchInput.value.trim();
+
+    if (!topic) {
+
+      showMessage(`
+        <h2>No topic entered</h2>
+
+        <p>
+          Enter a research topic first.
+        </p>
+      `);
+
+      return;
+    }
+
+
+    const topics =
+      getTrackedTopics();
+
+
+    const existingTopic =
+      topics.find(function (item) {
+
+        return (
+          item.name.toLowerCase() ===
+          topic.toLowerCase()
+        );
+
+      });
+
+
+    if (existingTopic) {
+
+      showMessage(`
+        <h2>Already tracking ✓</h2>
+
+        <p>
+          STracker is already tracking
+          <strong>${escapeHtml(topic)}</strong>.
+        </p>
+
+        <p>
+          Checking for new papers...
+        </p>
+      `);
+
+      await fetchAndDisplayPapers(
+        existingTopic.name,
+        true
+      );
+
+      return;
+    }
+
+
+    topics.push({
+
+      name: topic,
+
+      addedAt: TODAY,
+
+      lastChecked: null,
+
+      seenPaperIds: []
+
+    });
+
+
+    saveTrackedTopics(topics);
+
+    displayTrackedTopics();
+
+
+    showMessage(`
+      <h2>Topic tracked ✓</h2>
+
+      <p>
+        STracker is now tracking
+        <strong>${escapeHtml(topic)}</strong>.
+      </p>
+
+      <p>
+        Performing the first check...
+      </p>
+    `);
+
+
+    await fetchAndDisplayPapers(
+      topic,
+      true
+    );
+  }
+
+
+  async function processTrackedTopic(
+    topicName,
+    papers
+  ) {
+
+    const topics =
+      getTrackedTopics();
+
+
+    const topic =
+      topics.find(function (item) {
+
+        return (
+          item.name.toLowerCase() ===
+          topicName.toLowerCase()
+        );
+
+      });
+
+
+    if (!topic) {
+      return;
+    }
+
+
+    const previousIds =
+      topic.seenPaperIds || [];
+
+
+    const newPapers =
+      papers.filter(function (paper) {
+
+        return !previousIds.includes(
+          paper.id
+        );
+
+      });
+
+
+    const previousCount =
+      previousIds.length;
+
+
+    // Save all currently found papers
+    // so they become "seen" next time.
+
+    const currentIds =
+      papers.map(function (paper) {
+        return paper.id;
+      });
+
+
+    topic.seenPaperIds =
+      Array.from(
+        new Set(
+          previousIds.concat(currentIds)
+        )
+      );
+
+
+    topic.lastChecked =
+      TODAY;
+
+
+    saveTrackedTopics(topics);
+
+    displayTrackedTopics();
+
+
+    if (previousCount === 0) {
+
+      displayPapers(
+        topicName,
+        papers,
+        "First check"
+      );
+
+      return;
+    }
+
+
+    if (newPapers.length === 0) {
+
+      showMessage(`
+        <h2>No new papers 🎉</h2>
+
+        <p>
+          STracker didn't find any papers
+          that are new to this tracker.
+        </p>
+
+        <p>
+          Previously seen:
+          <strong>${previousCount}</strong>
+        </p>
+      `);
+
+      return;
+    }
+
+
+    displayPapers(
+      topicName,
+      newPapers,
+      "🟢 New papers"
+    );
+
+
+    const summary =
+      document.createElement("div");
+
+
+    summary.className =
+      "welcome";
+
+
+    summary.innerHTML = `
+
+      <h2>
+        🟢 ${newPapers.length}
+        new paper(s)
+      </h2>
+
+      <p>
+        These papers were not seen
+        during previous checks.
+      </p>
+
+      <p>
+        Previously seen:
+        <strong>${previousCount}</strong>
+      </p>
+
+    `;
+
+
+    results.insertBefore(
+      summary,
+      results.firstChild
+    );
+  }
+
+
+  function displayPapers(
+    query,
+    papers,
+    heading
+  ) {
+
+    results.innerHTML = `
+
+      <div class="welcome">
+
+        <h2>${heading}</h2>
+
+        <p>
+          Topic:
+          <strong>${escapeHtml(query)}</strong>
+        </p>
+
+        <p>
+          ${papers.length}
+          paper(s)
+        </p>
+
+      </div>
+
+    `;
+
+
+    papers.slice(0, 20).forEach(
+      function (paper) {
 
         const title =
           paper.title || "Untitled";
+
 
         const authors =
           paper.authorships
@@ -120,25 +416,36 @@ document.addEventListener("DOMContentLoaded", function () {
             .join(", ")
           || "Unknown authors";
 
+
         const date =
           paper.publication_date;
 
+
         const journal =
-          paper.primary_location?.source?.display_name
+          paper.primary_location
+            ?.source
+            ?.display_name
           || "Unknown source";
 
+
         const paperUrl =
-          paper.primary_location?.landing_page_url
+          paper.primary_location
+            ?.landing_page_url
           || paper.doi
           || "#";
+
 
         const abstract =
           getAbstract(paper);
 
+
         const paperElement =
           document.createElement("div");
 
-        paperElement.className = "paper";
+
+        paperElement.className =
+          "paper";
+
 
         paperElement.innerHTML = `
 
@@ -173,6 +480,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
 
           <p>
+
             <a
               href="${paperUrl}"
               target="_blank"
@@ -180,97 +488,18 @@ document.addEventListener("DOMContentLoaded", function () {
             >
               View paper →
             </a>
+
           </p>
 
         `;
 
-        results.appendChild(paperElement);
 
-      });
+        results.appendChild(
+          paperElement
+        );
 
-    } catch (error) {
-
-      console.error(error);
-
-      showMessage(`
-        <h2>Search error</h2>
-
-        <p>
-          Something went wrong while retrieving
-          the papers.
-        </p>
-      `);
-    }
-  }
-
-
-  function trackCurrentTopic() {
-
-    const topic =
-      searchInput.value.trim();
-
-    if (!topic) {
-
-      showMessage(
-        "Enter a topic before tracking it."
-      );
-
-      return;
-    }
-
-    const topics =
-      getTrackedTopics();
-
-    const exists =
-      topics.some(function (item) {
-        return item.name.toLowerCase() === topic.toLowerCase();
-      });
-
-    if (exists) {
-
-      showMessage(`
-        <h2>Already tracking</h2>
-
-        <p>
-          STracker is already tracking
-          <strong>${escapeHtml(topic)}</strong>.
-        </p>
-      `);
-
-      return;
-    }
-
-    topics.push({
-
-      name: topic,
-
-      addedAt: TODAY,
-
-      lastChecked: TODAY
-
-    });
-
-    localStorage.setItem(
-      "stracker_topics",
-      JSON.stringify(topics)
+      }
     );
-
-    displayTrackedTopics();
-
-    showMessage(`
-      <h2>Topic tracked ✓</h2>
-
-      <p>
-        STracker is now tracking
-        <strong>${escapeHtml(topic)}</strong>.
-      </p>
-
-      <p>
-        Next we'll make STracker detect
-        papers that are new since your
-        last check.
-      </p>
-    `);
   }
 
 
@@ -287,10 +516,22 @@ document.addEventListener("DOMContentLoaded", function () {
         ? JSON.parse(saved)
         : [];
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       return [];
+
     }
+  }
+
+
+  function saveTrackedTopics(topics) {
+
+    localStorage.setItem(
+      "stracker_topics",
+      JSON.stringify(topics)
+    );
   }
 
 
@@ -299,6 +540,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const topics =
       getTrackedTopics();
 
+
     if (topics.length === 0) {
 
       trackedTopics.innerHTML = "";
@@ -306,28 +548,51 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+
     trackedTopics.innerHTML = `
+
       <div class="welcome">
 
-        <h3>Tracked topics</h3>
+        <h3>
+          Tracked topics
+        </h3>
 
         ${topics.map(function (topic) {
 
+          const lastChecked =
+            topic.lastChecked
+            || "Not checked yet";
+
+
           return `
-            <div>
+
+            <div
+              style="
+                margin-bottom: 12px;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+              "
+            >
+
               <strong>
                 ${escapeHtml(topic.name)}
               </strong>
 
+              <br>
+
               <small>
-                Added ${escapeHtml(topic.addedAt)}
+                Last checked:
+                ${escapeHtml(lastChecked)}
               </small>
+
             </div>
+
           `;
 
         }).join("")}
 
       </div>
+
     `;
   }
 
@@ -335,9 +600,11 @@ document.addEventListener("DOMContentLoaded", function () {
   function showMessage(message) {
 
     results.innerHTML = `
+
       <div class="welcome">
         ${message}
       </div>
+
     `;
   }
 
@@ -347,23 +614,31 @@ document.addEventListener("DOMContentLoaded", function () {
     const invertedIndex =
       paper.abstract_inverted_index;
 
+
     if (!invertedIndex) {
       return "";
     }
 
+
     const words = [];
+
 
     for (const word in invertedIndex) {
 
       const positions =
         invertedIndex[word];
 
-      positions.forEach(function (position) {
 
-        words[position] = word;
+      positions.forEach(
+        function (position) {
 
-      });
+          words[position] =
+            word;
+
+        }
+      );
     }
+
 
     return words.join(" ");
   }
@@ -374,7 +649,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const div =
       document.createElement("div");
 
-    div.textContent = text;
+
+    div.textContent =
+      text;
+
 
     return div.innerHTML;
   }
