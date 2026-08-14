@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const addExcludeButton =
     document.getElementById("addExcludeButton");
 
+  const selectAllKeywordFields =
+  document.getElementById("selectAllKeywordFields");
+
   const authorInput =
     document.getElementById("authorInput");
 
