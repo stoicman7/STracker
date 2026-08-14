@@ -625,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
           showMessage(`
 
             <h2>
-              🔔 Research tracking created
+              🔔 Research tracking saved
             </h2>
 
             <p>
@@ -640,6 +640,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <p>
               You can check the tracker again later.
+            </p>
+
+            <p>
+              📚
+              <strong>
+                Papers tracked:
+              </strong>
+              ${getSeenCount(trackingResult.tracker)}
+            </p>
+
+            <p>
+              📅
+              <strong>
+                Last checked:
+              </strong>
+              ${escapeHtml(
+                trackingResult.tracker.lastChecked ||
+                "Never"
+              )}
             </p>
 
           `);
@@ -2963,34 +2982,48 @@ document.addEventListener("DOMContentLoaded", () => {
     papers
   ) {
 
-    const trackers =
+    let trackers =
       getAdvancedTrackers();
+
+
+    const normalizedCriteria =
+      cloneCriteria(criteria);
 
 
     const profileKey =
       createTrackerProfileKey(
-        criteria
+        normalizedCriteria
       );
 
 
     // ----------------------------------------
-    // FIND EXISTING TRACKER
+    // FIND ALL MATCHING TRACKERS
     // ----------------------------------------
 
-    let trackerIndex =
-      trackers.findIndex(
-        tracker =>
-          getTrackerProfileKey(
-            tracker
-          ) === profileKey
-      );
+    const matchingIndexes = [];
+
+
+    trackers.forEach(
+      (tracker, index) => {
+
+        if (
+          getTrackerProfileKey(tracker) ===
+          profileKey
+        ) {
+
+          matchingIndexes.push(index);
+
+        }
+
+      }
+    );
 
 
     // ----------------------------------------
     // NEW TRACKER
     // ----------------------------------------
 
-    if (trackerIndex === -1) {
+    if (!matchingIndexes.length) {
 
       const paperIds =
         Array.isArray(papers)
@@ -3006,12 +3039,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const tracker = {
 
         id:
-          createTrackerId(),
+          createStableTrackerId(
+            profileKey
+          ),
 
         profileKey,
 
         criteria:
-          cloneCriteria(criteria),
+          normalizedCriteria,
 
         createdAt:
           getToday(),
@@ -3047,6 +3082,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         newPapers: [],
 
+        previouslySeenPapers:
+          Array.isArray(papers)
+            ? papers
+            : [],
+
         isNewTracker: true
 
       };
@@ -3055,11 +3095,138 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ----------------------------------------
-    // EXISTING TRACKER
+    // EXISTING TRACKER(S)
     // ----------------------------------------
 
+    const primaryIndex =
+      matchingIndexes[0];
+
+
     const tracker =
-      trackers[trackerIndex];
+      normalizeTracker(
+        trackers[primaryIndex],
+        normalizedCriteria,
+        profileKey
+      );
+
+
+    // ----------------------------------------
+    // MERGE DUPLICATE TRACKERS
+    // ----------------------------------------
+
+    if (matchingIndexes.length > 1) {
+
+      const allSeenIds = new Set(
+        tracker.seenPaperIds
+      );
+
+
+      let totalNew =
+        Number(
+          tracker.totalNewPapers || 0
+        );
+
+
+      let lastNew =
+        Number(
+          tracker.lastCheckNewPapers || 0
+        );
+
+
+      for (
+        let i = 1;
+        i < matchingIndexes.length;
+        i++
+      ) {
+
+        const duplicate =
+          normalizeTracker(
+            trackers[
+              matchingIndexes[i]
+            ],
+            normalizedCriteria,
+            profileKey
+          );
+
+
+        duplicate.seenPaperIds
+          .forEach(
+            id =>
+              allSeenIds.add(id)
+          );
+
+
+        totalNew =
+          Math.max(
+            totalNew,
+            Number(
+              duplicate.totalNewPapers || 0
+            )
+          );
+
+
+        lastNew =
+          Math.max(
+            lastNew,
+            Number(
+              duplicate.lastCheckNewPapers || 0
+            )
+          );
+
+      }
+
+
+      tracker.seenPaperIds =
+        Array.from(allSeenIds);
+
+
+      tracker.totalNewPapers =
+        totalNew;
+
+
+      tracker.lastCheckNewPapers =
+        lastNew;
+
+
+      // Remove duplicate profiles.
+      trackers =
+        trackers.filter(
+          (item, index) =>
+            !matchingIndexes
+              .slice(1)
+              .includes(index)
+        );
+
+
+      // Primary index may have shifted.
+      const newPrimaryIndex =
+        trackers.findIndex(
+          item =>
+            String(item.id) ===
+            String(tracker.id)
+        );
+
+
+      if (newPrimaryIndex !== -1) {
+
+        trackers[newPrimaryIndex] =
+          tracker;
+
+      }
+
+    }
+
+
+    // ----------------------------------------
+    // NORMAL EXISTING UPDATE
+    // ----------------------------------------
+
+    const actualIndex =
+      trackers.findIndex(
+        item =>
+          String(item.id) ===
+          String(tracker.id)
+      );
 
 
     const check =
@@ -3069,16 +3236,16 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    tracker.profileKey =
-      profileKey;
+    if (actualIndex !== -1) {
 
+      trackers[actualIndex] =
+        tracker;
 
-    tracker.criteria =
-      cloneCriteria(criteria);
+    } else {
 
+      trackers.push(tracker);
 
-    trackers[trackerIndex] =
-      tracker;
+    }
 
 
     saveAdvancedTrackers(
@@ -3093,7 +3260,76 @@ document.addEventListener("DOMContentLoaded", () => {
       newPapers:
         check.newPapers,
 
+      previouslySeenPapers:
+        check.previouslySeenPapers,
+
       isNewTracker: false
+
+    };
+
+  }
+
+
+  // ==========================================
+  // NORMALIZE TRACKER
+  // ==========================================
+
+  function normalizeTracker(
+    tracker,
+    criteria,
+    profileKey
+  ) {
+
+    const safeTracker =
+      tracker || {};
+
+
+    const seen =
+      Array.isArray(
+        safeTracker.seenPaperIds
+      )
+        ? safeTracker.seenPaperIds
+            .filter(Boolean)
+        : [];
+
+
+    return {
+
+      ...safeTracker,
+
+      id:
+        safeTracker.id ||
+        createStableTrackerId(
+          profileKey
+        ),
+
+      profileKey,
+
+      criteria:
+        cloneCriteria(criteria),
+
+      createdAt:
+        safeTracker.createdAt ||
+        getToday(),
+
+      lastChecked:
+        safeTracker.lastChecked ||
+        "",
+
+      seenPaperIds:
+        Array.from(
+          new Set(seen)
+        ),
+
+      lastCheckNewPapers:
+        Number(
+          safeTracker.lastCheckNewPapers || 0
+        ),
+
+      totalNewPapers:
+        Number(
+          safeTracker.totalNewPapers || 0
+        )
 
     };
 
@@ -3141,6 +3377,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // IMPORTANT:
+    // Never reset this history.
     const oldSeen =
       new Set(
         Array.isArray(
@@ -3200,7 +3438,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ----------------------------------------
-    // COMBINE OLD + CURRENT IDS
+    // PRESERVE ALL HISTORY
     // ----------------------------------------
 
     const combinedIds =
@@ -3426,7 +3664,9 @@ document.addEventListener("DOMContentLoaded", () => {
       dateRange:
         String(
           criteria?.dateRange || "all"
-        ),
+        )
+          .trim()
+          .toLowerCase(),
 
       documentType:
         normalizeString(
@@ -3443,6 +3683,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return JSON.stringify(
       normalized
+    );
+
+  }
+
+
+  // ==========================================
+  // STABLE TRACKER ID
+  // ==========================================
+
+  function createStableTrackerId(
+    profileKey
+  ) {
+
+    // Deterministic hash.
+    // Same research profile = same ID.
+    let hash = 0;
+
+
+    for (
+      let i = 0;
+      i < profileKey.length;
+      i++
+    ) {
+
+      hash =
+        (
+          (
+            hash << 5
+          ) -
+          hash +
+          profileKey.charCodeAt(i)
+        ) |
+        0;
+
+    }
+
+
+    return (
+      "tracker-" +
+      Math.abs(hash).toString(36)
     );
 
   }
@@ -3641,7 +3921,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       localStorage.setItem(
         "stracker_advanced",
-        JSON.stringify(trackers)
+        JSON.stringify(
+          Array.isArray(trackers)
+            ? trackers
+            : []
+        )
       );
 
 
@@ -3663,18 +3947,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // CREATE TRACKER ID
+  // GET SEEN COUNT
   // ==========================================
 
-  function createTrackerId() {
+  function getSeenCount(tracker) {
 
-    return (
-      Date.now() +
-      "-" +
-      Math.random()
-        .toString(36)
-        .slice(2, 9)
-    );
+    return Array.isArray(
+      tracker?.seenPaperIds
+    )
+      ? tracker.seenPaperIds.length
+      : 0;
 
   }
 
@@ -3779,11 +4061,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             const totalSeen =
-              Array.isArray(
-                tracker.seenPaperIds
-              )
-                ? tracker.seenPaperIds.length
-                : 0;
+              getSeenCount(tracker);
 
 
             return `
@@ -4259,101 +4537,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // NORMALIZE SAVED CRITERIA
     // ----------------------------------------
 
-    const safeCriteria = {
-
-      keywords:
-        Array.isArray(
-          tracker.criteria?.keywords
-        )
-          ? tracker.criteria.keywords
-              .map(
-                keyword =>
-                  String(keyword).trim()
-              )
-              .filter(Boolean)
-          : [],
-
-      excluded:
-        Array.isArray(
-          tracker.criteria?.excluded
-        )
-          ? tracker.criteria.excluded
-              .map(
-                keyword =>
-                  String(keyword).trim()
-              )
-              .filter(Boolean)
-          : [],
-
-      keywordFields:
-        Array.isArray(
-          tracker.criteria?.keywordFields
-        )
-          ? tracker.criteria.keywordFields
-              .filter(
-                field =>
-                  [
-                    "title",
-                    "abstract",
-                    "authors",
-                    "journal",
-                    "concepts"
-                  ].includes(field)
-              )
-          : [],
-
-      keywordMode:
-        tracker.criteria?.keywordMode === "any"
-          ? "any"
-          : "all",
-
-      author:
-        typeof tracker.criteria?.author === "string"
-          ? tracker.criteria.author.trim()
-          : "",
-
-      journal:
-        typeof tracker.criteria?.journal === "string"
-          ? tracker.criteria.journal.trim()
-          : "",
-
-      field:
-        typeof tracker.criteria?.field === "string"
-          ? tracker.criteria.field.trim()
-          : "",
-
-      dateRange:
-        tracker.criteria?.dateRange !== undefined &&
-        tracker.criteria?.dateRange !== null &&
-        tracker.criteria?.dateRange !== ""
-          ? String(
-              tracker.criteria.dateRange
-            )
-          : "all",
-
-      documentType:
-        typeof tracker.criteria?.documentType === "string"
-          ? tracker.criteria.documentType.trim()
-          : "",
-
-      accuracy:
-        Number.isFinite(
-          Number(
-            tracker.criteria?.accuracy
-          )
-        )
-          ? Math.max(
-              0,
-              Math.min(
-                100,
-                Number(
-                  tracker.criteria.accuracy
-                )
-              )
-            )
-          : 0
-
-    };
+    const safeCriteria = cloneCriteria(
+      tracker.criteria || {}
+    );
 
 
     // ----------------------------------------
@@ -4407,7 +4593,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       // --------------------------------------
-      // COMPARE WITH PREVIOUSLY SEEN PAPERS
+      // GET CURRENT TRACKER FROM STORAGE
+      // --------------------------------------
+
+      let trackers =
+        getAdvancedTrackers();
+
+
+      const profileKey =
+        createTrackerProfileKey(
+          safeCriteria
+        );
+
+
+      // Find by stable profile identity first.
+      let trackerIndex =
+        trackers.findIndex(
+          item =>
+            getTrackerProfileKey(item) ===
+            profileKey
+        );
+
+
+      // Fallback to old ID.
+      if (trackerIndex === -1) {
+
+        trackerIndex =
+          trackers.findIndex(
+            item =>
+              String(item.id) ===
+              String(tracker.id)
+          );
+
+      }
+
+
+      if (trackerIndex === -1) {
+
+        showMessage(`
+
+          <h2>
+            ❌ Tracker not found
+          </h2>
+
+          <p>
+            This tracking profile no longer
+            exists in local storage.
+          </p>
+
+        `);
+
+        return;
+
+      }
+
+
+      // --------------------------------------
+      // NORMALIZE CURRENT TRACKER
+      // --------------------------------------
+
+      tracker =
+        normalizeTracker(
+          trackers[trackerIndex],
+          safeCriteria,
+          profileKey
+        );
+
+
+      // --------------------------------------
+      // COMPARE WITH HISTORY
       // --------------------------------------
 
       const check =
@@ -4418,32 +4672,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       // --------------------------------------
-      // SAVE UPDATED TRACKER
+      // SAVE
       // --------------------------------------
 
-      const trackers =
-        getAdvancedTrackers();
+      trackers[trackerIndex] =
+        tracker;
 
 
-      const trackerIndex =
-        trackers.findIndex(
-          item =>
-            String(item.id) ===
-            String(tracker.id)
-        );
-
-
-      if (trackerIndex !== -1) {
-
-        trackers[trackerIndex] =
-          tracker;
-
-
-        saveAdvancedTrackers(
-          trackers
-        );
-
-      }
+      saveAdvancedTrackers(
+        trackers
+      );
 
 
       // --------------------------------------
@@ -4479,11 +4717,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <strong>
               Papers tracked:
             </strong>
-            ${Array.isArray(
-              tracker.seenPaperIds
-            )
-              ? tracker.seenPaperIds.length
-              : 0}
+            ${getSeenCount(tracker)}
           </p>
 
           <p>
@@ -4570,6 +4804,14 @@ document.addEventListener("DOMContentLoaded", () => {
             ${check.previouslySeenPapers.length}
           </strong>
           previously seen
+
+          &nbsp;•&nbsp;
+
+          📊
+          <strong>
+            ${getSeenCount(tracker)}
+          </strong>
+          tracked
 
           &nbsp;•&nbsp;
 
