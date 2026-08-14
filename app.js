@@ -4299,18 +4299,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     </div>
 
-                    <div>
-
-                      <strong>
-                        Last checked:
-                      </strong>
-
-                      ${escapeHtml(
-                        tracker.lastChecked ||
-                        "Never"
-                      )}
-
-                    </div>
+                    
 
                   </div>
 
