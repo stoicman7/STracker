@@ -4071,106 +4071,59 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   function buildTrackerStatisticsHtml(
-    tracker
-  ) {
+  tracker
+) {
 
-    const papersTracked =
-      getSeenCount(
-        tracker
-      );
+  const papersTracked =
+    getSeenCount(
+      tracker
+    );
 
+  const newOnLastCheck =
+    Number(
+      tracker.lastCheckNewPapers || 0
+    );
 
-    const newOnLastCheck =
-      Number(
-        tracker.lastCheckNewPapers || 0
-      );
+  const totalNewDiscovered =
+    Number(
+      tracker.totalNewPapers || 0
+    );
 
+  return `
 
-    const totalNewDiscovered =
-      Number(
-        tracker.totalNewPapers || 0
-      );
+    <div class="tracker-stats-compact">
 
-
-    return `
-
-      <div class="tracker-stats">
-
-        <div class="tracker-stat">
-
-          <div class="tracker-stat-icon">
-            📚
-          </div>
-
-          <div class="tracker-stat-value">
-            ${papersTracked}
-          </div>
-
-          <div class="tracker-stat-label">
-            Papers tracked
-          </div>
-
-        </div>
-
-
-        <div class="tracker-stat">
-
-          <div class="tracker-stat-icon">
-            🆕
-          </div>
-
-          <div class="tracker-stat-value">
-            ${newOnLastCheck}
-          </div>
-
-          <div class="tracker-stat-label">
-            New on last check
-          </div>
-
-        </div>
-
-
-        <div class="tracker-stat">
-
-          <div class="tracker-stat-icon">
-            🔔
-          </div>
-
-          <div class="tracker-stat-value">
-            ${totalNewDiscovered}
-          </div>
-
-          <div class="tracker-stat-label">
-            Total new discovered
-          </div>
-
-        </div>
-
-
-        <div class="tracker-stat">
-
-          <div class="tracker-stat-icon">
-            📅
-          </div>
-
-          <div class="tracker-stat-value tracker-stat-date">
-            ${escapeHtml(
-              tracker.lastChecked ||
-              "Never"
-            )}
-          </div>
-
-          <div class="tracker-stat-label">
-            Last checked
-          </div>
-
-        </div>
-
+      <div class="tracker-stat-compact">
+        <span class="tracker-stat-icon">📚</span>
+        <strong>${papersTracked}</strong>
+        <span>Papers</span>
       </div>
 
-    `;
+      <div class="tracker-stat-compact">
+        <span class="tracker-stat-icon">🆕</span>
+        <strong>${newOnLastCheck}</strong>
+        <span>New</span>
+      </div>
 
-  }
+      <div class="tracker-stat-compact">
+        <span class="tracker-stat-icon">🔔</span>
+        <strong>${totalNewDiscovered}</strong>
+        <span>Total new</span>
+      </div>
+
+      <div class="tracker-stat-compact">
+        <span class="tracker-stat-icon">📅</span>
+        <strong>${escapeHtml(
+          tracker.lastChecked || "Never"
+        )}</strong>
+        <span>Last checked</span>
+      </div>
+
+    </div>
+
+  `;
+
+}
 
 
   // ==========================================
