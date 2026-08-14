@@ -4079,44 +4079,77 @@ document.addEventListener("DOMContentLoaded", () => {
       tracker
     );
 
+
   const newOnLastCheck =
     Number(
       tracker.lastCheckNewPapers || 0
     );
+
 
   const totalNewDiscovered =
     Number(
       tracker.totalNewPapers || 0
     );
 
+
+  const lastChecked =
+    tracker.lastChecked ||
+    "Never";
+
+
   return `
 
-    <div class="tracker-stats-compact">
+    <div class="tracker-stats">
 
-      <div class="tracker-stat-compact">
-        <span class="tracker-stat-icon">📚</span>
-        <strong>${papersTracked}</strong>
-        <span>Papers</span>
+      <div class="tracker-stat">
+
+        <span class="tracker-stat-value">
+          ${papersTracked}
+        </span>
+
+        <span class="tracker-stat-label">
+          Papers tracked
+        </span>
+
       </div>
 
-      <div class="tracker-stat-compact">
-        <span class="tracker-stat-icon">🆕</span>
-        <strong>${newOnLastCheck}</strong>
-        <span>New</span>
+
+      <div class="tracker-stat">
+
+        <span class="tracker-stat-value">
+          ${newOnLastCheck}
+        </span>
+
+        <span class="tracker-stat-label">
+          New on last check
+        </span>
+
       </div>
 
-      <div class="tracker-stat-compact">
-        <span class="tracker-stat-icon">🔔</span>
-        <strong>${totalNewDiscovered}</strong>
-        <span>Total new</span>
+
+      <div class="tracker-stat">
+
+        <span class="tracker-stat-value">
+          ${totalNewDiscovered}
+        </span>
+
+        <span class="tracker-stat-label">
+          Total new
+        </span>
+
       </div>
 
-      <div class="tracker-stat-compact">
-        <span class="tracker-stat-icon">📅</span>
-        <strong>${escapeHtml(
-          tracker.lastChecked || "Never"
-        )}</strong>
-        <span>Last checked</span>
+
+      <div class="tracker-stat">
+
+        <span class="tracker-stat-value">
+          ${escapeHtml(lastChecked)}
+        </span>
+
+        <span class="tracker-stat-label">
+          Last checked
+        </span>
+
       </div>
 
     </div>
@@ -4124,7 +4157,6 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
 
 }
-
 
   // ==========================================
   // DISPLAY TRACKED TOPICS
