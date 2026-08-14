@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     searchInput.addEventListener(
       "keydown",
-      (event) => {
+      event => {
 
         if (event.key === "Enter") {
 
@@ -135,14 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
 
       const papers =
-        await searchFreeSources(
-          query
-        );
+        await searchFreeSources(query);
 
 
-      sortPapersNewestFirst(
-        papers
-      );
+      sortPapersNewestFirst(papers);
 
 
       if (!papers.length) {
@@ -301,12 +297,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         const allChecked =
-          Array.from(
-            checkboxes
-          ).every(
-            checkbox =>
-              checkbox.checked
-          );
+          Array.from(checkboxes)
+            .every(
+              checkbox =>
+                checkbox.checked
+            );
 
 
         checkboxes.forEach(
@@ -348,9 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const row =
-      document.createElement(
-        "div"
-      );
+      document.createElement("div");
 
 
     row.className =
@@ -358,9 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const input =
-      document.createElement(
-        "input"
-      );
+      document.createElement("input");
 
 
     input.type =
@@ -376,9 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const removeButton =
-      document.createElement(
-        "button"
-      );
+      document.createElement("button");
 
 
     removeButton.type =
@@ -403,19 +392,11 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    row.appendChild(
-      input
-    );
+    row.appendChild(input);
 
+    row.appendChild(removeButton);
 
-    row.appendChild(
-      removeButton
-    );
-
-
-    container.appendChild(
-      row
-    );
+    container.appendChild(row);
 
   }
 
@@ -478,9 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const accuracy =
       accuracyInput
-        ? Number(
-            accuracyInput.value
-          )
+        ? Number(accuracyInput.value)
         : 0;
 
 
@@ -523,15 +502,10 @@ document.addEventListener("DOMContentLoaded", () => {
           : "",
 
       accuracy:
-        Number.isFinite(
-          accuracy
-        )
+        Number.isFinite(accuracy)
           ? Math.max(
               0,
-              Math.min(
-                100,
-                accuracy
-              )
+              Math.min(100, accuracy)
             )
           : 0
 
@@ -550,9 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "click",
       () => {
 
-        runAdvancedSearch(
-          false
-        );
+        runAdvancedSearch(false);
 
       }
     );
@@ -570,9 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "click",
       () => {
 
-        runAdvancedSearch(
-          true
-        );
+        runAdvancedSearch(true);
 
       }
     );
@@ -624,25 +594,30 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
 
       const papers =
-        await searchWithCriteria(
-          criteria
-        );
+        await searchWithCriteria(criteria);
 
 
       // ======================================
-      // CREATE NEW TRACKER
+      // REAL TRACKING
       // ======================================
 
       if (shouldTrack) {
 
-        const tracker =
-          createAdvancedTracker(
+        const trackingResult =
+          createOrUpdateTracker(
             criteria,
             papers
           );
 
 
         displayTrackedTopics();
+
+
+        const markedPapers =
+          markTrackerPapers(
+            papers,
+            trackingResult.newPapers
+          );
 
 
         if (!papers.length) {
@@ -675,8 +650,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         displayResults(
-          papers,
-          "🎯 Matching research"
+          markedPapers,
+          trackingResult.isNewTracker
+            ? "🎯 Research tracking started"
+            : `🎯 Tracker updated — ${trackingResult.newPapers.length} new`
+        );
+
+
+        updateTrackerCounter(
+          trackingResult.newPapers.length,
+          markedPapers.length
         );
 
 
@@ -758,9 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // SEARCH WITH CRITERIA
   // ==========================================
 
-  async function searchWithCriteria(
-    criteria
-  ) {
+  async function searchWithCriteria(criteria) {
 
     let query =
       criteria.keywords.join(" ");
@@ -798,9 +779,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     let papers =
-      await searchFreeSources(
-        query
-      );
+      await searchFreeSources(query);
 
 
     papers =
@@ -837,9 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    sortPapersNewestFirst(
-      papers
-    );
+    sortPapersNewestFirst(papers);
 
 
     return papers;
@@ -851,9 +828,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // PAPER DATE
   // ==========================================
 
-  function getPaperDate(
-    paper
-  ) {
+  function getPaperDate(paper) {
 
     const rawDate =
       paper.publication_date ||
@@ -864,23 +839,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const time =
-      new Date(
-        rawDate
-      ).getTime();
+      new Date(rawDate).getTime();
 
 
-    return Number.isFinite(
-      time
-    )
+    return Number.isFinite(time)
       ? time
       : 0;
 
   }
 
 
-  function sortPapersNewestFirst(
-    papers
-  ) {
+  function sortPapersNewestFirst(papers) {
 
     return papers.sort(
       (a, b) =>
@@ -895,15 +864,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // FREE RESEARCH SOURCES
   // ==========================================
 
-  async function searchFreeSources(
-    query
-  ) {
+  async function searchFreeSources(query) {
 
     const resultsById =
       new Map();
-
-
-    let europePapers = [];
 
 
     // ----------------------------------------
@@ -912,10 +876,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
 
-      europePapers =
-        await searchEuropePMC(
-          query
-        );
+      const europePapers =
+        await searchEuropePMC(query);
 
 
       europePapers.forEach(
@@ -953,9 +915,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
 
       const pubmedPapers =
-        await searchPubMed(
-          query
-        );
+        await searchPubMed(query);
 
 
       pubmedPapers.forEach(
@@ -967,11 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
 
-          if (
-            !resultsById.has(
-              key
-            )
-          ) {
+          if (!resultsById.has(key)) {
 
             resultsById.set(
               key,
@@ -981,9 +937,7 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
 
             const existing =
-              resultsById.get(
-                key
-              );
+              resultsById.get(key);
 
 
             resultsById.set(
@@ -1013,9 +967,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return Array.from(
       resultsById.values()
     )
-      .filter(
-        isValidDate
-      );
+      .filter(isValidDate);
 
   }
 
@@ -1024,36 +976,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // EUROPE PMC
   // ==========================================
 
-  async function searchEuropePMC(
-    query
-  ) {
+  async function searchEuropePMC(query) {
 
     const params =
       new URLSearchParams();
 
 
-    params.set(
-      "query",
-      query
-    );
+    params.set("query", query);
 
+    params.set("format", "json");
 
-    params.set(
-      "format",
-      "json"
-    );
+    params.set("resultType", "core");
 
-
-    params.set(
-      "resultType",
-      "core"
-    );
-
-
-    params.set(
-      "pageSize",
-      "100"
-    );
+    params.set("pageSize", "100");
 
 
     const url =
@@ -1062,9 +997,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const response =
-      await fetch(
-        url
-      );
+      await fetch(url);
 
 
     if (!response.ok) {
@@ -1099,18 +1032,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // MAP EUROPE PMC RECORD
   // ==========================================
 
-  function mapEuropePMCRecord(
-    record
-  ) {
+  function mapEuropePMCRecord(record) {
 
     const pmid =
-      record.pmid ||
-      "";
+      record.pmid || "";
 
 
     const doi =
-      record.doi ||
-      "";
+      record.doi || "";
 
 
     const id =
@@ -1142,19 +1071,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     let abstract =
-      record.abstractText ||
-      "";
+      record.abstractText || "";
 
 
     if (
-      typeof abstract !==
-      "string"
+      typeof abstract !== "string"
     ) {
 
       abstract =
-        String(
-          abstract || ""
-        );
+        String(abstract || "");
 
     }
 
@@ -1263,9 +1188,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // PUBMED
   // ==========================================
 
-  async function searchPubMed(
-    query
-  ) {
+  async function searchPubMed(query) {
 
     const searchParams =
       new URLSearchParams();
@@ -1276,24 +1199,20 @@ document.addEventListener("DOMContentLoaded", () => {
       "pubmed"
     );
 
-
     searchParams.set(
       "term",
       query
     );
-
 
     searchParams.set(
       "retmode",
       "json"
     );
 
-
     searchParams.set(
       "retmax",
       "100"
     );
-
 
     searchParams.set(
       "sort",
@@ -1307,9 +1226,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const searchResponse =
-      await fetch(
-        searchUrl
-      );
+      await fetch(searchUrl);
 
 
     if (!searchResponse.ok) {
@@ -1346,12 +1263,10 @@ document.addEventListener("DOMContentLoaded", () => {
       "pubmed"
     );
 
-
     summaryParams.set(
       "id",
       ids.join(",")
     );
-
 
     summaryParams.set(
       "retmode",
@@ -1365,9 +1280,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const summaryResponse =
-      await fetch(
-        summaryUrl
-      );
+      await fetch(summaryUrl);
 
 
     if (!summaryResponse.ok) {
@@ -1426,14 +1339,11 @@ document.addEventListener("DOMContentLoaded", () => {
   ) {
 
     const authors =
-      Array.isArray(
-        record.authors
-      )
+      Array.isArray(record.authors)
         ? record.authors
             .map(
               author =>
-                author.name ||
-                ""
+                author.name || ""
             )
             .filter(Boolean)
             .join(", ")
@@ -1444,24 +1354,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (
-      Array.isArray(
-        record.articleids
-      )
+      Array.isArray(record.articleids)
     ) {
 
       const doiObject =
         record.articleids.find(
           item =>
-            item.idtype ===
-            "doi"
+            item.idtype === "doi"
         );
 
 
       if (doiObject) {
 
         doi =
-          doiObject.value ||
-          "";
+          doiObject.value || "";
 
       }
 
@@ -1559,9 +1465,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // NORMALIZE PUBMED DATE
   // ==========================================
 
-  function normalizePubMedDate(
-    value
-  ) {
+  function normalizePubMedDate(value) {
 
     if (!value) {
 
@@ -1606,22 +1510,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const month =
-      monthNames[
-        match[2]
-      ] ||
+      monthNames[match[2]] ||
       "01";
 
 
     const day =
       match[3]
         ? String(
-            Number(
-              match[3]
-            )
-          ).padStart(
-            2,
-            "0"
-          )
+            Number(match[3])
+          ).padStart(2, "0")
         : "01";
 
 
@@ -1634,9 +1531,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // NORMALIZE DOCUMENT TYPE
   // ==========================================
 
-  function normalizeDocumentType(
-    types
-  ) {
+  function normalizeDocumentType(types) {
 
     if (!Array.isArray(types)) {
 
@@ -1651,33 +1546,21 @@ document.addEventListener("DOMContentLoaded", () => {
         .toLowerCase();
 
 
-    if (
-      text.includes(
-        "review"
-      )
-    ) {
+    if (text.includes("review")) {
 
       return "review";
 
     }
 
 
-    if (
-      text.includes(
-        "dataset"
-      )
-    ) {
+    if (text.includes("dataset")) {
 
       return "dataset";
 
     }
 
 
-    if (
-      text.includes(
-        "preprint"
-      )
-    ) {
+    if (text.includes("preprint")) {
 
       return "preprint";
 
@@ -1693,9 +1576,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // PAPER DEDUPLICATION
   // ==========================================
 
-  function getPaperDeduplicationKey(
-    paper
-  ) {
+  function getPaperDeduplicationKey(paper) {
 
     if (paper.pmid) {
 
@@ -1711,9 +1592,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (paper.doi) {
 
       return (
-        `doi:${String(
-          paper.doi
-        )
+        `doi:${String(paper.doi)
           .replace(
             /^https?:\/\/doi\.org\//i,
             ""
@@ -1840,13 +1719,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // DATE VALIDATION
   // ==========================================
 
-  function isValidDate(
-    paper
-  ) {
+  function isValidDate(paper) {
 
-    if (
-      !paper.publication_date
-    ) {
+    if (!paper.publication_date) {
 
       return false;
 
@@ -1859,11 +1734,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    if (Number.isNaN(date.getTime())) {
 
       return false;
 
@@ -1902,45 +1773,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const title =
       String(
-        paper.title ||
-        ""
+        paper.title || ""
       );
 
 
     const abstract =
-      getAbstract(
-        paper
-      );
+      getAbstract(paper);
 
 
     const authors =
-      getAuthors(
-        paper
-      );
+      getAuthors(paper);
 
 
     const journal =
-      getJournal(
-        paper
-      );
+      getJournal(paper);
 
 
     const concepts =
-      getConcepts(
-        paper
-      );
+      getConcepts(paper);
 
 
     const allText = [
 
       title,
-
       abstract,
-
       authors,
-
       journal,
-
       concepts
 
     ]
@@ -1960,14 +1818,10 @@ document.addEventListener("DOMContentLoaded", () => {
         : [];
 
 
-    for (
-      const keyword of excluded
-    ) {
+    for (const keyword of excluded) {
 
       const term =
-        String(
-          keyword || ""
-        )
+        String(keyword || "")
           .trim()
           .toLowerCase();
 
@@ -1979,11 +1833,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
 
-      if (
-        allText.includes(
-          term
-        )
-      ) {
+      if (allText.includes(term)) {
 
         return false;
 
@@ -2003,9 +1853,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ? safeCriteria.keywords
             .map(
               keyword =>
-                String(
-                  keyword || ""
-                )
+                String(keyword || "")
                   .trim()
                   .toLowerCase()
             )
@@ -2028,74 +1876,52 @@ document.addEventListener("DOMContentLoaded", () => {
     let searchableText = "";
 
 
-    if (
-      selectedFields.length > 0
-    ) {
+    if (selectedFields.length > 0) {
 
       const fieldTexts = [];
 
 
       if (
-        selectedFields.includes(
-          "title"
-        )
+        selectedFields.includes("title")
       ) {
 
-        fieldTexts.push(
-          title
-        );
+        fieldTexts.push(title);
 
       }
 
 
       if (
-        selectedFields.includes(
-          "abstract"
-        )
+        selectedFields.includes("abstract")
       ) {
 
-        fieldTexts.push(
-          abstract
-        );
+        fieldTexts.push(abstract);
 
       }
 
 
       if (
-        selectedFields.includes(
-          "authors"
-        )
+        selectedFields.includes("authors")
       ) {
 
-        fieldTexts.push(
-          authors
-        );
+        fieldTexts.push(authors);
 
       }
 
 
       if (
-        selectedFields.includes(
-          "journal"
-        )
+        selectedFields.includes("journal")
       ) {
 
-        fieldTexts.push(
-          journal
-        );
+        fieldTexts.push(journal);
 
       }
 
 
       if (
-        selectedFields.includes(
-          "concepts"
-        )
+        selectedFields.includes("concepts")
       ) {
 
-        fieldTexts.push(
-          concepts
-        );
+        fieldTexts.push(concepts);
 
       }
 
@@ -2117,27 +1943,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // KEYWORD MATCH MODE
     // ----------------------------------------
 
-    if (
-      keywords.length > 0
-    ) {
+    if (keywords.length > 0) {
 
       const keywordMode =
-        safeCriteria.keywordMode ===
-        "any"
+        safeCriteria.keywordMode === "any"
           ? "any"
           : "all";
 
 
-      if (
-        keywordMode === "any"
-      ) {
+      if (keywordMode === "any") {
 
         const anyMatch =
           keywords.some(
             keyword =>
-              searchableText.includes(
-                keyword
-              )
+              searchableText.includes(keyword)
           );
 
 
@@ -2152,9 +1971,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const allMatch =
           keywords.every(
             keyword =>
-              searchableText.includes(
-                keyword
-              )
+              searchableText.includes(keyword)
           );
 
 
@@ -2175,8 +1992,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const authorFilter =
       String(
-        safeCriteria.author ||
-        ""
+        safeCriteria.author || ""
       )
         .trim()
         .toLowerCase();
@@ -2186,9 +2002,7 @@ document.addEventListener("DOMContentLoaded", () => {
       authorFilter &&
       !authors
         .toLowerCase()
-        .includes(
-          authorFilter
-        )
+        .includes(authorFilter)
     ) {
 
       return false;
@@ -2202,8 +2016,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const journalFilter =
       String(
-        safeCriteria.journal ||
-        ""
+        safeCriteria.journal || ""
       )
         .trim()
         .toLowerCase();
@@ -2213,9 +2026,7 @@ document.addEventListener("DOMContentLoaded", () => {
       journalFilter &&
       !journal
         .toLowerCase()
-        .includes(
-          journalFilter
-        )
+        .includes(journalFilter)
     ) {
 
       return false;
@@ -2229,8 +2040,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fieldFilter =
       String(
-        safeCriteria.field ||
-        ""
+        safeCriteria.field || ""
       )
         .trim()
         .toLowerCase();
@@ -2238,9 +2048,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (
       fieldFilter &&
-      !allText.includes(
-        fieldFilter
-      )
+      !allText.includes(fieldFilter)
     ) {
 
       return false;
@@ -2254,19 +2062,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const dateRange =
       String(
-        safeCriteria.dateRange ||
-        "all"
+        safeCriteria.dateRange || "all"
       );
 
 
-    if (
-      dateRange !== "all"
-    ) {
+    if (dateRange !== "all") {
 
       const days =
-        Number(
-          dateRange
-        );
+        Number(dateRange);
 
 
       if (
@@ -2295,14 +2098,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
           cutoff.setDate(
-            cutoff.getDate() -
-            days
+            cutoff.getDate() - days
           );
 
 
           if (
-            publicationDate <
-            cutoff
+            publicationDate < cutoff
           ) {
 
             return false;
@@ -2322,16 +2123,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const documentType =
       String(
-        safeCriteria.documentType ||
-        ""
+        safeCriteria.documentType || ""
       )
         .trim()
         .toLowerCase();
 
 
-    if (
-      documentType
-    ) {
+    if (documentType) {
 
       const paperType =
         String(
@@ -2344,9 +2142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       if (
-        !paperType.includes(
-          documentType
-        )
+        !paperType.includes(documentType)
       ) {
 
         return false;
@@ -2375,8 +2171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const title =
       String(
-        paper.title ||
-        ""
+        paper.title || ""
       ).toLowerCase();
 
 
@@ -2412,21 +2207,15 @@ document.addEventListener("DOMContentLoaded", () => {
         : [];
 
 
-    if (
-      keywords.length > 0
-    ) {
+    if (keywords.length > 0) {
 
       let keywordScore = 0;
 
 
-      for (
-        const keyword of keywords
-      ) {
+      for (const keyword of keywords) {
 
         const k =
-          String(
-            keyword || ""
-          )
+          String(keyword || "")
             .toLowerCase()
             .trim();
 
@@ -2438,9 +2227,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        if (
-          title.includes(k)
-        ) {
+        if (title.includes(k)) {
 
           keywordScore += 40;
 
@@ -2477,9 +2264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         keywords.length * 40;
 
 
-      if (
-        maxKeywordScore > 0
-      ) {
+      if (maxKeywordScore > 0) {
 
         score +=
           (
@@ -2496,14 +2281,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // AUTHOR
     // ----------------------------------------
 
-    if (
-      criteria.author
-    ) {
+    if (criteria.author) {
 
       if (
         authors.includes(
-          criteria.author
-            .toLowerCase()
+          criteria.author.toLowerCase()
         )
       ) {
 
@@ -2518,14 +2300,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // JOURNAL
     // ----------------------------------------
 
-    if (
-      criteria.journal
-    ) {
+    if (criteria.journal) {
 
       if (
         journal.includes(
-          criteria.journal
-            .toLowerCase()
+          criteria.journal.toLowerCase()
         )
       ) {
 
@@ -2540,35 +2319,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // FIELD
     // ----------------------------------------
 
-    if (
-      criteria.field
-    ) {
+    if (criteria.field) {
 
       const field =
-        criteria.field
-          .toLowerCase();
+        criteria.field.toLowerCase();
 
 
-      if (
-        title.includes(
-          field
-        )
-      ) {
+      if (title.includes(field)) {
 
         score += 15;
 
       } else if (
-        abstract.includes(
-          field
-        )
+        abstract.includes(field)
       ) {
 
         score += 10;
 
       } else if (
-        concepts.includes(
-          field
-        )
+        concepts.includes(field)
       ) {
 
         score += 5;
@@ -2584,8 +2352,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const publication =
       new Date(
-        paper.publication_date ||
-        ""
+        paper.publication_date || ""
       );
 
 
@@ -2598,9 +2365,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (
-      Number.isFinite(
-        publicationTime
-      )
+      Number.isFinite(publicationTime)
     ) {
 
       const days =
@@ -2608,8 +2373,7 @@ document.addEventListener("DOMContentLoaded", () => {
           (
             now -
             publication
-          ) /
-          86400000
+          ) / 86400000
         );
 
 
@@ -2641,9 +2405,7 @@ document.addEventListener("DOMContentLoaded", () => {
       100,
       Math.max(
         0,
-        Math.round(
-          score
-        )
+        Math.round(score)
       )
     );
 
@@ -2654,13 +2416,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ABSTRACT
   // ==========================================
 
-  function getAbstract(
-    paper
-  ) {
+  function getAbstract(paper) {
 
     if (
-      typeof paper.abstract_text ===
-      "string" &&
+      typeof paper.abstract_text === "string" &&
       paper.abstract_text.trim()
     ) {
 
@@ -2670,8 +2429,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (
-      typeof paper.abstract ===
-      "string"
+      typeof paper.abstract === "string"
     ) {
 
       return paper.abstract;
@@ -2693,28 +2451,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const words = [];
 
 
-    for (
-      const word in index
-    ) {
+    for (const word in index) {
 
       const positions =
         index[word];
 
 
-      if (
-        !Array.isArray(
-          positions
-        )
-      ) {
+      if (!Array.isArray(positions)) {
 
         continue;
 
       }
 
 
-      for (
-        const position of positions
-      ) {
+      for (const position of positions) {
 
         words[position] =
           word;
@@ -2724,9 +2474,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    return words.join(
-      " "
-    );
+    return words.join(" ");
 
   }
 
@@ -2735,13 +2483,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // AUTHORS
   // ==========================================
 
-  function getAuthors(
-    paper
-  ) {
+  function getAuthors(paper) {
 
     if (
-      typeof paper.authorship ===
-      "string" &&
+      typeof paper.authorship === "string" &&
       paper.authorship.trim()
     ) {
 
@@ -2751,8 +2496,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (
-      typeof paper.authors ===
-      "string"
+      typeof paper.authors === "string"
     ) {
 
       return paper.authors;
@@ -2761,14 +2505,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (
-      Array.isArray(
-        paper.authors
-      )
+      Array.isArray(paper.authors)
     ) {
 
-      return paper.authors.join(
-        " "
-      );
+      return paper.authors.join(" ");
 
     }
 
@@ -2792,9 +2532,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // JOURNAL
   // ==========================================
 
-  function getJournal(
-    paper
-  ) {
+  function getJournal(paper) {
 
     return (
       paper.journal_name ||
@@ -2812,13 +2550,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // CONCEPTS
   // ==========================================
 
-  function getConcepts(
-    paper
-  ) {
+  function getConcepts(paper) {
 
     if (
-      typeof paper.concepts_text ===
-      "string"
+      typeof paper.concepts_text === "string"
     ) {
 
       return paper.concepts_text;
@@ -2827,8 +2562,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (
-      typeof paper.concepts ===
-      "string"
+      typeof paper.concepts === "string"
     ) {
 
       return paper.concepts;
@@ -2844,8 +2578,7 @@ document.addEventListener("DOMContentLoaded", () => {
         concept => {
 
           if (
-            typeof concept ===
-            "string"
+            typeof concept === "string"
           ) {
 
             return concept;
@@ -2876,9 +2609,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ) {
 
     currentResults =
-      Array.isArray(
-        papers
-      )
+      Array.isArray(papers)
         ? papers
         : [];
 
@@ -2948,8 +2679,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    list.innerHTML =
-      "";
+    list.innerHTML = "";
 
 
     const visible =
@@ -2963,9 +2693,7 @@ document.addEventListener("DOMContentLoaded", () => {
       paper => {
 
         list.appendChild(
-          createPaperCard(
-            paper
-          )
+          createPaperCard(paper)
         );
 
       }
@@ -2982,8 +2710,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (loadMoreArea) {
 
-      loadMoreArea.innerHTML =
-        "";
+      loadMoreArea.innerHTML = "";
 
     }
 
@@ -3029,12 +2756,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
+  // UPDATE TRACKER COUNTER
+  // ==========================================
+
+  function updateTrackerCounter(
+    newCount,
+    totalCount
+  ) {
+
+    const counter =
+      document.getElementById(
+        "resultCounter"
+      );
+
+
+    if (!counter) {
+
+      return;
+
+    }
+
+
+    counter.innerHTML = `
+
+      Showing
+      ${Math.min(
+        10,
+        totalCount
+      )}
+      of
+      ${totalCount}
+      papers
+
+      &nbsp;•&nbsp;
+
+      🔔
+      <strong>
+        ${newCount}
+      </strong>
+      new papers
+
+    `;
+
+  }
+
+
+  // ==========================================
   // PAPER CARD
   // ==========================================
 
-  function createPaperCard(
-    paper
-  ) {
+  function createPaperCard(paper) {
 
     const card =
       document.createElement(
@@ -3052,16 +2823,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const authors =
-      getAuthors(
-        paper
-      ) ||
+      getAuthors(paper) ||
       "Unknown authors";
 
 
     const journal =
-      getJournal(
-        paper
-      ) ||
+      getJournal(paper) ||
       "Unknown source";
 
 
@@ -3076,34 +2843,16 @@ document.addEventListener("DOMContentLoaded", () => {
       paper.strackerScore;
 
 
-    let scoreBadge =
-      "";
+    let badges = "";
 
 
-    if (
-      score !== undefined
-    ) {
+    // ----------------------------------------
+    // NEW / PREVIOUSLY SEEN
+    // ----------------------------------------
 
-      scoreBadge = `
+    if (paper.isNewToTracker) {
 
-        <span class="badge">
-          Relevance: ${score}%
-        </span>
-
-      `;
-
-    }
-
-
-    let newBadge =
-      "";
-
-
-    if (
-      paper.isNewToTracker
-    ) {
-
-      newBadge = `
+      badges += `
 
         <span
           class="badge"
@@ -3117,14 +2866,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
       `;
 
+    } else if (
+      paper.isPreviouslySeenByTracker
+    ) {
+
+      badges += `
+
+        <span
+          class="badge"
+          style="
+            background:#e5e7eb;
+            color:#374151;
+          "
+        >
+          📚 Previously seen
+        </span>
+
+      `;
+
     }
 
 
-    card.innerHTML = `
+    // ----------------------------------------
+    // RELEVANCE
+    // ----------------------------------------
 
-      ${newBadge}
+    if (score !== undefined) {
 
-      ${scoreBadge}
+      badges += `
+
+        <span class="badge">
+          Relevance: ${score}%
+        </span>
+
+      `;
+
+    }
+
+
+    // ----------------------------------------
+    // DATE
+    // ----------------------------------------
+
+    badges += `
 
       <span class="badge">
         ${escapeHtml(
@@ -3133,30 +2917,29 @@ document.addEventListener("DOMContentLoaded", () => {
         )}
       </span>
 
+    `;
+
+
+    card.innerHTML = `
+
+      ${badges}
+
       <h2>
-        ${escapeHtml(
-          title
-        )}
+        ${escapeHtml(title)}
       </h2>
 
       <p>
         <strong>Authors:</strong>
-        ${escapeHtml(
-          authors
-        )}
+        ${escapeHtml(authors)}
       </p>
 
       <p>
         <strong>Journal:</strong>
-        ${escapeHtml(
-          journal
-        )}
+        ${escapeHtml(journal)}
       </p>
 
       <a
-        href="${escapeAttribute(
-          link
-        )}"
+        href="${escapeAttribute(link)}"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -3172,10 +2955,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // CREATE NEW TRACKER
+  // CREATE OR UPDATE TRACKER
   // ==========================================
 
-  function createAdvancedTracker(
+  function createOrUpdateTracker(
     criteria,
     papers
   ) {
@@ -3184,52 +2967,118 @@ document.addEventListener("DOMContentLoaded", () => {
       getAdvancedTrackers();
 
 
-    const paperIds =
-      Array.isArray(
+    const profileKey =
+      createTrackerProfileKey(
+        criteria
+      );
+
+
+    // ----------------------------------------
+    // FIND EXISTING TRACKER
+    // ----------------------------------------
+
+    let trackerIndex =
+      trackers.findIndex(
+        tracker =>
+          getTrackerProfileKey(
+            tracker
+          ) === profileKey
+      );
+
+
+    // ----------------------------------------
+    // NEW TRACKER
+    // ----------------------------------------
+
+    if (trackerIndex === -1) {
+
+      const paperIds =
+        Array.isArray(papers)
+          ? papers
+              .map(
+                paper =>
+                  getStablePaperId(paper)
+              )
+              .filter(Boolean)
+          : [];
+
+
+      const tracker = {
+
+        id:
+          createTrackerId(),
+
+        profileKey,
+
+        criteria:
+          cloneCriteria(criteria),
+
+        createdAt:
+          getToday(),
+
+        lastChecked:
+          getToday(),
+
+        seenPaperIds:
+          Array.from(
+            new Set(paperIds)
+          ),
+
+        lastCheckNewPapers:
+          0,
+
+        totalNewPapers:
+          0
+
+      };
+
+
+      trackers.push(tracker);
+
+
+      saveAdvancedTrackers(
+        trackers
+      );
+
+
+      return {
+
+        tracker,
+
+        newPapers: [],
+
+        isNewTracker: true
+
+      };
+
+    }
+
+
+    // ----------------------------------------
+    // EXISTING TRACKER
+    // ----------------------------------------
+
+    const tracker =
+      trackers[trackerIndex];
+
+
+    const check =
+      updateTrackerAfterCheck(
+        tracker,
         papers
-      )
-        ? papers
-            .map(
-              paper =>
-                getStablePaperId(
-                  paper
-                )
-            )
-            .filter(Boolean)
-        : [];
+      );
 
 
-    const tracker = {
-
-      id:
-        createTrackerId(),
-
-      criteria:
-        cloneCriteria(
-          criteria
-        ),
-
-      createdAt:
-        getToday(),
-
-      lastChecked:
-        getToday(),
-
-      seenPaperIds:
-        paperIds,
-
-      lastCheckNewPapers:
-        paperIds.length,
-
-      totalNewPapers:
-        paperIds.length
-
-    };
+    tracker.profileKey =
+      profileKey;
 
 
-    trackers.push(
-      tracker
-    );
+    tracker.criteria =
+      cloneCriteria(criteria);
+
+
+    trackers[trackerIndex] =
+      tracker;
 
 
     saveAdvancedTrackers(
@@ -3237,13 +3086,39 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    return tracker;
+    return {
+
+      tracker,
+
+      newPapers:
+        check.newPapers,
+
+      isNewTracker: false
+
+    };
 
   }
 
 
   // ==========================================
-  // UPDATE EXISTING TRACKER
+  // LEGACY FUNCTION
+  // ==========================================
+
+  function createAdvancedTracker(
+    criteria,
+    papers
+  ) {
+
+    return createOrUpdateTracker(
+      criteria,
+      papers
+    ).tracker;
+
+  }
+
+
+  // ==========================================
+  // UPDATE EXISTING TRACKER AFTER CHECK
   // ==========================================
 
   function updateTrackerAfterCheck(
@@ -3254,8 +3129,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tracker) {
 
       return {
+
         newPapers: [],
+
+        previouslySeenPapers: [],
+
         allPapers: []
+
       };
 
     }
@@ -3273,11 +3153,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const newPapers = [];
 
+    const previouslySeenPapers = [];
 
     const allPapers =
-      Array.isArray(
-        papers
-      )
+      Array.isArray(papers)
         ? papers
         : [];
 
@@ -3289,9 +3168,7 @@ document.addEventListener("DOMContentLoaded", () => {
       paper => {
 
         const id =
-          getStablePaperId(
-            paper
-          );
+          getStablePaperId(paper);
 
 
         if (!id) {
@@ -3301,16 +3178,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        currentIds.push(
-          id
-        );
+        currentIds.push(id);
 
 
-        if (
-          !oldSeen.has(
-            id
-          )
-        ) {
+        if (oldSeen.has(id)) {
+
+          previouslySeenPapers.push(
+            paper
+          );
+
+        } else {
 
           newPapers.push(
             paper
@@ -3321,6 +3198,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
 
+
+    // ----------------------------------------
+    // COMBINE OLD + CURRENT IDS
+    // ----------------------------------------
 
     const combinedIds =
       Array.from(
@@ -3356,6 +3237,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       newPapers,
 
+      previouslySeenPapers,
+
       allPapers
 
     };
@@ -3364,12 +3247,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
+  // MARK TRACKER PAPERS
+  // ==========================================
+
+  function markTrackerPapers(
+    papers,
+    newPapers
+  ) {
+
+    const newIds =
+      new Set(
+        Array.isArray(newPapers)
+          ? newPapers
+              .map(
+                paper =>
+                  getStablePaperId(paper)
+              )
+              .filter(Boolean)
+          : []
+      );
+
+
+    return (
+      Array.isArray(papers)
+        ? papers
+        : []
+    )
+      .map(
+        paper => {
+
+          const id =
+            getStablePaperId(
+              paper
+            );
+
+
+          return {
+
+            ...paper,
+
+            isNewToTracker:
+              newIds.has(id),
+
+            isPreviouslySeenByTracker:
+              !newIds.has(id)
+
+          };
+
+        }
+      );
+
+  }
+
+
+  // ==========================================
   // STABLE PAPER ID
   // ==========================================
 
-  function getStablePaperId(
-    paper
-  ) {
+  function getStablePaperId(paper) {
 
     if (!paper) {
 
@@ -3378,27 +3313,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    if (
-      paper.pmid
-    ) {
+    if (paper.pmid) {
 
       return (
         `pmid:${String(
           paper.pmid
-        ).trim().toLowerCase()}`
+        )
+          .trim()
+          .toLowerCase()}`
       );
 
     }
 
 
-    if (
-      paper.doi
-    ) {
+    if (paper.doi) {
 
       return (
-        `doi:${String(
-          paper.doi
-        )
+        `doi:${String(paper.doi)
           .replace(
             /^https?:\/\/doi\.org\//i,
             ""
@@ -3410,14 +3341,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    if (
-      paper.id
-    ) {
+    if (paper.id) {
 
       return (
         `id:${String(
           paper.id
-        ).trim().toLowerCase()}`
+        )
+          .trim()
+          .toLowerCase()}`
       );
 
     }
@@ -3425,8 +3356,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const title =
       String(
-        paper.title ||
-        ""
+        paper.title || ""
       )
         .toLowerCase()
         .replace(
@@ -3449,12 +3379,142 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
+  // TRACKER PROFILE IDENTITY
+  // ==========================================
+
+  function createTrackerProfileKey(
+    criteria
+  ) {
+
+    const normalized = {
+
+      keywords:
+        normalizeStringArray(
+          criteria?.keywords
+        ),
+
+      excluded:
+        normalizeStringArray(
+          criteria?.excluded
+        ),
+
+      keywordFields:
+        normalizeStringArray(
+          criteria?.keywordFields
+        ),
+
+      keywordMode:
+        criteria?.keywordMode === "any"
+          ? "any"
+          : "all",
+
+      author:
+        normalizeString(
+          criteria?.author
+        ),
+
+      journal:
+        normalizeString(
+          criteria?.journal
+        ),
+
+      field:
+        normalizeString(
+          criteria?.field
+        ),
+
+      dateRange:
+        String(
+          criteria?.dateRange || "all"
+        ),
+
+      documentType:
+        normalizeString(
+          criteria?.documentType
+        ),
+
+      accuracy:
+        Number(
+          criteria?.accuracy || 0
+        )
+
+    };
+
+
+    return JSON.stringify(
+      normalized
+    );
+
+  }
+
+
+  // ==========================================
+  // GET TRACKER PROFILE KEY
+  // ==========================================
+
+  function getTrackerProfileKey(
+    tracker
+  ) {
+
+    if (
+      tracker?.profileKey
+    ) {
+
+      return tracker.profileKey;
+
+    }
+
+
+    return createTrackerProfileKey(
+      tracker?.criteria || {}
+    );
+
+  }
+
+
+  // ==========================================
+  // NORMALIZE STRING
+  // ==========================================
+
+  function normalizeString(value) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  }
+
+
+  // ==========================================
+  // NORMALIZE STRING ARRAY
+  // ==========================================
+
+  function normalizeStringArray(
+    value
+  ) {
+
+    return (
+      Array.isArray(value)
+        ? value
+        : []
+    )
+      .map(
+        item =>
+          normalizeString(item)
+      )
+      .filter(Boolean)
+      .sort();
+
+  }
+
+
+  // ==========================================
   // CLONE CRITERIA
   // ==========================================
 
-  function cloneCriteria(
-    criteria
-  ) {
+  function cloneCriteria(criteria) {
 
     return {
 
@@ -3486,8 +3546,7 @@ document.addEventListener("DOMContentLoaded", () => {
           : [],
 
       keywordMode:
-        criteria?.keywordMode ===
-        "any"
+        criteria?.keywordMode === "any"
           ? "any"
           : "all",
 
@@ -3543,16 +3602,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       const parsed =
-        JSON.parse(
-          saved
-        );
+        JSON.parse(saved);
 
 
-      if (
-        !Array.isArray(
-          parsed
-        )
-      ) {
+      if (!Array.isArray(parsed)) {
 
         return [];
 
@@ -3588,9 +3641,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       localStorage.setItem(
         "stracker_advanced",
-        JSON.stringify(
-          trackers
-        )
+        JSON.stringify(trackers)
       );
 
 
@@ -3664,14 +3715,10 @@ document.addEventListener("DOMContentLoaded", () => {
         </h2>
 
         ${trackers.map(
-          (
-            tracker,
-            index
-          ) => {
+          (tracker, index) => {
 
             const criteria =
-              tracker.criteria ||
-              {};
+              tracker.criteria || {};
 
 
             const keywords =
@@ -3682,9 +3729,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(
                       keyword =>
                         `<span class="badge">
-                          ${escapeHtml(
-                            keyword
-                          )}
+                          ${escapeHtml(keyword)}
                         </span>`
                     )
                     .join("")
@@ -3699,9 +3744,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(
                       keyword =>
                         `<span class="badge">
-                          ${escapeHtml(
-                            keyword
-                          )}
+                          ${escapeHtml(keyword)}
                         </span>`
                     )
                     .join("")
@@ -3716,9 +3759,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(
                       field =>
                         `<span class="badge">
-                          ${escapeHtml(
-                            field
-                          )}
+                          ${escapeHtml(field)}
                         </span>`
                     )
                     .join("")
@@ -3727,15 +3768,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const lastNew =
               Number(
-                tracker.lastCheckNewPapers ||
-                0
+                tracker.lastCheckNewPapers || 0
               );
 
 
             const totalNew =
               Number(
-                tracker.totalNewPapers ||
-                0
+                tracker.totalNewPapers || 0
               );
 
 
@@ -3799,8 +3838,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </strong>
 
                         ${
-                          criteria.keywordMode ===
-                          "any"
+                          criteria.keywordMode === "any"
                             ? "Any"
                             : "All"
                         }
@@ -3881,8 +3919,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 ${
                   criteria.dateRange &&
-                  criteria.dateRange !==
-                    "all"
+                  criteria.dateRange !== "all"
                     ? `
                       <p>
                         📅
@@ -4066,8 +4103,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
               await runSavedTracker(
-                tracker,
-                true
+                tracker
               );
 
             }
@@ -4127,8 +4163,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
               await runSavedTracker(
-                tracker,
-                true
+                tracker
               );
 
             }
@@ -4210,8 +4245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   async function runSavedTracker(
-    tracker,
-    showAllResults
+    tracker
   ) {
 
     if (!tracker) {
@@ -4234,9 +4268,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? tracker.criteria.keywords
               .map(
                 keyword =>
-                  String(
-                    keyword
-                  ).trim()
+                  String(keyword).trim()
               )
               .filter(Boolean)
           : [],
@@ -4248,9 +4280,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? tracker.criteria.excluded
               .map(
                 keyword =>
-                  String(
-                    keyword
-                  ).trim()
+                  String(keyword).trim()
               )
               .filter(Boolean)
           : [],
@@ -4268,51 +4298,41 @@ document.addEventListener("DOMContentLoaded", () => {
                     "authors",
                     "journal",
                     "concepts"
-                  ].includes(
-                    field
-                  )
+                  ].includes(field)
               )
           : [],
 
       keywordMode:
-        tracker.criteria?.keywordMode ===
-        "any"
+        tracker.criteria?.keywordMode === "any"
           ? "any"
           : "all",
 
       author:
-        typeof tracker.criteria?.author ===
-        "string"
+        typeof tracker.criteria?.author === "string"
           ? tracker.criteria.author.trim()
           : "",
 
       journal:
-        typeof tracker.criteria?.journal ===
-        "string"
+        typeof tracker.criteria?.journal === "string"
           ? tracker.criteria.journal.trim()
           : "",
 
       field:
-        typeof tracker.criteria?.field ===
-        "string"
+        typeof tracker.criteria?.field === "string"
           ? tracker.criteria.field.trim()
           : "",
 
       dateRange:
-        tracker.criteria?.dateRange !==
-          undefined &&
-        tracker.criteria?.dateRange !==
-          null &&
-        tracker.criteria?.dateRange !==
-          ""
+        tracker.criteria?.dateRange !== undefined &&
+        tracker.criteria?.dateRange !== null &&
+        tracker.criteria?.dateRange !== ""
           ? String(
               tracker.criteria.dateRange
             )
           : "all",
 
       documentType:
-        typeof tracker.criteria?.documentType ===
-        "string"
+        typeof tracker.criteria?.documentType === "string"
           ? tracker.criteria.documentType.trim()
           : "",
 
@@ -4341,8 +4361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ----------------------------------------
 
     const hasCriteria =
-      safeCriteria.keywords.length >
-        0 ||
+      safeCriteria.keywords.length > 0 ||
       safeCriteria.author ||
       safeCriteria.journal ||
       safeCriteria.field;
@@ -4388,7 +4407,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       // --------------------------------------
-      // UPDATE TRACKER
+      // COMPARE WITH PREVIOUSLY SEEN PAPERS
       // --------------------------------------
 
       const check =
@@ -4409,22 +4428,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const trackerIndex =
         trackers.findIndex(
           item =>
-            String(
-              item.id
-            ) ===
-            String(
-              tracker.id
-            )
+            String(item.id) ===
+            String(tracker.id)
         );
 
 
-      if (
-        trackerIndex !== -1
-      ) {
+      if (trackerIndex !== -1) {
 
-        trackers[
-          trackerIndex
-        ] =
+        trackers[trackerIndex] =
           tracker;
 
 
@@ -4464,6 +4475,18 @@ document.addEventListener("DOMContentLoaded", () => {
           </p>
 
           <p>
+            📚
+            <strong>
+              Papers tracked:
+            </strong>
+            ${Array.isArray(
+              tracker.seenPaperIds
+            )
+              ? tracker.seenPaperIds.length
+              : 0}
+          </p>
+
+          <p>
             📅
             <strong>
               Last checked:
@@ -4474,7 +4497,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </p>
 
           <p>
-            🆕
+            🔔
             <strong>
               New papers found:
             </strong>
@@ -4489,34 +4512,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       // --------------------------------------
-      // MARK NEW PAPERS
+      // MARK NEW / PREVIOUSLY SEEN
       // --------------------------------------
 
-      const newIds =
-        new Set(
-          check.newPapers.map(
-            paper =>
-              getStablePaperId(
-                paper
-              )
-          )
-        );
-
-
       const markedPapers =
-        papers.map(
-          paper => ({
-
-            ...paper,
-
-            isNewToTracker:
-              newIds.has(
-                getStablePaperId(
-                  paper
-                )
-              )
-
-          })
+        markTrackerPapers(
+          papers,
+          check.newPapers
         );
 
 
@@ -4524,23 +4526,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // SHOW RESULTS
       // --------------------------------------
 
-      if (
-        showAllResults
-      ) {
-
-        displayResults(
-          markedPapers,
-          `📚 Tracked research — ${check.newPapers.length} new`
-        );
-
-      } else {
-
-        displayResults(
-          markedPapers,
-          "📚 Tracked research results"
-        );
-
-      }
+      displayResults(
+        markedPapers,
+        `📚 Tracked research — ${check.newPapers.length} new`
+      );
 
 
       // --------------------------------------
@@ -4568,11 +4557,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
           &nbsp;•&nbsp;
 
-          🆕
+          🔔
           <strong>
             ${check.newPapers.length}
           </strong>
-          new since last check
+          new papers
+
+          &nbsp;•&nbsp;
+
+          📚
+          <strong>
+            ${check.previouslySeenPapers.length}
+          </strong>
+          previously seen
+
+          &nbsp;•&nbsp;
+
+          📅
+          Last checked:
+          <strong>
+            ${escapeHtml(
+              tracker.lastChecked
+            )}
+          </strong>
 
         `;
 
@@ -4639,9 +4646,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // MESSAGE
   // ==========================================
 
-  function showMessage(
-    html
-  ) {
+  function showMessage(html) {
 
     if (!results) {
 
@@ -4678,17 +4683,11 @@ document.addEventListener("DOMContentLoaded", () => {
       "-" +
       String(
         date.getMonth() + 1
-      ).padStart(
-        2,
-        "0"
-      ) +
+      ).padStart(2, "0") +
       "-" +
       String(
         date.getDate()
-      ).padStart(
-        2,
-        "0"
-      )
+      ).padStart(2, "0")
     );
 
   }
@@ -4698,20 +4697,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ESCAPE HTML
   // ==========================================
 
-  function escapeHtml(
-    text
-  ) {
+  function escapeHtml(text) {
 
     const div =
-      document.createElement(
-        "div"
-      );
+      document.createElement("div");
 
 
     div.textContent =
-      String(
-        text
-      );
+      String(text);
 
 
     return div.innerHTML;
@@ -4723,13 +4716,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ESCAPE ATTRIBUTE
   // ==========================================
 
-  function escapeAttribute(
-    text
-  ) {
+  function escapeAttribute(text) {
 
-    return String(
-      text
-    )
+    return String(text)
       .replace(
         /&/g,
         "&amp;"
