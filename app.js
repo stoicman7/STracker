@@ -69,6 +69,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
+  // TRACKER UI STATE
+  // ==========================================
+
+  let trackerActionInProgress = false;
+
+
+  // ==========================================
   // QUICK SEARCH
   // ==========================================
 
@@ -1825,10 +1832,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .toLowerCase();
 
 
-    // ----------------------------------------
-    // EXCLUDED KEYWORDS
-    // ----------------------------------------
-
     const excluded =
       Array.isArray(
         safeCriteria.excluded
@@ -1861,10 +1864,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // REQUIRED KEYWORDS
-    // ----------------------------------------
-
     const keywords =
       Array.isArray(
         safeCriteria.keywords
@@ -1879,10 +1878,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean)
         : [];
 
-
-    // ----------------------------------------
-    // SELECTED KEYWORD FIELDS
-    // ----------------------------------------
 
     const selectedFields =
       Array.isArray(
@@ -1958,10 +1953,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // KEYWORD MATCH MODE
-    // ----------------------------------------
-
     if (keywords.length > 0) {
 
       const keywordMode =
@@ -2005,10 +1996,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // AUTHOR FILTER
-    // ----------------------------------------
-
     const authorFilter =
       String(
         safeCriteria.author || ""
@@ -2028,10 +2015,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // JOURNAL FILTER
-    // ----------------------------------------
 
     const journalFilter =
       String(
@@ -2053,10 +2036,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // FIELD FILTER
-    // ----------------------------------------
-
     const fieldFilter =
       String(
         safeCriteria.field || ""
@@ -2074,10 +2053,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // DATE FILTER
-    // ----------------------------------------
 
     const dateRange =
       String(
@@ -2135,10 +2110,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // DOCUMENT TYPE
-    // ----------------------------------------
 
     const documentType =
       String(
@@ -2296,10 +2267,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // AUTHOR
-    // ----------------------------------------
-
     if (criteria.author) {
 
       if (
@@ -2315,10 +2282,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // JOURNAL
-    // ----------------------------------------
-
     if (criteria.journal) {
 
       if (
@@ -2333,10 +2296,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // FIELD
-    // ----------------------------------------
 
     if (criteria.field) {
 
@@ -2364,10 +2323,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // RECENCY
-    // ----------------------------------------
 
     const publication =
       new Date(
@@ -2865,10 +2820,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let badges = "";
 
 
-    // ----------------------------------------
-    // NEW / PREVIOUSLY SEEN
-    // ----------------------------------------
-
     if (paper.isNewToTracker) {
 
       badges += `
@@ -2906,10 +2857,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // RELEVANCE
-    // ----------------------------------------
-
     if (score !== undefined) {
 
       badges += `
@@ -2922,10 +2869,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // DATE
-    // ----------------------------------------
 
     badges += `
 
@@ -2996,10 +2939,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    // ----------------------------------------
-    // FIND ALL MATCHING TRACKERS
-    // ----------------------------------------
-
     const matchingIndexes = [];
 
 
@@ -3018,10 +2957,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
 
-
-    // ----------------------------------------
-    // NEW TRACKER
-    // ----------------------------------------
 
     if (!matchingIndexes.length) {
 
@@ -3094,10 +3029,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ----------------------------------------
-    // EXISTING TRACKER(S)
-    // ----------------------------------------
-
     const primaryIndex =
       matchingIndexes[0];
 
@@ -3109,10 +3040,6 @@ document.addEventListener("DOMContentLoaded", () => {
         profileKey
       );
 
-
-    // ----------------------------------------
-    // MERGE DUPLICATE TRACKERS
-    // ----------------------------------------
 
     if (matchingIndexes.length > 1) {
 
@@ -3188,7 +3115,6 @@ document.addEventListener("DOMContentLoaded", () => {
         lastNew;
 
 
-      // Remove duplicate profiles.
       trackers =
         trackers.filter(
           (item, index) =>
@@ -3198,7 +3124,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-      // Primary index may have shifted.
       const newPrimaryIndex =
         trackers.findIndex(
           item =>
@@ -3216,10 +3141,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ----------------------------------------
-    // NORMAL EXISTING UPDATE
-    // ----------------------------------------
 
     const actualIndex =
       trackers.findIndex(
@@ -3377,8 +3298,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // IMPORTANT:
-    // Never reset this history.
     const oldSeen =
       new Set(
         Array.isArray(
@@ -3437,11 +3356,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    // ----------------------------------------
-    // PRESERVE ALL HISTORY
-    // ----------------------------------------
-
-    const combinedIds =
+    tracker.seenPaperIds =
       Array.from(
         new Set(
           [
@@ -3450,10 +3365,6 @@ document.addEventListener("DOMContentLoaded", () => {
           ]
         )
       );
-
-
-    tracker.seenPaperIds =
-      combinedIds;
 
 
     tracker.lastChecked =
@@ -3696,8 +3607,6 @@ document.addEventListener("DOMContentLoaded", () => {
     profileKey
   ) {
 
-    // Deterministic hash.
-    // Same research profile = same ID.
     let hash = 0;
 
 
@@ -3962,6 +3871,531 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
+  // TRACKER STATUS
+  // ==========================================
+
+  function getTrackerStatus(
+    tracker
+  ) {
+
+    if (!tracker) {
+
+      return {
+
+        label: "Unknown",
+
+        icon: "❔",
+
+        className: "tracker-status-unknown"
+
+      };
+
+    }
+
+
+    const lastChecked =
+      tracker.lastChecked || "";
+
+
+    const lastNew =
+      Number(
+        tracker.lastCheckNewPapers || 0
+      );
+
+
+    if (!lastChecked) {
+
+      return {
+
+        label: "Never checked",
+
+        icon: "⏳",
+
+        className: "tracker-status-never"
+
+      };
+
+    }
+
+
+    if (lastNew > 0) {
+
+      return {
+
+        label:
+          `${lastNew} new paper${lastNew === 1 ? "" : "s"}`,
+
+        icon: "🆕",
+
+        className: "tracker-status-new"
+
+      };
+
+    }
+
+
+    return {
+
+      label: "No new papers",
+
+      icon: "✓",
+
+      className: "tracker-status-clear"
+
+    };
+
+  }
+
+
+  // ==========================================
+  // TRACKER STATUS HTML
+  // ==========================================
+
+  function getTrackerStatusHtml(
+    tracker
+  ) {
+
+    const status =
+      getTrackerStatus(
+        tracker
+      );
+
+
+    return `
+
+      <span
+        class="tracker-status ${status.className}"
+      >
+        <span class="tracker-status-icon">
+          ${status.icon}
+        </span>
+
+        <span>
+          ${escapeHtml(status.label)}
+        </span>
+      </span>
+
+    `;
+
+  }
+
+
+  // ==========================================
+  // CRITERIA BADGE
+  // ==========================================
+
+  function createCriteriaBadge(
+    text,
+    className = ""
+  ) {
+
+    if (!String(text || "").trim()) {
+
+      return "";
+
+    }
+
+
+    return `
+
+      <span
+        class="tracker-criteria-badge ${className}"
+      >
+        ${escapeHtml(text)}
+      </span>
+
+    `;
+
+  }
+
+
+  // ==========================================
+  // TRACKER CRITERIA HTML
+  // ==========================================
+
+  function buildTrackerCriteriaHtml(
+    criteria
+  ) {
+
+    const parts = [];
+
+
+    if (
+      Array.isArray(criteria.keywords) &&
+      criteria.keywords.length
+    ) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            Required keywords
+          </div>
+
+          <div class="tracker-criteria-values">
+
+            ${criteria.keywords
+              .map(
+                keyword =>
+                  createCriteriaBadge(
+                    keyword
+                  )
+              )
+              .join("")}
+
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (
+      Array.isArray(criteria.excluded) &&
+      criteria.excluded.length
+    ) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            Excluded
+          </div>
+
+          <div class="tracker-criteria-values">
+
+            ${criteria.excluded
+              .map(
+                keyword =>
+                  createCriteriaBadge(
+                    keyword,
+                    "tracker-excluded-badge"
+                  )
+              )
+              .join("")}
+
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (
+      Array.isArray(criteria.keywordFields) &&
+      criteria.keywordFields.length
+    ) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            Search fields
+          </div>
+
+          <div class="tracker-criteria-values">
+
+            ${criteria.keywordFields
+              .map(
+                field =>
+                  createCriteriaBadge(
+                    field
+                  )
+              )
+              .join("")}
+
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (criteria.keywordMode) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            Keyword mode
+          </div>
+
+          <div class="tracker-criteria-text">
+            ${
+              criteria.keywordMode === "any"
+                ? "Any keyword"
+                : "All keywords"
+            }
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (criteria.author) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            👤 Author
+          </div>
+
+          <div class="tracker-criteria-text">
+            ${escapeHtml(criteria.author)}
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (criteria.journal) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            📖 Journal
+          </div>
+
+          <div class="tracker-criteria-text">
+            ${escapeHtml(criteria.journal)}
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (criteria.field) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            🧠 Field
+          </div>
+
+          <div class="tracker-criteria-text">
+            ${escapeHtml(criteria.field)}
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (
+      criteria.dateRange &&
+      criteria.dateRange !== "all"
+    ) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            📅 Date range
+          </div>
+
+          <div class="tracker-criteria-text">
+            Last ${escapeHtml(criteria.dateRange)} days
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    if (criteria.documentType) {
+
+      parts.push(`
+
+        <div class="tracker-criteria-row">
+
+          <div class="tracker-criteria-label">
+            📄 Document type
+          </div>
+
+          <div class="tracker-criteria-text">
+            ${escapeHtml(criteria.documentType)}
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+
+    parts.push(`
+
+      <div class="tracker-criteria-row">
+
+        <div class="tracker-criteria-label">
+          🎯 Relevance threshold
+        </div>
+
+        <div class="tracker-criteria-text">
+          ${Number(criteria.accuracy || 0)}%
+        </div>
+
+      </div>
+
+    `);
+
+
+    if (!parts.length) {
+
+      return `
+
+        <p>
+          No criteria available.
+        </p>
+
+      `;
+
+    }
+
+
+    return parts.join("");
+
+  }
+
+
+  // ==========================================
+  // TRACKER STATISTICS HTML
+  // ==========================================
+
+  function buildTrackerStatisticsHtml(
+    tracker
+  ) {
+
+    const papersTracked =
+      getSeenCount(
+        tracker
+      );
+
+
+    const newOnLastCheck =
+      Number(
+        tracker.lastCheckNewPapers || 0
+      );
+
+
+    const totalNewDiscovered =
+      Number(
+        tracker.totalNewPapers || 0
+      );
+
+
+    return `
+
+      <div class="tracker-stats">
+
+        <div class="tracker-stat">
+
+          <div class="tracker-stat-icon">
+            📚
+          </div>
+
+          <div class="tracker-stat-value">
+            ${papersTracked}
+          </div>
+
+          <div class="tracker-stat-label">
+            Papers tracked
+          </div>
+
+        </div>
+
+
+        <div class="tracker-stat">
+
+          <div class="tracker-stat-icon">
+            🆕
+          </div>
+
+          <div class="tracker-stat-value">
+            ${newOnLastCheck}
+          </div>
+
+          <div class="tracker-stat-label">
+            New on last check
+          </div>
+
+        </div>
+
+
+        <div class="tracker-stat">
+
+          <div class="tracker-stat-icon">
+            🔔
+          </div>
+
+          <div class="tracker-stat-value">
+            ${totalNewDiscovered}
+          </div>
+
+          <div class="tracker-stat-label">
+            Total new discovered
+          </div>
+
+        </div>
+
+
+        <div class="tracker-stat">
+
+          <div class="tracker-stat-icon">
+            📅
+          </div>
+
+          <div class="tracker-stat-value tracker-stat-date">
+            ${escapeHtml(
+              tracker.lastChecked ||
+              "Never"
+            )}
+          </div>
+
+          <div class="tracker-stat-label">
+            Last checked
+          </div>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================
   // DISPLAY TRACKED TOPICS
   // ==========================================
 
@@ -3980,8 +4414,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!trackers.length) {
 
-      trackedTopics.innerHTML =
-        "";
+      trackedTopics.innerHTML = `
+
+        <div class="card">
+
+          <h2>
+            📚 My tracked research
+          </h2>
+
+          <p>
+            You don't have any tracked research
+            profiles yet.
+          </p>
+
+        </div>
+
+      `;
 
       return;
 
@@ -3990,350 +4438,297 @@ document.addEventListener("DOMContentLoaded", () => {
 
     trackedTopics.innerHTML = `
 
-      <div class="card">
-
-        <h2>
-          📚 My tracked research
-        </h2>
-
-        ${trackers.map(
-          (tracker, index) => {
-
-            const criteria =
-              tracker.criteria || {};
-
-
-            const keywords =
-              Array.isArray(
-                criteria.keywords
-              )
-                ? criteria.keywords
-                    .map(
-                      keyword =>
-                        `<span class="badge">
-                          ${escapeHtml(keyword)}
-                        </span>`
-                    )
-                    .join("")
-                : "";
-
-
-            const excluded =
-              Array.isArray(
-                criteria.excluded
-              )
-                ? criteria.excluded
-                    .map(
-                      keyword =>
-                        `<span class="badge">
-                          ${escapeHtml(keyword)}
-                        </span>`
-                    )
-                    .join("")
-                : "";
-
-
-            const keywordFields =
-              Array.isArray(
-                criteria.keywordFields
-              )
-                ? criteria.keywordFields
-                    .map(
-                      field =>
-                        `<span class="badge">
-                          ${escapeHtml(field)}
-                        </span>`
-                    )
-                    .join("")
-                : "";
-
-
-            const lastNew =
-              Number(
-                tracker.lastCheckNewPapers || 0
-              );
-
-
-            const totalNew =
-              Number(
-                tracker.totalNewPapers || 0
-              );
-
-
-            const totalSeen =
-              getSeenCount(tracker);
-
-
-            return `
-
-              <div
-                class="tracked-topic"
-                data-tracker-index="${index}"
-              >
-
-                <h3>
-                  🔬 Research profile
-                  ${index + 1}
-                </h3>
-
-
-                ${
-                  keywords
-                    ? `
-                      <p>
-                        <strong>
-                          Required:
-                        </strong>
-
-                        ${keywords}
-                      </p>
-                    `
-                    : ""
-                }
-
+      <div class="card tracker-dashboard">
 
-                ${
-                  keywordFields
-                    ? `
-                      <p>
-                        <strong>
-                          Search fields:
-                        </strong>
-
-                        ${keywordFields}
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  criteria.keywordMode
-                    ? `
-                      <p>
-                        <strong>
-                          Keyword mode:
-                        </strong>
-
-                        ${
-                          criteria.keywordMode === "any"
-                            ? "Any"
-                            : "All"
-                        }
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  excluded
-                    ? `
-                      <p>
-                        <strong>
-                          Excluded:
-                        </strong>
-
-                        ${excluded}
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  criteria.author
-                    ? `
-                      <p>
-                        👤
-                        <strong>
-                          Author:
-                        </strong>
-
-                        ${escapeHtml(
-                          criteria.author
-                        )}
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  criteria.journal
-                    ? `
-                      <p>
-                        📖
-                        <strong>
-                          Journal:
-                        </strong>
-
-                        ${escapeHtml(
-                          criteria.journal
-                        )}
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  criteria.field
-                    ? `
-                      <p>
-                        🧠
-                        <strong>
-                          Field:
-                        </strong>
-
-                        ${escapeHtml(
-                          criteria.field
-                        )}
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  criteria.dateRange &&
-                  criteria.dateRange !== "all"
-                    ? `
-                      <p>
-                        📅
-                        <strong>
-                          Date range:
-                        </strong>
-
-                        Last
-                        ${escapeHtml(
-                          criteria.dateRange
-                        )}
-                        days
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                ${
-                  criteria.documentType
-                    ? `
-                      <p>
-                        📄
-                        <strong>
-                          Type:
-                        </strong>
-
-                        ${escapeHtml(
-                          criteria.documentType
-                        )}
-                      </p>
-                    `
-                    : ""
-                }
-
-
-                <p>
-                  🎯
-                  <strong>
-                    Relevance threshold:
-                  </strong>
-
-                  ${Number(
-                    criteria.accuracy || 0
-                  )}%
-                </p>
-
-
-                <p>
-                  📅
-                  <strong>
-                    Last checked:
-                  </strong>
-
-                  ${escapeHtml(
-                    tracker.lastChecked ||
-                    "Never"
-                  )}
-                </p>
-
-
-                <p>
-                  📚
-                  <strong>
-                    Papers tracked:
-                  </strong>
-
-                  ${totalSeen}
-                </p>
-
-
-                <p>
-                  🆕
-                  <strong>
-                    New on last check:
-                  </strong>
-
-                  ${lastNew}
-                </p>
-
-
-                <p>
-                  🔔
-                  <strong>
-                    Total new discovered:
-                  </strong>
-
-                  ${totalNew}
-                </p>
-
-
-                <div class="actions">
-
-                  <button
-                    type="button"
-                    class="view-tracker-button"
-                    data-index="${index}"
-                  >
-                    👁️ View
-                  </button>
-
-
-                  <button
-                    type="button"
-                    class="check-tracker-button"
-                    data-index="${index}"
-                  >
-                    🔄 Check for new papers
-                  </button>
-
-
-                  <button
-                    type="button"
-                    class="delete-tracker-button danger"
-                    data-index="${index}"
-                  >
-                    🗑️ Delete
-                  </button>
+        <div class="tracker-dashboard-header">
+
+          <div>
+
+            <h2>
+              📚 My tracked research
+            </h2>
+
+            <p>
+              ${trackers.length}
+              tracked research
+              ${trackers.length === 1 ? "profile" : "profiles"}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="tracker-list">
+
+          ${trackers.map(
+            (tracker, index) => {
+
+              const criteria =
+                tracker.criteria || {};
+
+
+              const createdAt =
+                tracker.createdAt ||
+                "Unknown";
+
+
+              return `
+
+                <div
+                  class="tracked-topic tracker-card"
+                  data-tracker-id="${escapeAttribute(
+                    tracker.id || ""
+                  )}"
+                  data-tracker-index="${index}"
+                >
+
+                  <!-- ======================
+                       CARD HEADER
+                  ======================= -->
+
+                  <div class="tracker-card-header">
+
+                    <div class="tracker-card-title">
+
+                      <div class="tracker-number">
+                        ${index + 1}
+                      </div>
+
+                      <div>
+
+                        <h3>
+                          Research profile
+                        </h3>
+
+                        <div class="tracker-id-label">
+                          ${escapeHtml(
+                            getTrackerShortLabel(
+                              tracker
+                            )
+                          )}
+                        </div>
+
+                      </div>
+
+                    </div>
+
+
+                    <div class="tracker-card-status">
+
+                      ${getTrackerStatusHtml(
+                        tracker
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- ======================
+                       CRITERIA
+                  ======================= -->
+
+                  <div class="tracker-section">
+
+                    <div class="tracker-section-heading">
+                      🔬 Research criteria
+                    </div>
+
+                    <div class="tracker-criteria">
+
+                      ${buildTrackerCriteriaHtml(
+                        criteria
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- ======================
+                       STATISTICS
+                  ======================= -->
+
+                  <div class="tracker-section">
+
+                    <div class="tracker-section-heading">
+                      📊 Tracking statistics
+                    </div>
+
+                    ${buildTrackerStatisticsHtml(
+                      tracker
+                    )}
+
+                  </div>
+
+
+                  <!-- ======================
+                       DATES
+                  ======================= -->
+
+                  <div class="tracker-meta">
+
+                    <div>
+
+                      <strong>
+                        Created:
+                      </strong>
+
+                      ${escapeHtml(
+                        createdAt
+                      )}
+
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        Last checked:
+                      </strong>
+
+                      ${escapeHtml(
+                        tracker.lastChecked ||
+                        "Never"
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- ======================
+                       ACTIONS
+                  ======================= -->
+
+                  <div class="tracker-actions">
+
+                    <button
+                      type="button"
+                      class="view-tracker-button"
+                      data-tracker-id="${escapeAttribute(
+                        tracker.id || ""
+                      )}"
+                    >
+                      👁️ View
+                    </button>
+
+
+                    <button
+                      type="button"
+                      class="check-tracker-button"
+                      data-tracker-id="${escapeAttribute(
+                        tracker.id || ""
+                      )}"
+                    >
+                      🔄 Check for new papers
+                    </button>
+
+
+                    <button
+                      type="button"
+                      class="delete-tracker-button danger"
+                      data-tracker-id="${escapeAttribute(
+                        tracker.id || ""
+                      )}"
+                    >
+                      🗑️ Delete
+                    </button>
+
+                  </div>
 
                 </div>
 
-              </div>
+              `;
 
-            `;
+            }
+          ).join("")}
 
-          }
-        ).join("")}
+        </div>
 
       </div>
 
     `;
 
 
-    // ========================================
-    // VIEW BUTTONS
-    // ========================================
+    attachTrackerDashboardEvents();
+
+  }
+
+
+  // ==========================================
+  // SHORT TRACKER LABEL
+  // ==========================================
+
+  function getTrackerShortLabel(
+    tracker
+  ) {
+
+    const criteria =
+      tracker?.criteria || {};
+
+
+    const keywords =
+      Array.isArray(criteria.keywords)
+        ? criteria.keywords.filter(Boolean)
+        : [];
+
+
+    if (keywords.length) {
+
+      const text =
+        keywords.slice(0, 3).join(", ");
+
+
+      if (keywords.length > 3) {
+
+        return (
+          `${text} +${keywords.length - 3}`
+        );
+
+      }
+
+
+      return text;
+
+    }
+
+
+    if (criteria.author) {
+
+      return `Author: ${criteria.author}`;
+
+    }
+
+
+    if (criteria.journal) {
+
+      return `Journal: ${criteria.journal}`;
+
+    }
+
+
+    if (criteria.field) {
+
+      return `Field: ${criteria.field}`;
+
+    }
+
+
+    return "Custom research profile";
+
+  }
+
+
+  // ==========================================
+  // TRACKER DASHBOARD EVENTS
+  // ==========================================
+
+  function attachTrackerDashboardEvents() {
+
+    // ----------------------------------------
+    // VIEW
+    // ----------------------------------------
 
     document
       .querySelectorAll(
@@ -4346,34 +4741,26 @@ document.addEventListener("DOMContentLoaded", () => {
             "click",
             async () => {
 
-              const index =
-                Number(
-                  button.dataset.index
-                );
+              if (trackerActionInProgress) {
+
+                return;
+
+              }
 
 
-              const trackers =
-                getAdvancedTrackers();
+              const trackerId =
+                button.dataset.trackerId;
 
 
               const tracker =
-                trackers[index];
+                findTrackerById(
+                  trackerId
+                );
 
 
               if (!tracker) {
 
-                showMessage(`
-
-                  <h2>
-                    ❌ Tracker not found
-                  </h2>
-
-                  <p>
-                    This tracking profile
-                    no longer exists.
-                  </p>
-
-                `);
+                showTrackerNotFound();
 
                 return;
 
@@ -4391,9 +4778,9 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    // ========================================
-    // CHECK BUTTONS
-    // ========================================
+    // ----------------------------------------
+    // CHECK
+    // ----------------------------------------
 
     document
       .querySelectorAll(
@@ -4406,34 +4793,26 @@ document.addEventListener("DOMContentLoaded", () => {
             "click",
             async () => {
 
-              const index =
-                Number(
-                  button.dataset.index
-                );
+              if (trackerActionInProgress) {
+
+                return;
+
+              }
 
 
-              const trackers =
-                getAdvancedTrackers();
+              const trackerId =
+                button.dataset.trackerId;
 
 
               const tracker =
-                trackers[index];
+                findTrackerById(
+                  trackerId
+                );
 
 
               if (!tracker) {
 
-                showMessage(`
-
-                  <h2>
-                    ❌ Tracker not found
-                  </h2>
-
-                  <p>
-                    This tracking profile
-                    no longer exists.
-                  </p>
-
-                `);
+                showTrackerNotFound();
 
                 return;
 
@@ -4451,9 +4830,9 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    // ========================================
-    // DELETE BUTTONS
-    // ========================================
+    // ----------------------------------------
+    // DELETE
+    // ----------------------------------------
 
     document
       .querySelectorAll(
@@ -4466,26 +4845,57 @@ document.addEventListener("DOMContentLoaded", () => {
             "click",
             () => {
 
-              const index =
-                Number(
-                  button.dataset.index
-                );
-
-
-              const trackers =
-                getAdvancedTrackers();
-
-
-              if (!trackers[index]) {
+              if (trackerActionInProgress) {
 
                 return;
 
               }
 
 
+              const trackerId =
+                button.dataset.trackerId;
+
+
+              const trackers =
+                getAdvancedTrackers();
+
+
+              const trackerIndex =
+                trackers.findIndex(
+                  tracker =>
+                    String(
+                      tracker.id || ""
+                    ) ===
+                    String(
+                      trackerId || ""
+                    )
+                );
+
+
+              if (trackerIndex === -1) {
+
+                showTrackerNotFound();
+
+                return;
+
+              }
+
+
+              const tracker =
+                trackers[
+                  trackerIndex
+                ];
+
+
+              const label =
+                getTrackerShortLabel(
+                  tracker
+                );
+
+
               const confirmed =
                 window.confirm(
-                  "Delete this tracked research profile?"
+                  `Delete this tracked research profile?\n\n${label}`
                 );
 
 
@@ -4497,7 +4907,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
               trackers.splice(
-                index,
+                trackerIndex,
                 1
               );
 
@@ -4509,11 +4919,89 @@ document.addEventListener("DOMContentLoaded", () => {
 
               displayTrackedTopics();
 
+
+              showMessage(`
+
+                <h2>
+                  🗑️ Tracker deleted
+                </h2>
+
+                <p>
+                  The research tracking profile
+                  was deleted successfully.
+                </p>
+
+              `);
+
             }
           );
 
         }
       );
+
+  }
+
+
+  // ==========================================
+  // FIND TRACKER BY ID
+  // ==========================================
+
+  function findTrackerById(
+    trackerId
+  ) {
+
+    if (!trackerId) {
+
+      return null;
+
+    }
+
+
+    const trackers =
+      getAdvancedTrackers();
+
+
+    return (
+      trackers.find(
+        tracker =>
+          String(
+            tracker.id || ""
+          ) ===
+          String(
+            trackerId
+          )
+      ) ||
+      null
+    );
+
+  }
+
+
+  // ==========================================
+  // TRACKER NOT FOUND
+  // ==========================================
+
+  function showTrackerNotFound() {
+
+    showMessage(`
+
+      <h2>
+        ❌ Tracker not found
+      </h2>
+
+      <p>
+        This tracking profile no longer
+        exists in local storage.
+      </p>
+
+      <p>
+        The tracker dashboard has been refreshed.
+      </p>
+
+    `);
+
+
+    displayTrackedTopics();
 
   }
 
@@ -4533,13 +5021,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    if (trackerActionInProgress) {
+
+      return;
+
+    }
+
+
+    trackerActionInProgress =
+      true;
+
+
     // ----------------------------------------
     // NORMALIZE SAVED CRITERIA
     // ----------------------------------------
 
-    const safeCriteria = cloneCriteria(
-      tracker.criteria || {}
-    );
+    const safeCriteria =
+      cloneCriteria(
+        tracker.criteria || {}
+      );
 
 
     // ----------------------------------------
@@ -4554,6 +5054,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (!hasCriteria) {
+
+      trackerActionInProgress =
+        false;
+
 
       showMessage(`
 
@@ -4580,7 +5084,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showSearchingMessage(
       "🔎 Checking tracked research...",
-      "Looking for papers matching your saved research profile."
+      `Looking for papers matching
+       <strong>${escapeHtml(
+         getTrackerShortLabel(tracker)
+       )}</strong>.`
     );
 
 
@@ -4606,7 +5113,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-      // Find by stable profile identity first.
       let trackerIndex =
         trackers.findIndex(
           item =>
@@ -4615,7 +5121,10 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-      // Fallback to old ID.
+      // --------------------------------------
+      // FALLBACK TO STABLE ID
+      // --------------------------------------
+
       if (trackerIndex === -1) {
 
         trackerIndex =
@@ -4630,18 +5139,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (trackerIndex === -1) {
 
-        showMessage(`
+        trackerActionInProgress =
+          false;
 
-          <h2>
-            ❌ Tracker not found
-          </h2>
 
-          <p>
-            This tracking profile no longer
-            exists in local storage.
-          </p>
-
-        `);
+        showTrackerNotFound();
 
         return;
 
@@ -4685,7 +5187,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       // --------------------------------------
-      // REFRESH TRACKER UI
+      // REFRESH DASHBOARD
       // --------------------------------------
 
       displayTrackedTopics();
@@ -4696,6 +5198,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // --------------------------------------
 
       if (!papers.length) {
+
+        trackerActionInProgress =
+          false;
+
 
         showMessage(`
 
@@ -4712,31 +5218,45 @@ document.addEventListener("DOMContentLoaded", () => {
             The tracker was checked successfully.
           </p>
 
-          <p>
-            📚
-            <strong>
-              Papers tracked:
-            </strong>
-            ${getSeenCount(tracker)}
-          </p>
+          <div class="tracker-result-summary">
 
-          <p>
-            📅
-            <strong>
-              Last checked:
-            </strong>
-            ${escapeHtml(
-              tracker.lastChecked
-            )}
-          </p>
+            <div>
+              📚
+              <strong>
+                Papers tracked:
+              </strong>
+              ${getSeenCount(tracker)}
+            </div>
 
-          <p>
-            🔔
-            <strong>
-              New papers found:
-            </strong>
-            0
-          </p>
+            <div>
+              🆕
+              <strong>
+                New on this check:
+              </strong>
+              0
+            </div>
+
+            <div>
+              🔔
+              <strong>
+                Total new discovered:
+              </strong>
+              ${Number(
+                tracker.totalNewPapers || 0
+              )}
+            </div>
+
+            <div>
+              📅
+              <strong>
+                Last checked:
+              </strong>
+              ${escapeHtml(
+                tracker.lastChecked
+              )}
+            </div>
+
+          </div>
 
         `);
 
@@ -4762,7 +5282,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       displayResults(
         markedPapers,
-        `📚 Tracked research — ${check.newPapers.length} new`
+        check.newPapers.length > 0
+          ? `🆕 Tracked research — ${check.newPapers.length} new`
+          : "📚 Tracked research — no new papers"
       );
 
 
@@ -4791,11 +5313,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
           &nbsp;•&nbsp;
 
-          🔔
-          <strong>
-            ${check.newPapers.length}
-          </strong>
-          new papers
+          ${
+            check.newPapers.length > 0
+              ? `
+                🆕
+                <strong>
+                  ${check.newPapers.length}
+                </strong>
+                new
+              `
+              : `
+                ✓
+                <strong>
+                  No new papers
+                </strong>
+              `
+          }
 
           &nbsp;•&nbsp;
 
@@ -4812,6 +5345,16 @@ document.addEventListener("DOMContentLoaded", () => {
             ${getSeenCount(tracker)}
           </strong>
           tracked
+
+          &nbsp;•&nbsp;
+
+          🔔
+          <strong>
+            ${Number(
+              tracker.totalNewPapers || 0
+            )}
+          </strong>
+          total new discovered
 
           &nbsp;•&nbsp;
 
@@ -4854,6 +5397,16 @@ document.addEventListener("DOMContentLoaded", () => {
         </p>
 
       `);
+
+    } finally {
+
+      trackerActionInProgress =
+        false;
+
+
+      // Refresh the dashboard one final time
+      // so statistics/status are always current.
+      displayTrackedTopics();
 
     }
 
