@@ -7,89 +7,238 @@
   <title>STracker - Scientific Paper Discovery</title>
 
   <style>
+    /* ==========================================
+       GLOBAL
+    ========================================== */
+
     * {
       box-sizing: border-box;
     }
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f5f7fa;
-      color: #222;
+    html {
+      scroll-behavior: smooth;
     }
 
+    body {
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      margin: 0;
+
+      background:
+        linear-gradient(
+          180deg,
+          #f1f5f9 0%,
+          #f8fafc 45%,
+          #f1f5f9 100%
+        );
+
+      color: #1f2937;
+
+      line-height: 1.6;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+
+    /* ==========================================
+       HEADER
+    ========================================== */
+
     header {
-      background: #111827;
+      background:
+        linear-gradient(
+          135deg,
+          #111827 0%,
+          #172554 55%,
+          #1e3a8a 100%
+        );
+
       color: white;
-      padding: 30px 20px;
+
+      padding: 42px 20px;
+
       text-align: center;
+
+      box-shadow:
+        0 6px 20px rgba(15, 23, 42, 0.18);
     }
 
     header h1 {
-      margin: 0 0 8px;
+      margin: 0 0 7px;
+
+      font-size: 40px;
+
+      font-weight: 800;
+
+      letter-spacing: -0.8px;
     }
 
     header p {
       margin: 0;
-      color: #d1d5db;
+
+      color: #dbeafe;
+
+      font-size: 16px;
+
+      letter-spacing: 0.2px;
     }
+
+
+    /* ==========================================
+       MAIN
+    ========================================== */
 
     main {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 20px;
+      width: min(100% - 32px, 1000px);
+
+      margin: 40px auto 70px;
     }
 
+
+    /* ==========================================
+       GENERAL CARD
+    ========================================== */
+
     .card {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.96);
+
+      padding: 28px;
+
+      border-radius: 16px;
+
+      border: 1px solid #e2e8f0;
+
+      box-shadow:
+        0 4px 15px rgba(15, 23, 42, 0.06);
+
       margin-bottom: 25px;
     }
 
+    .card h2 {
+      margin-top: 0;
+
+      margin-bottom: 8px;
+
+      color: #111827;
+
+      font-size: 23px;
+    }
+
+    .card > p {
+      color: #64748b;
+    }
+
+
+    /* ==========================================
+       SEARCH
+    ========================================== */
+
     .search-box {
       display: flex;
+
       gap: 10px;
+
       margin-bottom: 20px;
     }
 
     input,
     select {
       width: 100%;
-      padding: 13px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+
+      padding: 13px 15px;
+
+      border: 1px solid #cbd5e1;
+
+      border-radius: 10px;
+
       font-size: 15px;
+
       background: white;
+
+      color: #111827;
+
+      outline: none;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+    }
+
+    input:hover,
+    select:hover {
+      border-color: #94a3b8;
     }
 
     input:focus,
     select:focus {
-      outline: none;
       border-color: #2563eb;
+
+      box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.12);
     }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+
+    /* ==========================================
+       BUTTONS
+    ========================================== */
 
     button {
       padding: 13px 20px;
+
       border: none;
-      border-radius: 8px;
+
+      border-radius: 10px;
+
       background: #2563eb;
+
       color: white;
+
       cursor: pointer;
+
       font-size: 15px;
+
+      font-weight: 600;
+
+      white-space: nowrap;
+
+      transition:
+        background 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
     }
 
     button:hover {
       background: #1d4ed8;
+
+      box-shadow:
+        0 5px 14px rgba(37, 99, 235, 0.22);
+    }
+
+    button:active {
+      transform: translateY(1px);
     }
 
     .secondary {
-      background: #6b7280;
+      background: #64748b;
     }
 
     .secondary:hover {
-      background: #4b5563;
+      background: #475569;
+
+      box-shadow:
+        0 5px 14px rgba(71, 85, 105, 0.18);
     }
 
     .danger {
@@ -98,7 +247,15 @@
 
     .danger:hover {
       background: #b91c1c;
+
+      box-shadow:
+        0 5px 14px rgba(220, 38, 38, 0.18);
     }
+
+
+    /* ==========================================
+       FORM FIELDS
+    ========================================== */
 
     .field {
       margin-bottom: 18px;
@@ -106,137 +263,409 @@
 
     .field label {
       display: block;
-      font-weight: bold;
+
+      font-weight: 700;
+
       margin-bottom: 7px;
+
+      color: #334155;
     }
 
     .hint {
-      color: #6b7280;
+      color: #64748b;
+
       font-size: 13px;
-      margin-top: 5px;
+
+      margin-top: 6px;
     }
 
-    .keyword-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
 
-    .keyword-options {
-  margin-top: 15px;
-  padding: 15px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.keyword-options > label,
-.keyword-mode > label:first-child {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 12px;
-}
-
-.checkbox-group label,
-.keyword-mode label {
-  font-weight: normal;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.checkbox-group input,
-.keyword-mode input {
-  width: auto;
-  padding: 0;
-}
-
-.keyword-mode {
-  margin-top: 15px;
-  padding: 15px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.keyword-mode > label:not(:first-child) {
-  display: inline-flex;
-  margin-right: 20px;
-}
-    .keyword-row input {
-      flex: 1;
-    }
+    /* ==========================================
+       ADVANCED GRID
+    ========================================== */
 
     .advanced-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
+
+      grid-template-columns:
+        1fr
+        1fr;
+
+      gap: 20px;
+
+      margin-top: 25px;
     }
 
     .full-width {
       grid-column: 1 / -1;
     }
 
+
+    /* ==========================================
+       KEYWORDS
+    ========================================== */
+
+    .keyword-row {
+      display: flex;
+
+      gap: 8px;
+
+      margin-bottom: 9px;
+    }
+
+    .keyword-row input {
+      flex: 1;
+    }
+
+    .keyword-options,
+    .keyword-mode {
+      margin-top: 16px;
+
+      padding: 17px;
+
+      background:
+        #f8fafc;
+
+      border: 1px solid #e2e8f0;
+
+      border-radius: 12px;
+    }
+
+    .keyword-options > label,
+    .keyword-mode > label:first-child {
+      display: block;
+
+      font-weight: 700;
+
+      margin-bottom: 12px;
+
+      color: #334155;
+    }
+
+    .checkbox-group {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 12px 18px;
+
+      margin-bottom: 14px;
+    }
+
+    .checkbox-group label,
+    .keyword-mode label {
+      font-weight: normal;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      color: #475569;
+
+      cursor: pointer;
+    }
+
+    .checkbox-group input,
+    .keyword-mode input {
+      width: auto;
+
+      padding: 0;
+
+      accent-color: #2563eb;
+
+      cursor: pointer;
+    }
+
+    .keyword-mode > label:not(:first-child) {
+      display: inline-flex;
+
+      margin-right: 22px;
+    }
+
+
+    /* ==========================================
+       ACCURACY
+    ========================================== */
+
     .accuracy-value {
-      font-size: 24px;
-      font-weight: bold;
+      display: inline-block;
+
+      margin: 2px 0 8px;
+
+      font-size: 27px;
+
+      font-weight: 800;
+
       color: #2563eb;
     }
 
     input[type="range"] {
+      width: 100%;
+
       padding: 0;
+
+      border: none;
+
+      background: transparent;
+
       cursor: pointer;
+
+      box-shadow: none;
     }
+
+    input[type="range"]:focus {
+      box-shadow: none;
+    }
+
+
+    /* ==========================================
+       ACTIONS
+    ========================================== */
 
     .actions {
       display: flex;
+
       gap: 10px;
+
       margin-top: 25px;
+
+      padding-top: 20px;
+
+      border-top: 1px solid #e5e7eb;
+
       flex-wrap: wrap;
     }
 
+
+    /* ==========================================
+       PAPERS / SEARCH RESULTS
+    ========================================== */
+
     .paper {
       background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
+
+      padding: 26px;
+
+      border-radius: 14px;
+
+      border: 1px solid #e2e8f0;
+
+      box-shadow:
+        0 4px 14px rgba(15, 23, 42, 0.05);
+
+      margin-bottom: 18px;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .paper:hover {
+      transform: translateY(-2px);
+
+      border-color: #cbd5e1;
+
+      box-shadow:
+        0 8px 22px rgba(15, 23, 42, 0.08);
     }
 
     .paper h2 {
       margin-top: 0;
+
+      margin-bottom: 12px;
+
+      color: #111827;
+
+      font-size: 20px;
+
+      line-height: 1.4;
+    }
+
+    .paper p {
+      margin: 8px 0;
+
+      color: #64748b;
     }
 
     .paper a {
+      display: inline-block;
+
+      margin-top: 8px;
+
       color: #2563eb;
-      font-weight: bold;
+
+      font-weight: 700;
+
       text-decoration: none;
     }
 
+    .paper a:hover {
+      text-decoration: underline;
+    }
+
+
+    /* ==========================================
+       BADGES
+    ========================================== */
+
     .badge {
       display: inline-block;
+
       background: #eff6ff;
+
       color: #1d4ed8;
-      padding: 5px 9px;
-      border-radius: 6px;
+
+      padding: 5px 10px;
+
+      border-radius: 999px;
+
+      border: 1px solid #dbeafe;
+
       font-size: 13px;
+
+      font-weight: 600;
+
       margin-right: 5px;
+
       margin-bottom: 5px;
     }
 
-    .tracked-topic {
-      padding: 18px 0;
-      border-bottom: 1px solid #e5e7eb;
+
+    /* ==========================================
+       TRACKED TOPICS
+    ========================================== */
+
+    #trackedTopics {
+      margin-bottom: 25px;
     }
 
+    .tracked-topic {
+      padding: 20px;
+
+      margin-bottom: 14px;
+
+      background: white;
+
+      border: 1px solid #e2e8f0;
+
+      border-radius: 14px;
+
+      box-shadow:
+        0 3px 12px rgba(15, 23, 42, 0.05);
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .tracked-topic:hover {
+      border-color: #bfdbfe;
+
+      box-shadow:
+        0 7px 20px rgba(15, 23, 42, 0.07);
+
+      transform: translateY(-1px);
+    }
+
+    .tracked-topic:last-child {
+      margin-bottom: 0;
+    }
+
+
+    /* ==========================================
+       TRACKER ACTIONS
+    ========================================== */
+
+    .tracked-topic .actions {
+      margin-top: 18px;
+
+      padding-top: 15px;
+
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .tracked-topic .actions button {
+      padding: 9px 15px;
+
+      font-size: 14px;
+    }
+
+
+    /* ==========================================
+       LOAD MORE
+    ========================================== */
+
+    #loadMoreArea {
+      display: flex;
+
+      justify-content: center;
+
+      padding: 15px 0 30px;
+    }
+
+    #loadMoreArea button {
+      min-width: 160px;
+    }
+
+
+    /* ==========================================
+       RESULT / STATUS TEXT
+    ========================================== */
+
+    #results {
+      min-height: 20px;
+    }
+
+    #results > p {
+      padding: 18px;
+
+      background: white;
+
+      border: 1px solid #e2e8f0;
+
+      border-radius: 12px;
+
+      color: #64748b;
+    }
+
+
+    /* ==========================================
+       WELCOME
+    ========================================== */
+
+    #results .card {
+      border-top: 4px solid #2563eb;
+    }
+
+    #results .card h2 {
+      color: #111827;
+    }
+
+
+    /* ==========================================
+       MOBILE
+    ========================================== */
+
     @media (max-width: 700px) {
+
+      main {
+        width: min(100% - 20px, 1000px);
+
+        margin-top: 25px;
+      }
+
+      header {
+        padding: 34px 15px;
+      }
+
+      header h1 {
+        font-size: 34px;
+      }
+
       .advanced-grid {
         grid-template-columns: 1fr;
       }
@@ -248,7 +677,68 @@
       .search-box {
         flex-direction: column;
       }
+
+      .search-box button {
+        width: 100%;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .actions button {
+        width: 100%;
+      }
+
+      .checkbox-group {
+        flex-direction: column;
+
+        gap: 10px;
+      }
+
+      .keyword-mode > label:not(:first-child) {
+        display: flex;
+
+        margin: 10px 0 0;
+      }
     }
+
+
+    /* ==========================================
+       SMALL PHONES
+    ========================================== */
+
+    @media (max-width: 420px) {
+
+      .card {
+        padding: 20px;
+      }
+
+      .paper {
+        padding: 20px;
+      }
+
+      .tracked-topic {
+        padding: 17px;
+      }
+
+      header h1 {
+        font-size: 30px;
+      }
+
+      header p {
+        font-size: 14px;
+      }
+
+      .card h2 {
+        font-size: 20px;
+      }
+
+      .paper h2 {
+        font-size: 18px;
+      }
+    }
+
   </style>
 </head>
 
@@ -256,12 +746,15 @@
 
   <header>
     <h1>STracker</h1>
-    <p>Scientific Paper Discovery & Tracking</p>
+    <p>Scientific Paper Discovery &amp; Tracking</p>
   </header>
+
 
   <main>
 
-    <!-- QUICK SEARCH -->
+    <!-- ==========================================
+         QUICK SEARCH
+    ========================================== -->
 
     <div class="card">
 
@@ -288,7 +781,9 @@
     </div>
 
 
-    <!-- ADVANCED TRACKER -->
+    <!-- ==========================================
+         ADVANCED TRACKER
+    ========================================== -->
 
     <div class="card">
 
@@ -304,127 +799,131 @@
 
         <!-- REQUIRED KEYWORDS -->
 
-<div class="field full-width">
+        <div class="field full-width">
 
-  <label>
-    Required keywords
-  </label>
+          <label>
+            Required keywords
+          </label>
 
-  <div id="keywordContainer">
+          <div id="keywordContainer">
 
-    <div class="keyword-row">
+            <div class="keyword-row">
 
-      <input
-        type="text"
-        class="required-keyword"
-        placeholder="Example: cognitive neuroscience"
-      >
+              <input
+                type="text"
+                class="required-keyword"
+                placeholder="Example: cognitive neuroscience"
+              >
 
-    </div>
+            </div>
 
-  </div>
+          </div>
 
-  <button
-    type="button"
-    id="addKeywordButton"
-    class="secondary"
-  >
-    + Add keyword
-  </button>
 
-  <div class="keyword-options">
+          <button
+            type="button"
+            id="addKeywordButton"
+            class="secondary"
+          >
+            + Add keyword
+          </button>
 
-    <label>
-      Search keywords in:
-    </label>
 
-    <div class="checkbox-group">
+          <div class="keyword-options">
 
-      <label>
-        <input
-          type="checkbox"
-          class="keyword-field"
-          value="title"
-        >
-        Title
-      </label>
+            <label>
+              Search keywords in:
+            </label>
 
-      <label>
-        <input
-          type="checkbox"
-          class="keyword-field"
-          value="abstract"
-        >
-        Abstract
-      </label>
+            <div class="checkbox-group">
 
-      <label>
-        <input
-          type="checkbox"
-          class="keyword-field"
-          value="authors"
-        >
-        Authors
-      </label>
+              <label>
+                <input
+                  type="checkbox"
+                  class="keyword-field"
+                  value="title"
+                >
+                Title
+              </label>
 
-      <label>
-        <input
-          type="checkbox"
-          class="keyword-field"
-          value="journal"
-        >
-        Journal
-      </label>
+              <label>
+                <input
+                  type="checkbox"
+                  class="keyword-field"
+                  value="abstract"
+                >
+                Abstract
+              </label>
 
-      <label>
-        <input
-          type="checkbox"
-          class="keyword-field"
-          value="concepts"
-        >
-        Concepts
-      </label>
+              <label>
+                <input
+                  type="checkbox"
+                  class="keyword-field"
+                  value="authors"
+                >
+                Authors
+              </label>
 
-    </div>
+              <label>
+                <input
+                  type="checkbox"
+                  class="keyword-field"
+                  value="journal"
+                >
+                Journal
+              </label>
 
-    <button
-      type="button"
-      id="selectAllKeywordFields"
-      class="secondary"
-    >
-      Select all
-    </button>
+              <label>
+                <input
+                  type="checkbox"
+                  class="keyword-field"
+                  value="concepts"
+                >
+                Concepts
+              </label>
 
-  </div>
+            </div>
 
-  <div class="keyword-mode">
 
-    <label>
-      Match keywords:
-    </label>
+            <button
+              type="button"
+              id="selectAllKeywordFields"
+              class="secondary"
+            >
+              Select all
+            </button>
 
-    <label>
-      <input
-        type="radio"
-        name="keywordMode"
-        value="all"
-        checked
-      >
-      All keywords
-    </label>
+          </div>
 
-    <label>
-      <input
-        type="radio"
-        name="keywordMode"
-        value="any"
-      >
-      Any keyword
-    </label>
 
-  </div>
+          <div class="keyword-mode">
 
-</div>
+            <label>
+              Match keywords:
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                name="keywordMode"
+                value="all"
+                checked
+              >
+              All keywords
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                name="keywordMode"
+                value="any"
+              >
+              Any keyword
+            </label>
+
+          </div>
+
+        </div>
 
 
         <!-- EXCLUDED KEYWORDS -->
@@ -448,6 +947,7 @@
             </div>
 
           </div>
+
 
           <button
             type="button"
@@ -635,13 +1135,13 @@
           </div>
 
           <input
-  type="range"
-  id="accuracyInput"
-  min="0"
-  max="100"
-  value="75"
-  step="1"
->
+            type="range"
+            id="accuracyInput"
+            min="0"
+            max="100"
+            value="75"
+            step="1"
+          >
 
           <p class="hint">
             Higher = stricter matching.
@@ -651,6 +1151,8 @@
 
       </div>
 
+
+      <!-- ACTIONS -->
 
       <div class="actions">
 
@@ -673,12 +1175,16 @@
     </div>
 
 
-    <!-- TRACKED TOPICS -->
+    <!-- ==========================================
+         TRACKED TOPICS
+    ========================================== -->
 
     <div id="trackedTopics"></div>
 
 
-    <!-- RESULTS -->
+    <!-- ==========================================
+         RESULTS
+    ========================================== -->
 
     <div id="results">
 
@@ -705,8 +1211,12 @@
   </main>
 
 
+  <!-- ==========================================
+       JAVASCRIPT
+       DO NOT CHANGE
+  ========================================== -->
+
   <script src="app.js"></script>
 
 </body>
-
 </html>
