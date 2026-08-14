@@ -275,6 +275,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  // ==========================================
+// SELECT ALL KEYWORD FIELDS
+// ==========================================
+
+if (selectAllKeywordFields) {
+
+  selectAllKeywordFields.addEventListener(
+    "click",
+    () => {
+
+      const checkboxes =
+        document.querySelectorAll(
+          ".keyword-field"
+        );
+
+      const allChecked =
+        Array.from(checkboxes).every(
+          checkbox => checkbox.checked
+        );
+
+      checkboxes.forEach(
+        checkbox => {
+          checkbox.checked = !allChecked;
+        }
+      );
+
+      selectAllKeywordFields.textContent =
+        allChecked
+          ? "Select all"
+          : "Deselect all";
+
+    }
+  );
+
+}
   function createInputRow(
     container,
     className,
