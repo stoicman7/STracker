@@ -4058,16 +4058,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   return `
 
-    <div class="tracker-criteria-row">
-
-      <div class="tracker-criteria-label">
-        🔬 Research topic
-      </div>
-
-      <div class="tracker-criteria-text">
-        ${escapeHtml(topic)}
-      </div>
-
+    <div class="tracker-criteria-text tracker-topic-name">
+      ${escapeHtml(topic)}
     </div>
 
   `;
@@ -4315,22 +4307,14 @@ document.addEventListener("DOMContentLoaded", () => {
                        CRITERIA
                   ======================= -->
 
-                  <div class="tracker-section">
 
-                    <div class="tracker-section-heading">
-                      🔬 Research criteria
-                    </div>
+                  <div class="tracker-criteria">
 
-                    <div class="tracker-criteria">
+  ${buildTrackerCriteriaHtml(
+    criteria
+  )}
 
-                      ${buildTrackerCriteriaHtml(
-                        criteria
-                      )}
-
-                    </div>
-
-                  </div>
-
+</div>
 
                   <!-- ======================
                        STATISTICS
