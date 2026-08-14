@@ -311,53 +311,91 @@ accuracyInput.addEventListener(
 
   function getCriteria() {
 
-    const keywords =
-      Array.from(
-        document.querySelectorAll(
-          ".required-keyword"
-        )
+  const keywords =
+    Array.from(
+      document.querySelectorAll(
+        ".required-keyword"
       )
-        .map(input => input.value.trim())
-        .filter(Boolean);
+    )
+      .map(input => input.value.trim())
+      .filter(Boolean);
 
 
-    const excluded =
-      Array.from(
-        document.querySelectorAll(
-          ".excluded-keyword"
-        )
+  const excluded =
+    Array.from(
+      document.querySelectorAll(
+        ".excluded-keyword"
       )
-        .map(input => input.value.trim())
-        .filter(Boolean);
+    )
+      .map(input => input.value.trim())
+      .filter(Boolean);
 
 
-    return {
+  // ------------------------------------------
+  // KEYWORD SEARCH FIELDS
+  // ------------------------------------------
 
-      keywords: keywords,
+  const keywordFields =
+    Array.from(
+      document.querySelectorAll(
+        ".keyword-field:checked"
+      )
+    )
+      .map(input => input.value);
 
-      excluded: excluded,
 
-      author:
-        authorInput.value.trim(),
+  // ------------------------------------------
+  // KEYWORD MATCH MODE
+  // ------------------------------------------
 
-      journal:
-        journalInput.value.trim(),
+  const keywordModeInput =
+    document.querySelector(
+      'input[name="keywordMode"]:checked'
+    );
 
-      field:
-        fieldInput.value,
+  const keywordMode =
+    keywordModeInput
+      ? keywordModeInput.value
+      : "all";
 
-      dateRange:
-        dateRangeInput.value,
 
-      documentType:
-        documentTypeInput.value,
+  return {
 
-      accuracy:
-        Number(accuracyInput.value)
+    keywords: keywords,
 
-    };
+    excluded: excluded,
 
-  }
+    // New keyword-search settings
+    keywordFields: keywordFields,
+
+    keywordMode: keywordMode,
+
+    author:
+      authorInput.value.trim(),
+
+    journal:
+      journalInput.value.trim(),
+
+    field:
+      fieldInput.value,
+
+    dateRange:
+      dateRangeInput.value,
+
+    documentType:
+      documentTypeInput.value,
+
+    // Temporary name for compatibility.
+    // We will rename this to
+    // relevanceThreshold in the next step.
+    accuracy:
+      Number(
+        accuracyInput.value
+      )
+
+  };
+
+}
 
 
   // ==========================================
@@ -2385,33 +2423,47 @@ function matchesAdvancedCriteria(
 
       criteria: {
 
-        keywords: [
-          ...criteria.keywords
-        ],
+  keywords: [
+    ...criteria.keywords
+  ],
 
-        excluded: [
-          ...criteria.excluded
-        ],
+  excluded: [
+    ...criteria.excluded
+  ],
 
-        author:
-          criteria.author,
+  // New keyword search settings
+  keywordFields: Array.isArray(
+    criteria.keywordFields
+  )
+    ? [
+        ...criteria.keywordFields
+      ]
+    : [],
 
-        journal:
-          criteria.journal,
+  keywordMode:
+    criteria.keywordMode === "any"
+      ? "any"
+      : "all",
 
-        field:
-          criteria.field,
+  author:
+    criteria.author,
 
-        dateRange:
-          criteria.dateRange,
+  journal:
+    criteria.journal,
 
-        documentType:
-          criteria.documentType,
+  field:
+    criteria.field,
 
-        accuracy:
-          criteria.accuracy
+  dateRange:
+    criteria.dateRange,
 
-      },
+  documentType:
+    criteria.documentType,
+
+  accuracy:
+    criteria.accuracy
+
+},
 
       createdAt:
         getToday(),
@@ -2874,6 +2926,24 @@ function matchesAdvancedCriteria(
               .filter(Boolean)
           : [],
 
+      keywordFields:
+  Array.isArray(criteria?.keywordFields)
+    ? criteria.keywordFields
+        .filter(field =>
+          [
+            "title",
+            "abstract",
+            "authors",
+            "journal",
+            "concepts"
+          ].includes(field)
+        )
+    : [],
+
+keywordMode:
+  criteria?.keywordMode === "any"
+    ? "any"
+    : "all",
       author:
         typeof criteria?.author === "string"
           ? criteria.author.trim()
