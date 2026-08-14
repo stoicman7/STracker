@@ -542,6 +542,32 @@ accuracyInput.addEventListener(
   }
 
 
+  function getPaperDate(paper) {
+
+  const rawDate =
+    paper.published ||
+    paper.publicationDate ||
+    paper.date ||
+    "";
+
+  const time =
+    new Date(rawDate).getTime();
+
+  return Number.isFinite(time)
+    ? time
+    : 0;
+}
+
+
+function sortPapersNewestFirst(papers) {
+
+  return papers.sort(
+    (a, b) =>
+      getPaperDate(b) -
+      getPaperDate(a)
+  );
+
+}
   // ==========================================
   // SEARCH WITH CRITERIA
   // ==========================================
@@ -631,20 +657,33 @@ accuracyInput.addEventListener(
       );
 
 
-    // Highest relevance first.
-    papers.sort((a, b) => {
+   // Newest publication first.
+// Relevance score is NOT used for ordering.
+papers.sort((a, b) => {
 
-      return (
-        b.strackerScore -
-        a.strackerScore
-      );
+  const dateA = new Date(
+    a.published ||
+    a.publicationDate ||
+    a.date ||
+    ""
+  ).getTime();
 
-    });
+  const dateB = new Date(
+    b.published ||
+    b.publicationDate ||
+    b.date ||
+    ""
+  ).getTime();
+
+  return (
+    (Number.isFinite(dateB) ? dateB : 0) -
+    (Number.isFinite(dateA) ? dateA : 0)
+  );
+
+});
 
 
-    return papers;
-
-  }
+return papers;
 
 
   // ==========================================
