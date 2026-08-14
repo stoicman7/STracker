@@ -122,6 +122,54 @@
       margin-bottom: 8px;
     }
 
+    .keyword-options {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.keyword-options > label,
+.keyword-mode > label:first-child {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.checkbox-group label,
+.keyword-mode label {
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.checkbox-group input,
+.keyword-mode input {
+  width: auto;
+  padding: 0;
+}
+
+.keyword-mode {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.keyword-mode > label:not(:first-child) {
+  display: inline-flex;
+  margin-right: 20px;
+}
     .keyword-row input {
       flex: 1;
     }
@@ -256,35 +304,127 @@
 
         <!-- REQUIRED KEYWORDS -->
 
-        <div class="field full-width">
+<div class="field full-width">
 
-          <label>
-            Required keywords
-          </label>
+  <label>
+    Required keywords
+  </label>
 
-          <div id="keywordContainer">
+  <div id="keywordContainer">
 
-            <div class="keyword-row">
+    <div class="keyword-row">
 
-              <input
-                type="text"
-                class="required-keyword"
-                placeholder="Example: cognitive neuroscience"
-              >
+      <input
+        type="text"
+        class="required-keyword"
+        placeholder="Example: cognitive neuroscience"
+      >
 
-            </div>
+    </div>
 
-          </div>
+  </div>
 
-          <button
-            type="button"
-            id="addKeywordButton"
-            class="secondary"
-          >
-            + Add keyword
-          </button>
+  <button
+    type="button"
+    id="addKeywordButton"
+    class="secondary"
+  >
+    + Add keyword
+  </button>
 
-        </div>
+  <div class="keyword-options">
+
+    <label>
+      Search keywords in:
+    </label>
+
+    <div class="checkbox-group">
+
+      <label>
+        <input
+          type="checkbox"
+          class="keyword-field"
+          value="title"
+        >
+        Title
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          class="keyword-field"
+          value="abstract"
+        >
+        Abstract
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          class="keyword-field"
+          value="authors"
+        >
+        Authors
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          class="keyword-field"
+          value="journal"
+        >
+        Journal
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          class="keyword-field"
+          value="concepts"
+        >
+        Concepts
+      </label>
+
+    </div>
+
+    <button
+      type="button"
+      id="selectAllKeywordFields"
+      class="secondary"
+    >
+      Select all
+    </button>
+
+  </div>
+
+  <div class="keyword-mode">
+
+    <label>
+      Match keywords:
+    </label>
+
+    <label>
+      <input
+        type="radio"
+        name="keywordMode"
+        value="all"
+        checked
+      >
+      All keywords
+    </label>
+
+    <label>
+      <input
+        type="radio"
+        name="keywordMode"
+        value="any"
+      >
+      Any keyword
+    </label>
+
+  </div>
+
+</div>
 
 
         <!-- EXCLUDED KEYWORDS -->
