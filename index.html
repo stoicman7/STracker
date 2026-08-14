@@ -8,6 +8,106 @@
   <title>STracker - Scientific Paper Discovery</title>
 
   <style>
+
+
+    /* =========================================================
+   MINIMAL TRACKER STATISTICS
+   ========================================================= */
+
+.tracker-stats {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 0;
+
+  margin-top: 8px;
+
+  padding: 14px 0;
+
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.tracker-stat {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 4px 22px;
+
+  background: transparent;
+
+  border: none;
+
+  border-radius: 0;
+
+  text-align: left;
+
+  box-shadow: none;
+
+  transform: none !important;
+
+  transition: none;
+}
+
+
+.tracker-stat + .tracker-stat {
+  border-left: 1px solid #e2e8f0;
+}
+
+
+.tracker-stat-value {
+  font-size: 16px;
+
+  font-weight: 700;
+
+  color: #334155;
+
+  white-space: nowrap;
+}
+
+
+.tracker-stat-label {
+  font-size: 13px;
+
+  color: #64748b;
+
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   MORE SPACE INSIDE TRACKER CARD
+   ========================================================= */
+
+.tracked-topic {
+  padding: 0 24px 24px;
+}
+
+
+.tracker-card-header {
+  padding-top: 24px;
+
+  margin-bottom: 22px;
+}
+
+
+.tracker-section {
+  margin-top: 22px;
+
+  padding-top: 4px;
+}
+
+
+.tracker-section-heading {
+  margin-bottom: 12px;
+}
     /* =========================================================
        GLOBAL
        ========================================================= */
