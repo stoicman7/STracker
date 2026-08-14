@@ -4308,13 +4308,8 @@ document.addEventListener("DOMContentLoaded", () => {
                   ======================= -->
 
 
-                  <div class="tracker-criteria">
+                  
 
-  ${buildTrackerCriteriaHtml(
-    criteria
-  )}
-
-</div>
 
                   <!-- ======================
                        STATISTICS
