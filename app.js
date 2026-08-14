@@ -4014,279 +4014,65 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   function buildTrackerCriteriaHtml(
-    criteria
+  criteria
+) {
+
+  criteria = criteria || {};
+
+  let topic = "";
+
+  if (
+    Array.isArray(criteria.keywords) &&
+    criteria.keywords.length
   ) {
 
-    const parts = [];
-
-
-    if (
-      Array.isArray(criteria.keywords) &&
-      criteria.keywords.length
-    ) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            Required keywords
-          </div>
-
-          <div class="tracker-criteria-values">
-
-            ${criteria.keywords
-              .map(
-                keyword =>
-                  createCriteriaBadge(
-                    keyword
-                  )
-              )
-              .join("")}
-
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (
-      Array.isArray(criteria.excluded) &&
-      criteria.excluded.length
-    ) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            Excluded
-          </div>
-
-          <div class="tracker-criteria-values">
-
-            ${criteria.excluded
-              .map(
-                keyword =>
-                  createCriteriaBadge(
-                    keyword,
-                    "tracker-excluded-badge"
-                  )
-              )
-              .join("")}
-
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (
-      Array.isArray(criteria.keywordFields) &&
-      criteria.keywordFields.length
-    ) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            Search fields
-          </div>
-
-          <div class="tracker-criteria-values">
-
-            ${criteria.keywordFields
-              .map(
-                field =>
-                  createCriteriaBadge(
-                    field
-                  )
-              )
-              .join("")}
-
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (criteria.keywordMode) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            Keyword mode
-          </div>
-
-          <div class="tracker-criteria-text">
-            ${
-              criteria.keywordMode === "any"
-                ? "Any keyword"
-                : "All keywords"
-            }
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (criteria.author) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            👤 Author
-          </div>
-
-          <div class="tracker-criteria-text">
-            ${escapeHtml(criteria.author)}
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (criteria.journal) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            📖 Journal
-          </div>
-
-          <div class="tracker-criteria-text">
-            ${escapeHtml(criteria.journal)}
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (criteria.field) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            🧠 Field
-          </div>
-
-          <div class="tracker-criteria-text">
-            ${escapeHtml(criteria.field)}
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (
-      criteria.dateRange &&
-      criteria.dateRange !== "all"
-    ) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            📅 Date range
-          </div>
-
-          <div class="tracker-criteria-text">
-            Last ${escapeHtml(criteria.dateRange)} days
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    if (criteria.documentType) {
-
-      parts.push(`
-
-        <div class="tracker-criteria-row">
-
-          <div class="tracker-criteria-label">
-            📄 Document type
-          </div>
-
-          <div class="tracker-criteria-text">
-            ${escapeHtml(criteria.documentType)}
-          </div>
-
-        </div>
-
-      `);
-
-    }
-
-
-    parts.push(`
-
-      <div class="tracker-criteria-row">
-
-        <div class="tracker-criteria-label">
-          🎯 Relevance threshold
-        </div>
-
-        <div class="tracker-criteria-text">
-          ${Number(criteria.accuracy || 0)}%
-        </div>
-
-      </div>
-
-    `);
-
-
-    if (!parts.length) {
-
-      return `
-
-        <p>
-          No criteria available.
-        </p>
-
-      `;
-
-    }
-
-
-    return parts.join("");
+    topic =
+      criteria.keywords
+        .filter(Boolean)
+        .join(", ");
 
   }
 
+  if (!topic) {
+
+    if (criteria.author) {
+      topic = `Author: ${criteria.author}`;
+    }
+
+    else if (criteria.journal) {
+      topic = `Journal: ${criteria.journal}`;
+    }
+
+    else if (criteria.field) {
+      topic = criteria.field;
+    }
+
+  }
+
+  if (!topic) {
+
+    topic =
+      "Custom research profile";
+
+  }
+
+  return `
+
+    <div class="tracker-criteria-row">
+
+      <div class="tracker-criteria-label">
+        🔬 Research topic
+      </div>
+
+      <div class="tracker-criteria-text">
+        ${escapeHtml(topic)}
+      </div>
+
+    </div>
+
+  `;
+
+}
 
   // ==========================================
   // TRACKER STATISTICS HTML
