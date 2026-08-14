@@ -49,6 +49,51 @@
       font: inherit;
     }
 
+    .tracker-stats-compact {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tracker-stat-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 7px 10px;
+
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  font-size: 12px;
+  color: #64748b;
+
+  white-space: nowrap;
+}
+
+.tracker-stat-compact strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.tracker-stat-icon {
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+
+  .tracker-stats-compact {
+    gap: 6px;
+  }
+
+  .tracker-stat-compact {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+}
 
     /* =========================================================
        HEADER
