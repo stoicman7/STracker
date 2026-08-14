@@ -659,7 +659,8 @@ function sortPapersNewestFirst(papers) {
 
    // Newest publication first.
 // Relevance score is NOT used for ordering.
-papers.sort((a, b) => {
+ 
+    papers.sort((a, b) => {
 
   const dateA = new Date(
     a.published ||
