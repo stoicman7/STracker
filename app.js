@@ -68,32 +68,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // QUICK SEARCH
   // ==========================================
 
-  searchButton.addEventListener(
-    "click",
-    quickSearch
-  );
+  if (searchButton) {
+
+    searchButton.addEventListener(
+      "click",
+      quickSearch
+    );
+
+  }
 
 
-  searchInput.addEventListener(
-    "keydown",
-    (event) => {
+  if (searchInput) {
 
-      if (event.key === "Enter") {
+    searchInput.addEventListener(
+      "keydown",
+      (event) => {
 
-        event.preventDefault();
+        if (event.key === "Enter") {
 
-        quickSearch();
+          event.preventDefault();
+
+          quickSearch();
+
+        }
 
       }
+    );
 
-    }
-  );
+  }
 
 
   async function quickSearch() {
 
     const query =
-      searchInput.value.trim();
+      searchInput
+        ? searchInput.value.trim()
+        : "";
 
 
     if (!query) {
@@ -111,18 +121,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    results.innerHTML = `
-      <div class="card">
-
-        <h2>🔎 Searching...</h2>
-
-        <p>
-          Searching free research sources for
-          <strong>${escapeHtml(query)}</strong>
-        </p>
-
-      </div>
-    `;
+    showSearchingMessage(
+      "🔎 Searching...",
+      `Searching free research sources for
+       <strong>${escapeHtml(query)}</strong>`
+    );
 
 
     try {
@@ -133,14 +136,29 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-      papers.sort((a, b) => {
+      sortPapersNewestFirst(
+        papers
+      );
 
-        return (
-          new Date(b.publication_date) -
-          new Date(a.publication_date)
-        );
 
-      });
+      if (!papers.length) {
+
+        showMessage(`
+          <h2>🔎 No papers found</h2>
+
+          <p>
+            No papers were found for
+            <strong>${escapeHtml(query)}</strong>.
+          </p>
+
+          <p>
+            Try a broader search term.
+          </p>
+        `);
+
+        return;
+
+      }
 
 
       displayResults(
@@ -181,63 +199,77 @@ document.addEventListener("DOMContentLoaded", () => {
   // ACCURACY SLIDER
   // ==========================================
 
-  // ==========================================
-// ACCURACY SLIDER
-// ==========================================
+  if (accuracyInput) {
 
-accuracyInput.min = "0";
-accuracyInput.max = "100";
-accuracyInput.step = "1";
-
-accuracyValue.textContent =
-  accuracyInput.value + "%";
-
-
-accuracyInput.addEventListener(
-  "input",
-  () => {
-
-    accuracyValue.textContent =
-      accuracyInput.value + "%";
+    // Force the range to 0–100.
+    accuracyInput.min = "0";
+    accuracyInput.max = "100";
+    accuracyInput.step = "1";
 
   }
-);
+
+
+  if (accuracyValue && accuracyInput) {
+
+    accuracyValue.textContent =
+      `${accuracyInput.value}%`;
+
+
+    accuracyInput.addEventListener(
+      "input",
+      () => {
+
+        accuracyValue.textContent =
+          `${accuracyInput.value}%`;
+
+      }
+    );
+
+  }
 
 
   // ==========================================
   // ADD REQUIRED KEYWORD
   // ==========================================
 
-  addKeywordButton.addEventListener(
-    "click",
-    () => {
+  if (addKeywordButton) {
 
-      createInputRow(
-        keywordContainer,
-        "required-keyword",
-        "Example: memory formation"
-      );
+    addKeywordButton.addEventListener(
+      "click",
+      () => {
 
-    }
-  );
+        createInputRow(
+          keywordContainer,
+          "required-keyword",
+          "Example: memory formation"
+        );
+
+      }
+    );
+
+  }
 
 
   // ==========================================
   // ADD EXCLUDED KEYWORD
   // ==========================================
 
-  addExcludeButton.addEventListener(
-    "click",
-    () => {
+  if (addExcludeButton) {
 
-      createInputRow(
-        excludeContainer,
-        "excluded-keyword",
-        "Example: animal studies"
-      );
+    addExcludeButton.addEventListener(
+      "click",
+      () => {
 
-    }
-  );
+        createInputRow(
+          excludeContainer,
+          "excluded-keyword",
+          "Example: animal studies"
+        );
+
+      }
+    );
+
+  }
 
 
   function createInputRow(
@@ -245,6 +277,11 @@ accuracyInput.addEventListener(
     className,
     placeholder
   ) {
+
+    if (!container) {
+      return;
+    }
+
 
     const row =
       document.createElement("div");
@@ -311,119 +348,166 @@ accuracyInput.addEventListener(
 
   function getCriteria() {
 
-  const keywords =
-    Array.from(
-      document.querySelectorAll(
-        ".required-keyword"
+    const keywords =
+      Array.from(
+        document.querySelectorAll(
+          ".required-keyword"
+        )
       )
-    )
-      .map(input => input.value.trim())
-      .filter(Boolean);
+        .map(
+          input =>
+            input.value.trim()
+        )
+        .filter(Boolean);
 
 
-  const excluded =
-    Array.from(
-      document.querySelectorAll(
-        ".excluded-keyword"
+    const excluded =
+      Array.from(
+        document.querySelectorAll(
+          ".excluded-keyword"
+        )
       )
-    )
-      .map(input => input.value.trim())
-      .filter(Boolean);
+        .map(
+          input =>
+            input.value.trim()
+        )
+        .filter(Boolean);
 
 
-  // ------------------------------------------
-  // KEYWORD SEARCH FIELDS
-  // ------------------------------------------
+    // ----------------------------------------
+    // KEYWORD SEARCH FIELDS
+    // ----------------------------------------
 
-  const keywordFields =
-    Array.from(
-      document.querySelectorAll(
-        ".keyword-field:checked"
+    const keywordFields =
+      Array.from(
+        document.querySelectorAll(
+          ".keyword-field:checked"
+        )
       )
-    )
-      .map(input => input.value);
+        .map(
+          input =>
+            input.value
+        );
 
 
-  // ------------------------------------------
-  // KEYWORD MATCH MODE
-  // ------------------------------------------
+    // ----------------------------------------
+    // KEYWORD MATCH MODE
+    // ----------------------------------------
 
-  const keywordModeInput =
-    document.querySelector(
-      'input[name="keywordMode"]:checked'
-    );
-
-  const keywordMode =
-    keywordModeInput
-      ? keywordModeInput.value
-      : "all";
+    const keywordModeInput =
+      document.querySelector(
+        'input[name="keywordMode"]:checked'
+      );
 
 
-  return {
+    const keywordMode =
+      keywordModeInput
+        ? keywordModeInput.value
+        : "all";
 
-    keywords: keywords,
 
-    excluded: excluded,
+    // ----------------------------------------
+    // ACCURACY
+    // ----------------------------------------
 
-    // New keyword-search settings
-    keywordFields: keywordFields,
+    const accuracy =
+      accuracyInput
+        ? Number(accuracyInput.value)
+        : 0;
 
-    keywordMode: keywordMode,
 
-    author:
-      authorInput.value.trim(),
+    return {
 
-    journal:
-      journalInput.value.trim(),
+      keywords,
 
-    field:
-      fieldInput.value,
+      excluded,
 
-    dateRange:
-      dateRangeInput.value,
+      keywordFields,
 
-    documentType:
-      documentTypeInput.value,
+      keywordMode:
+        keywordMode === "any"
+          ? "any"
+          : "all",
 
-    // Temporary name for compatibility.
-    // We will rename this to
-    // relevanceThreshold in the next step.
-    accuracy:
-      Number(
-        accuracyInput.value
-      )
+      author:
+        authorInput
+          ? authorInput.value.trim()
+          : "",
 
-  };
+      journal:
+        journalInput
+          ? journalInput.value.trim()
+          : "",
 
-}
+      field:
+        fieldInput
+          ? fieldInput.value
+          : "",
+
+      dateRange:
+        dateRangeInput
+          ? dateRangeInput.value
+          : "all",
+
+      documentType:
+        documentTypeInput
+          ? documentTypeInput.value
+          : "",
+
+      accuracy:
+        Number.isFinite(accuracy)
+          ? Math.max(
+              0,
+              Math.min(
+                100,
+                accuracy
+              )
+            )
+          : 0
+
+    };
+
+  }
 
 
   // ==========================================
   // PREVIEW
   // ==========================================
 
-  previewButton.addEventListener(
-    "click",
-    () => {
+  if (previewButton) {
 
-      runAdvancedSearch(false);
+    previewButton.addEventListener(
+      "click",
+      () => {
 
-    }
-  );
+        runAdvancedSearch(
+          false
+        );
+
+      }
+    );
+
+  }
 
 
   // ==========================================
   // TRACK
   // ==========================================
 
-  advancedTrackButton.addEventListener(
-    "click",
-    () => {
+  if (advancedTrackButton) {
 
-      runAdvancedSearch(true);
+    advancedTrackButton.addEventListener(
+      "click",
+      () => {
 
-    }
-  );
+        runAdvancedSearch(
+          true
+        );
+
+      }
+    );
+
+  }
 
 
   // ==========================================
@@ -438,12 +522,14 @@ accuracyInput.addEventListener(
       getCriteria();
 
 
-    if (
-      criteria.keywords.length === 0 &&
-      !criteria.author &&
-      !criteria.journal &&
-      !criteria.field
-    ) {
+    const hasSearchCriteria =
+      criteria.keywords.length > 0 ||
+      criteria.author ||
+      criteria.journal ||
+      criteria.field;
+
+
+    if (!hasSearchCriteria) {
 
       showMessage(`
         <h2>🔬 Add some criteria first</h2>
@@ -459,18 +545,10 @@ accuracyInput.addEventListener(
     }
 
 
-    results.innerHTML = `
-      <div class="card">
-
-        <h2>🔎 Searching...</h2>
-
-        <p>
-          Searching for papers matching
-          your research profile.
-        </p>
-
-      </div>
-    `;
+    showSearchingMessage(
+      "🔎 Searching...",
+      "Searching free research sources for papers matching your research profile."
+    );
 
 
     try {
@@ -481,32 +559,10 @@ accuracyInput.addEventListener(
         );
 
 
-      if (papers.length === 0) {
-
-        showMessage(`
-          <h2>🔎 No matching papers</h2>
-
-          <p>
-            No papers passed your
-            ${criteria.accuracy}% relevance threshold.
-          </p>
-
-          <p>
-            Try lowering the accuracy level
-            or making your criteria broader.
-          </p>
-        `);
-
-        return;
-
-      }
-
-
-      displayResults(
-        papers,
-        "🎯 Matching research"
-      );
-
+      // ======================================
+      // IMPORTANT:
+      // CREATE TRACKER EVEN IF ZERO RESULTS
+      // ======================================
 
       if (shouldTrack) {
 
@@ -520,16 +576,88 @@ accuracyInput.addEventListener(
       }
 
 
+      // ======================================
+      // ZERO RESULTS
+      // ======================================
+
+      if (!papers.length) {
+
+        if (shouldTrack) {
+
+          showMessage(`
+
+            <h2>
+              🔔 Research tracking created
+            </h2>
+
+            <p>
+              Your tracking profile was saved
+              successfully.
+            </p>
+
+            <p>
+              There are currently no papers
+              matching your criteria.
+            </p>
+
+            <p>
+              You can open the tracker later
+              to check again.
+            </p>
+
+          `);
+
+        } else {
+
+          showMessage(`
+
+            <h2>
+              🔎 No matching papers
+            </h2>
+
+            <p>
+              No papers currently match your
+              research criteria at
+              <strong>${criteria.accuracy}%</strong>
+              relevance.
+            </p>
+
+            <p>
+              Try lowering the relevance threshold
+              or broadening your criteria.
+            </p>
+
+          `);
+
+        }
+
+        return;
+
+      }
+
+
+      displayResults(
+        papers,
+        "🎯 Matching research"
+      );
+
+
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Advanced search error:",
+        error
+      );
 
 
       showMessage(`
         <h2>❌ Search failed</h2>
 
         <p>
-          ${escapeHtml(error.message)}
+          ${escapeHtml(
+            error?.message ||
+            "Could not search the free research sources."
+          )}
         </p>
 
         <p>
@@ -542,32 +670,6 @@ accuracyInput.addEventListener(
   }
 
 
-  function getPaperDate(paper) {
-
-  const rawDate =
-    paper.published ||
-    paper.publicationDate ||
-    paper.date ||
-    "";
-
-  const time =
-    new Date(rawDate).getTime();
-
-  return Number.isFinite(time)
-    ? time
-    : 0;
-}
-
-
-function sortPapersNewestFirst(papers) {
-
-  return papers.sort(
-    (a, b) =>
-      getPaperDate(b) -
-      getPaperDate(a)
-  );
-
-}
   // ==========================================
   // SEARCH WITH CRITERIA
   // ==========================================
@@ -611,14 +713,20 @@ function sortPapersNewestFirst(papers) {
     }
 
 
-    // Search free sources instead of OpenAlex.
+    // ----------------------------------------
+    // FREE SOURCES
+    // ----------------------------------------
+
     let papers =
       await searchFreeSources(
         query
       );
 
 
-    // Apply advanced filters.
+    // ----------------------------------------
+    // HARD FILTERS
+    // ----------------------------------------
+
     papers =
       papers.filter(
         paper =>
@@ -629,11 +737,13 @@ function sortPapersNewestFirst(papers) {
       );
 
 
-    // Calculate relevance.
-    papers =
-      papers.map(paper => {
+    // ----------------------------------------
+    // RELEVANCE SCORE
+    // ----------------------------------------
 
-        return {
+    papers =
+      papers.map(
+        paper => ({
 
           ...paper,
 
@@ -643,12 +753,14 @@ function sortPapersNewestFirst(papers) {
               criteria
             )
 
-        };
+        })
+      );
 
-      });
 
+    // ----------------------------------------
+    // 0–100 RELEVANCE THRESHOLD
+    // ----------------------------------------
 
-    // Apply accuracy threshold.
     papers =
       papers.filter(
         paper =>
@@ -657,34 +769,68 @@ function sortPapersNewestFirst(papers) {
       );
 
 
-   // Newest publication first.
-// Relevance score is NOT used for ordering.
- 
-    papers.sort((a, b) => {
+    // ----------------------------------------
+    // NEWEST FIRST
+    // ----------------------------------------
+    //
+    // Relevance is used to decide whether
+    // a paper passes the threshold.
+    //
+    // It is NOT used to order results.
+    //
+    // Newest papers appear first.
+    //
 
-  const dateA = new Date(
-    a.published ||
-    a.publicationDate ||
-    a.date ||
-    ""
-  ).getTime();
-
-  const dateB = new Date(
-    b.published ||
-    b.publicationDate ||
-    b.date ||
-    ""
-  ).getTime();
-
-  return (
-    (Number.isFinite(dateB) ? dateB : 0) -
-    (Number.isFinite(dateA) ? dateA : 0)
-  );
-
-});
+    sortPapersNewestFirst(
+      papers
+    );
 
 
-return papers;
+    return papers;
+
+  }
+
+
+  // ==========================================
+  // PAPER DATE
+  // ==========================================
+
+  function getPaperDate(
+    paper
+  ) {
+
+    const rawDate =
+      paper.publication_date ||
+      paper.published ||
+      paper.publicationDate ||
+      paper.date ||
+      "";
+
+
+    const time =
+      new Date(
+        rawDate
+      ).getTime();
+
+
+    return Number.isFinite(time)
+      ? time
+      : 0;
+
+  }
+
+
+  function sortPapersNewestFirst(
+    papers
+  ) {
+
+    return papers.sort(
+      (a, b) =>
+        getPaperDate(b) -
+        getPaperDate(a)
+    );
+
+  }
 
 
   // ==========================================
@@ -696,14 +842,14 @@ return papers;
   ) {
 
     /*
-      Europe PMC is the primary source.
+      Free sources:
 
-      PubMed is used as a second source.
-
-      Results from both sources are merged and
-      duplicate records are removed.
+      1. Europe PMC
+      2. PubMed
 
       No OpenAlex request is used.
+
+      Results are merged and deduplicated.
     */
 
 
@@ -713,6 +859,10 @@ return papers;
 
     let europePapers = [];
 
+
+    // ----------------------------------------
+    // EUROPE PMC
+    // ----------------------------------------
 
     try {
 
@@ -750,8 +900,10 @@ return papers;
     }
 
 
-    // PubMed is attempted as a second free source.
-    // If it fails, Europe PMC results are still usable.
+    // ----------------------------------------
+    // PUBMED
+    // ----------------------------------------
+
     try {
 
       const pubmedPapers =
@@ -780,8 +932,6 @@ return papers;
 
           } else {
 
-            // Prefer the richer Europe PMC record,
-            // but fill missing metadata from PubMed.
             const existing =
               resultsById.get(key);
 
@@ -814,17 +964,20 @@ return papers;
       Array.from(
         resultsById.values()
       )
-        .filter(isValidDate);
+        .filter(
+          isValidDate
+        );
 
 
-    if (!papers.length) {
+    /*
+      IMPORTANT:
 
-      throw new Error(
-        "No results were returned from Europe PMC or PubMed."
-      );
+      Do NOT throw when zero results are found.
 
-    }
-
+      Returning [] allows the tracker to be
+      created even when there are currently
+      no matching papers.
+    */
 
     return papers;
 
@@ -873,7 +1026,9 @@ return papers;
 
 
     const response =
-      await fetch(url);
+      await fetch(
+        url
+      );
 
 
     if (!response.ok) {
@@ -889,18 +1044,24 @@ return papers;
       await response.json();
 
 
-    const results =
-      Array.isArray(data?.resultList?.result)
+    const sourceResults =
+      Array.isArray(
+        data?.resultList?.result
+      )
         ? data.resultList.result
         : [];
 
 
-    return results.map(
+    return sourceResults.map(
       mapEuropePMCRecord
     );
 
   }
 
+
+  // ==========================================
+  // MAP EUROPE PMC RECORD
+  // ==========================================
 
   function mapEuropePMCRecord(
     record
@@ -925,7 +1086,9 @@ return papers;
 
 
     const authors =
-      Array.isArray(record.authorList?.author)
+      Array.isArray(
+        record.authorList?.author
+      )
         ? record.authorList.author
             .map(
               author =>
@@ -938,7 +1101,7 @@ return papers;
                   .join(" ")
             )
             .filter(Boolean)
-            .join(" ")
+            .join(", ")
         : "";
 
 
@@ -947,10 +1110,14 @@ return papers;
       "";
 
 
-    if (typeof abstract !== "string") {
+    if (
+      typeof abstract !== "string"
+    ) {
 
       abstract =
-        String(abstract || "");
+        String(
+          abstract || ""
+        );
 
     }
 
@@ -975,13 +1142,15 @@ return papers;
         ? `https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(pmid)}/`
         : doi
           ? `https://doi.org/${encodeURIComponent(doi)}`
-          : record.fullTextUrlList?.fullTextUrl?.[0]?.url ||
+          : record.fullTextUrlList
+              ?.fullTextUrl
+              ?.[0]?.url ||
             "#";
 
 
     return {
 
-      id: id,
+      id,
 
       title:
         record.title ||
@@ -990,7 +1159,8 @@ return papers;
       publication_date:
         publicationDate,
 
-      authorship: authors,
+      authorship:
+        authors,
 
       journal_name:
         journal,
@@ -1018,12 +1188,19 @@ return papers;
       authorships:
         authors
           ? authors
-              .split(" ")
-              .map(name => ({
-                author: {
-                  display_name: name
-                }
-              }))
+              .split(",")
+              .map(
+                name => ({
+
+                  author: {
+
+                    display_name:
+                      name.trim()
+
+                  }
+
+                })
+              )
           : [],
 
       concepts:
@@ -1039,8 +1216,7 @@ return papers;
           ? `https://doi.org/${doi}`
           : "",
 
-      pmid:
-        pmid
+      pmid
 
     };
 
@@ -1095,7 +1271,9 @@ return papers;
 
 
     const searchResponse =
-      await fetch(searchUrl);
+      await fetch(
+        searchUrl
+      );
 
 
     if (!searchResponse.ok) {
@@ -1112,7 +1290,8 @@ return papers;
 
 
     const ids =
-      searchData?.esearchresult?.idlist || [];
+      searchData?.esearchresult?.idlist ||
+      [];
 
 
     if (!ids.length) {
@@ -1150,7 +1329,9 @@ return papers;
 
 
     const summaryResponse =
-      await fetch(summaryUrl);
+      await fetch(
+        summaryUrl
+      );
 
 
     if (!summaryResponse.ok) {
@@ -1199,20 +1380,27 @@ return papers;
   }
 
 
+  // ==========================================
+  // MAP PUBMED RECORD
+  // ==========================================
+
   function mapPubMedRecord(
     record,
     pmid
   ) {
 
     const authors =
-      Array.isArray(record.authors)
+      Array.isArray(
+        record.authors
+      )
         ? record.authors
             .map(
               author =>
-                author.name || ""
+                author.name ||
+                ""
             )
             .filter(Boolean)
-            .join(" ")
+            .join(", ")
         : "";
 
 
@@ -1235,7 +1423,8 @@ return papers;
       if (doiObject) {
 
         doi =
-          doiObject.value || "";
+          doiObject.value ||
+          "";
 
       }
 
@@ -1274,12 +1463,19 @@ return papers;
       authorships:
         authors
           ? authors
-              .split(" ")
-              .map(name => ({
-                author: {
-                  display_name: name
-                }
-              }))
+              .split(",")
+              .map(
+                name => ({
+
+                  author: {
+
+                    display_name:
+                      name.trim()
+
+                  }
+
+                })
+              )
           : [],
 
       journal_name:
@@ -1316,13 +1512,16 @@ return papers;
           ? `https://doi.org/${doi}`
           : "",
 
-      pmid:
-        pmid
+      pmid
 
     };
 
   }
 
+
+  // ==========================================
+  // NORMALIZE PUBMED DATE
+  // ==========================================
 
   function normalizePubMedDate(
     value
@@ -1378,17 +1577,24 @@ return papers;
     const day =
       match[3]
         ? String(
-            Number(match[3])
-          ).padStart(2, "0")
+            Number(
+              match[3]
+            )
+          ).padStart(
+            2,
+            "0"
+          )
         : "01";
 
 
-    return (
-      `${year}-${month}-${day}`
-    );
+    return `${year}-${month}-${day}`;
 
   }
 
+
+  // ==========================================
+  // NORMALIZE DOCUMENT TYPE
+  // ==========================================
 
   function normalizeDocumentType(
     types
@@ -1440,7 +1646,7 @@ return papers;
 
 
   // ==========================================
-  // PAPER NORMALIZATION / DEDUPLICATION
+  // PAPER DEDUPLICATION
   // ==========================================
 
   function getPaperDeduplicationKey(
@@ -1488,6 +1694,10 @@ return papers;
 
   }
 
+
+  // ==========================================
+  // MERGE PAPER RECORDS
+  // ==========================================
 
   function mergePaperRecords(
     first,
@@ -1586,9 +1796,13 @@ return papers;
   // DATE VALIDATION
   // ==========================================
 
-  function isValidDate(paper) {
+  function isValidDate(
+    paper
+  ) {
 
-    if (!paper.publication_date) {
+    if (
+      !paper.publication_date
+    ) {
 
       return false;
 
@@ -1601,7 +1815,11 @@ return papers;
       );
 
 
-    if (isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
 
       return false;
 
@@ -1629,574 +1847,823 @@ return papers;
   // ADVANCED FILTERS
   // ==========================================
 
-  // ==========================================
-// ADVANCED FILTERS
-// ==========================================
-
-function matchesAdvancedCriteria(paper, criteria) {
-
-  const safeCriteria = criteria || {};
-
-  const title =
-    String(paper.title || "");
-
-  const abstract =
-    String(paper.abstract || "");
-
-  const authors =
-    Array.isArray(paper.authors)
-      ? paper.authors.join(" ")
-      : String(paper.authors || "");
-
-  const journal =
-    String(paper.journal || "");
-
-  const concepts =
-    Array.isArray(paper.concepts)
-      ? paper.concepts.join(" ")
-      : String(paper.concepts || "");
-
-  const allText = [
-    title,
-    abstract,
-    authors,
-    journal,
-    concepts
-  ]
-    .join(" ")
-    .toLowerCase();
-
-
-  // ------------------------------------------
-  // EXCLUDED KEYWORDS
-  // ------------------------------------------
-
-  const excluded =
-    Array.isArray(safeCriteria.excluded)
-      ? safeCriteria.excluded
-      : [];
-
-  for (const keyword of excluded) {
-
-    const term =
-      String(keyword || "")
-        .trim()
-        .toLowerCase();
-
-    if (!term) {
-      continue;
-    }
-
-    if (allText.includes(term)) {
-      return false;
-    }
-  }
-
-
-  // ------------------------------------------
-  // REQUIRED KEYWORDS
-  // ------------------------------------------
-
-  const keywords =
-    Array.isArray(safeCriteria.keywords)
-      ? safeCriteria.keywords
-          .map(keyword =>
-            String(keyword || "")
-              .trim()
-              .toLowerCase()
-          )
-          .filter(Boolean)
-      : [];
-
-
-  /*
-    IMPORTANT:
-
-    If the user selected fields, ONLY those
-    fields are searched.
-
-    If the user selected NO fields, we do NOT
-    secretly impose a field restriction.
-    This preserves the normal Quick Search
-    behavior.
-  */
-
-  const selectedFields =
-    Array.isArray(safeCriteria.keywordFields)
-      ? safeCriteria.keywordFields
-      : [];
-
-
-  let searchableText = "";
-
-
-  if (selectedFields.length > 0) {
-
-    const fieldTexts = [];
-
-    if (selectedFields.includes("title")) {
-      fieldTexts.push(title);
-    }
-
-    if (selectedFields.includes("abstract")) {
-      fieldTexts.push(abstract);
-    }
-
-    if (selectedFields.includes("authors")) {
-      fieldTexts.push(authors);
-    }
-
-    if (selectedFields.includes("journal")) {
-      fieldTexts.push(journal);
-    }
-
-    if (selectedFields.includes("concepts")) {
-      fieldTexts.push(concepts);
-    }
-
-    searchableText =
-      fieldTexts
-        .join(" ")
-        .toLowerCase();
-
-  } else {
-
-    /*
-      No field selected:
-      use the paper's complete searchable
-      metadata, without adding a hidden
-      restriction.
-    */
-
-    searchableText = allText;
-  }
-
-
-  // ------------------------------------------
-  // KEYWORD MATCHING
-  // ------------------------------------------
-
-  if (keywords.length > 0) {
-
-    const keywordMode =
-      safeCriteria.keywordMode === "any"
-        ? "any"
-        : "all";
-
-
-    if (keywordMode === "any") {
-
-      const anyMatch =
-        keywords.some(keyword =>
-          searchableText.includes(keyword)
-        );
-
-      if (!anyMatch) {
-        return false;
-      }
-
-    } else {
-
-      const allMatch =
-        keywords.every(keyword =>
-          searchableText.includes(keyword)
-        );
-
-      if (!allMatch) {
-        return false;
-      }
-    }
-  }
-
-
-  // ------------------------------------------
-  // AUTHOR FILTER
-  // ------------------------------------------
-
-  const authorFilter =
-    String(safeCriteria.author || "")
-      .trim()
-      .toLowerCase();
-
-  if (
-    authorFilter &&
-    !authors
-      .toLowerCase()
-      .includes(authorFilter)
+  function matchesAdvancedCriteria(
+    paper,
+    criteria
   ) {
-    return false;
-  }
+
+    const safeCriteria =
+      criteria || {};
 
 
-  // ------------------------------------------
-  // JOURNAL FILTER
-  // ------------------------------------------
+    // ----------------------------------------
+    // USE THE ACTUAL PAPER DATA STRUCTURE
+    // ----------------------------------------
 
-  const journalFilter =
-    String(safeCriteria.journal || "")
-      .trim()
-      .toLowerCase();
-
-  if (
-    journalFilter &&
-    !journal
-      .toLowerCase()
-      .includes(journalFilter)
-  ) {
-    return false;
-  }
-
-
-  // ------------------------------------------
-  // FIELD FILTER
-  // ------------------------------------------
-
-  const fieldFilter =
-    String(safeCriteria.field || "")
-      .trim()
-      .toLowerCase();
-
-  if (fieldFilter) {
-
-    const paperField =
+    const title =
       String(
-        paper.field ||
-        paper.fields ||
-        paper.subject ||
-        paper.category ||
+        paper.title ||
         ""
-      ).toLowerCase();
+      );
 
-    if (
-      !paperField.includes(fieldFilter)
+
+    const abstract =
+      getAbstract(
+        paper
+      );
+
+
+    const authors =
+      getAuthors(
+        paper
+      );
+
+
+    const journal =
+      getJournal(
+        paper
+      );
+
+
+    const concepts =
+      getConcepts(
+        paper
+      );
+
+
+    const allText = [
+
+      title,
+
+      abstract,
+
+      authors,
+
+      journal,
+
+      concepts
+
+    ]
+      .join(" ")
+      .toLowerCase();
+
+
+    // ----------------------------------------
+    // EXCLUDED KEYWORDS
+    // ----------------------------------------
+
+    const excluded =
+      Array.isArray(
+        safeCriteria.excluded
+      )
+        ? safeCriteria.excluded
+        : [];
+
+
+    for (
+      const keyword of excluded
     ) {
-      return false;
-    }
-  }
+
+      const term =
+        String(
+          keyword || ""
+        )
+          .trim()
+          .toLowerCase();
 
 
-  // ------------------------------------------
-  // DATE FILTER
-  // ------------------------------------------
+      if (!term) {
 
-  const dateRange =
-    String(
-      safeCriteria.dateRange || "all"
-    );
+        continue;
 
-  if (dateRange !== "all") {
+      }
 
-    const days =
-      Number(dateRange);
-
-    if (
-      Number.isFinite(days) &&
-      days > 0
-    ) {
-
-      const publicationDate =
-        new Date(
-          paper.published ||
-          paper.publicationDate ||
-          paper.date ||
-          ""
-        );
 
       if (
-        !Number.isNaN(
-          publicationDate.getTime()
+        allText.includes(term)
+      ) {
+
+        return false;
+
+      }
+
+    }
+
+
+    // ----------------------------------------
+    // REQUIRED KEYWORDS
+    // ----------------------------------------
+
+    const keywords =
+      Array.isArray(
+        safeCriteria.keywords
+      )
+        ? safeCriteria.keywords
+            .map(
+              keyword =>
+                String(
+                  keyword || ""
+                )
+                  .trim()
+                  .toLowerCase()
+            )
+            .filter(Boolean)
+        : [];
+
+
+    // ----------------------------------------
+    // SELECTED KEYWORD FIELDS
+    // ----------------------------------------
+
+    const selectedFields =
+      Array.isArray(
+        safeCriteria.keywordFields
+      )
+        ? safeCriteria.keywordFields
+        : [];
+
+
+    let searchableText = "";
+
+
+    if (
+      selectedFields.length > 0
+    ) {
+
+      const fieldTexts = [];
+
+
+      if (
+        selectedFields.includes(
+          "title"
         )
       ) {
 
-        const cutoff =
-          new Date();
-
-        cutoff.setDate(
-          cutoff.getDate() - days
+        fieldTexts.push(
+          title
         );
 
-        if (
-          publicationDate < cutoff
-        ) {
-          return false;
-        }
       }
+
+
+      if (
+        selectedFields.includes(
+          "abstract"
+        )
+      ) {
+
+        fieldTexts.push(
+          abstract
+        );
+
+      }
+
+
+      if (
+        selectedFields.includes(
+          "authors"
+        )
+      ) {
+
+        fieldTexts.push(
+          authors
+        );
+
+      }
+
+
+      if (
+        selectedFields.includes(
+          "journal"
+        )
+      ) {
+
+        fieldTexts.push(
+          journal
+        );
+
+      }
+
+
+      if (
+        selectedFields.includes(
+          "concepts"
+        )
+      ) {
+
+        fieldTexts.push(
+          concepts
+        );
+
+      }
+
+
+      searchableText =
+        fieldTexts
+          .join(" ")
+          .toLowerCase();
+
+    } else {
+
+      // No field selected:
+      // search the complete metadata.
+
+      searchableText =
+        allText;
+
     }
-  }
 
 
-  // ------------------------------------------
-  // DOCUMENT TYPE FILTER
-  // ------------------------------------------
-
-  const documentType =
-    String(
-      safeCriteria.documentType || ""
-    )
-      .trim()
-      .toLowerCase();
-
-  if (documentType) {
-
-    const paperType =
-      String(
-        paper.type ||
-        paper.documentType ||
-        paper.publicationType ||
-        ""
-      ).toLowerCase();
+    // ----------------------------------------
+    // KEYWORD MATCH MODE
+    // ----------------------------------------
 
     if (
-      !paperType.includes(documentType)
+      keywords.length > 0
     ) {
-      return false;
+
+      const keywordMode =
+        safeCriteria.keywordMode === "any"
+          ? "any"
+          : "all";
+
+
+      if (
+        keywordMode === "any"
+      ) {
+
+        const anyMatch =
+          keywords.some(
+            keyword =>
+              searchableText.includes(
+                keyword
+              )
+          );
+
+
+        if (!anyMatch) {
+
+          return false;
+
+        }
+
+      } else {
+
+        const allMatch =
+          keywords.every(
+            keyword =>
+              searchableText.includes(
+                keyword
+              )
+          );
+
+
+        if (!allMatch) {
+
+          return false;
+
+        }
+
+      }
+
     }
+
+
+    // ----------------------------------------
+    // AUTHOR FILTER
+    // ----------------------------------------
+
+    const authorFilter =
+      String(
+        safeCriteria.author ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      authorFilter &&
+      !authors
+        .toLowerCase()
+        .includes(
+          authorFilter
+        )
+    ) {
+
+      return false;
+
+    }
+
+
+    // ----------------------------------------
+    // JOURNAL FILTER
+    // ----------------------------------------
+
+    const journalFilter =
+      String(
+        safeCriteria.journal ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      journalFilter &&
+      !journal
+        .toLowerCase()
+        .includes(
+          journalFilter
+        )
+    ) {
+
+      return false;
+
+    }
+
+
+    // ----------------------------------------
+    // FIELD FILTER
+    // ----------------------------------------
+    //
+    // Free sources don't provide the same
+    // structured field/concept data that
+    // OpenAlex provided.
+    //
+    // Therefore we use searchable metadata
+    // rather than secretly rejecting every
+    // paper that lacks a "field" property.
+    //
+
+    const fieldFilter =
+      String(
+        safeCriteria.field ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      fieldFilter
+    ) {
+
+      if (
+        !allText.includes(
+          fieldFilter
+        )
+      ) {
+
+        return false;
+
+      }
+
+    }
+
+
+    // ----------------------------------------
+    // DATE FILTER
+    // ----------------------------------------
+
+    const dateRange =
+      String(
+        safeCriteria.dateRange ||
+        "all"
+      );
+
+
+    if (
+      dateRange !== "all"
+    ) {
+
+      const days =
+        Number(
+          dateRange
+        );
+
+
+      if (
+        Number.isFinite(days) &&
+        days > 0
+      ) {
+
+        const publicationDate =
+          new Date(
+            paper.publication_date ||
+            paper.published ||
+            paper.publicationDate ||
+            paper.date ||
+            ""
+          );
+
+
+        if (
+          !Number.isNaN(
+            publicationDate.getTime()
+          )
+        ) {
+
+          const cutoff =
+            new Date();
+
+
+          cutoff.setDate(
+            cutoff.getDate() -
+            days
+          );
+
+
+          if (
+            publicationDate <
+            cutoff
+          ) {
+
+            return false;
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+    // ----------------------------------------
+    // DOCUMENT TYPE
+    // ----------------------------------------
+
+    const documentType =
+      String(
+        safeCriteria.documentType ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      documentType
+    ) {
+
+      const paperType =
+        String(
+          paper.type ||
+          paper.documentType ||
+          paper.publicationType ||
+          ""
+        )
+          .toLowerCase();
+
+
+      if (
+        !paperType.includes(
+          documentType
+        )
+      ) {
+
+        return false;
+
+      }
+
+    }
+
+
+    // ----------------------------------------
+    // PASSED ALL HARD FILTERS
+    // ----------------------------------------
+
+    return true;
+
   }
 
 
-  // ------------------------------------------
-  // PASSED HARD FILTERS
-  // ------------------------------------------
-
-  return true;
-}
   // ==========================================
   // RELEVANCE SCORE
   // ==========================================
 
-  function calculateScore(paper, criteria) {
+  function calculateScore(
+    paper,
+    criteria
+  ) {
 
-  let score = 0;
-
-  const title =
-    (paper.title || "").toLowerCase();
-
-  const abstract =
-    getAbstract(paper).toLowerCase();
-
-  const concepts =
-    getConcepts(paper).toLowerCase();
-
-  const authors =
-    getAuthors(paper).toLowerCase();
-
-  const journal =
-    getJournal(paper).toLowerCase();
+    let score = 0;
 
 
-  // ==========================================
-  // KEYWORD RELEVANCE
-  // ==========================================
-
-  const keywords =
-    Array.isArray(criteria.keywords)
-      ? criteria.keywords
-      : [];
+    const title =
+      String(
+        paper.title ||
+        ""
+      ).toLowerCase();
 
 
-  if (keywords.length > 0) {
-
-    let keywordScore = 0;
-
-    for (const keyword of keywords) {
-
-      const k =
-        keyword.toLowerCase().trim();
+    const abstract =
+      getAbstract(
+        paper
+      ).toLowerCase();
 
 
-      if (!k) {
-        continue;
-      }
+    const concepts =
+      getConcepts(
+        paper
+      ).toLowerCase();
 
 
-      // Strongest match: title
-      if (title.includes(k)) {
-
-        keywordScore += 40;
-
-      }
-
-      // Strong match: abstract
-      else if (abstract.includes(k)) {
-
-        keywordScore += 30;
-
-      }
-
-      // Weaker match: concepts/metadata
-      else if (concepts.includes(k)) {
-
-        keywordScore += 20;
-
-      }
-
-    }
+    const authors =
+      getAuthors(
+        paper
+      ).toLowerCase();
 
 
-    /*
-      Normalize according to the number of keywords.
-
-      Example:
-
-      2 keywords
-      1 title match = ~20 points
-      2 title matches = ~40 points
-
-      This prevents the score from becoming
-      artificially huge when many keywords exist.
-    */
-
-    const maxKeywordScore =
-      keywords.length * 40;
+    const journal =
+      getJournal(
+        paper
+      ).toLowerCase();
 
 
-    if (maxKeywordScore > 0) {
+    // ========================================
+    // KEYWORD RELEVANCE
+    // ========================================
 
-      score +=
-        (
-          keywordScore /
-          maxKeywordScore
-        ) * 60;
+    const keywords =
+      Array.isArray(
+        criteria.keywords
+      )
+        ? criteria.keywords
+        : [];
 
-    }
-
-  }
-
-
-  // ==========================================
-  // AUTHOR
-  // ==========================================
-
-  if (criteria.author) {
 
     if (
-      authors.includes(
-        criteria.author.toLowerCase()
+      keywords.length > 0
+    ) {
+
+      let keywordScore = 0;
+
+
+      for (
+        const keyword of keywords
+      ) {
+
+        const k =
+          String(
+            keyword || ""
+          )
+            .toLowerCase()
+            .trim();
+
+
+        if (!k) {
+
+          continue;
+
+        }
+
+
+        // Title = strongest
+        if (
+          title.includes(k)
+        ) {
+
+          keywordScore += 40;
+
+        }
+
+        // Abstract = strong
+        else if (
+          abstract.includes(k)
+        ) {
+
+          keywordScore += 30;
+
+        }
+
+        // Concepts = weaker
+        else if (
+          concepts.includes(k)
+        ) {
+
+          keywordScore += 20;
+
+        }
+
+        // Author/journal can also contribute
+        else if (
+          authors.includes(k)
+        ) {
+
+          keywordScore += 10;
+
+        }
+
+        else if (
+          journal.includes(k)
+        ) {
+
+          keywordScore += 10;
+
+        }
+
+      }
+
+
+      const maxKeywordScore =
+        keywords.length * 40;
+
+
+      if (
+        maxKeywordScore > 0
+      ) {
+
+        score +=
+          (
+            keywordScore /
+            maxKeywordScore
+          ) * 60;
+
+      }
+
+    }
+
+
+    // ========================================
+    // AUTHOR
+    // ========================================
+
+    if (
+      criteria.author
+    ) {
+
+      if (
+        authors.includes(
+          criteria.author
+            .toLowerCase()
+        )
+      ) {
+
+        score += 15;
+
+      }
+
+    }
+
+
+    // ========================================
+    // JOURNAL
+    // ========================================
+
+    if (
+      criteria.journal
+    ) {
+
+      if (
+        journal.includes(
+          criteria.journal
+            .toLowerCase()
+        )
+      ) {
+
+        score += 15;
+
+      }
+
+    }
+
+
+    // ========================================
+    // FIELD
+    // ========================================
+
+    if (
+      criteria.field
+    ) {
+
+      const field =
+        criteria.field
+          .toLowerCase();
+
+
+      if (
+        title.includes(
+          field
+        )
+      ) {
+
+        score += 15;
+
+      }
+
+      else if (
+        abstract.includes(
+          field
+        )
+      ) {
+
+        score += 10;
+
+      }
+
+      else if (
+        concepts.includes(
+          field
+        )
+      ) {
+
+        score += 5;
+
+      }
+
+    }
+
+
+    // ========================================
+    // RECENCY
+    // ========================================
+
+    const publication =
+      new Date(
+        paper.publication_date ||
+        ""
+      );
+
+
+    const now =
+      new Date();
+
+
+    const publicationTime =
+      publication.getTime();
+
+
+    if (
+      Number.isFinite(
+        publicationTime
       )
     ) {
 
-      score += 15;
+      const days =
+        Math.floor(
+          (
+            now -
+            publication
+          ) /
+          86400000
+        );
+
+
+      if (
+        days >= 0 &&
+        days <= 30
+      ) {
+
+        score += 10;
+
+      }
+
+      else if (
+        days <= 90
+      ) {
+
+        score += 7;
+
+      }
+
+      else if (
+        days <= 365
+      ) {
+
+        score += 4;
+
+      }
 
     }
 
-  }
 
-
-  // ==========================================
-  // JOURNAL
-  // ==========================================
-
-  if (criteria.journal) {
-
-    if (
-      journal.includes(
-        criteria.journal.toLowerCase()
+    return Math.min(
+      100,
+      Math.max(
+        0,
+        Math.round(
+          score
+        )
       )
-    ) {
-
-      score += 15;
-
-    }
-
-  }
-
-
-  // ==========================================
-  // FIELD
-  // ==========================================
-
-  if (criteria.field) {
-
-    const field =
-      criteria.field.toLowerCase();
-
-
-    if (
-      title.includes(field)
-    ) {
-
-      score += 15;
-
-    }
-
-    else if (
-      abstract.includes(field)
-    ) {
-
-      score += 10;
-
-    }
-
-    else if (
-      concepts.includes(field)
-    ) {
-
-      score += 5;
-
-    }
-
-  }
-
-
-  // ==========================================
-  // RECENCY
-  // ==========================================
-
-  const publication =
-    new Date(
-      paper.publication_date
     );
 
-
-  const now =
-    new Date();
-
-
-  const days =
-    Math.floor(
-      (now - publication) /
-      86400000
-    );
-
-
-  if (days <= 30) {
-
-    score += 10;
-
   }
-
-  else if (days <= 90) {
-
-    score += 7;
-
-  }
-
-  else if (days <= 365) {
-
-    score += 4;
-
-  }
-
-
-  return Math.min(
-    100,
-    Math.round(score)
-  );
-
-}
 
 
   // ==========================================
   // ABSTRACT
   // ==========================================
 
-  function getAbstract(paper) {
+  function getAbstract(
+    paper
+  ) {
 
-    // Free-source records already contain a normal
-    // abstract string. Keep support for the old
-    // inverted-index format as a fallback.
+    // Europe PMC / free sources
     if (
-      typeof paper.abstract_text === "string" &&
+      typeof paper.abstract_text ===
+      "string" &&
       paper.abstract_text.trim()
     ) {
 
@@ -2205,6 +2672,18 @@ function matchesAdvancedCriteria(paper, criteria) {
     }
 
 
+    // Compatibility with old records
+    if (
+      typeof paper.abstract ===
+      "string"
+    ) {
+
+      return paper.abstract;
+
+    }
+
+
+    // Compatibility with old inverted index
     const index =
       paper.abstract_inverted_index;
 
@@ -2225,6 +2704,17 @@ function matchesAdvancedCriteria(paper, criteria) {
 
       const positions =
         index[word];
+
+
+      if (
+        !Array.isArray(
+          positions
+        )
+      ) {
+
+        continue;
+
+      }
 
 
       for (
@@ -2248,10 +2738,13 @@ function matchesAdvancedCriteria(paper, criteria) {
   // AUTHORS
   // ==========================================
 
-  function getAuthors(paper) {
+  function getAuthors(
+    paper
+  ) {
 
     if (
-      typeof paper.authorship === "string" &&
+      typeof paper.authorship ===
+      "string" &&
       paper.authorship.trim()
     ) {
 
@@ -2260,13 +2753,39 @@ function matchesAdvancedCriteria(paper, criteria) {
     }
 
 
+    if (
+      typeof paper.authors ===
+      "string"
+    ) {
+
+      return paper.authors;
+
+    }
+
+
+    if (
+      Array.isArray(
+        paper.authors
+      )
+    ) {
+
+      return paper.authors.join(
+        " "
+      );
+
+    }
+
+
     return (
-      paper.authorships || []
+      paper.authorships ||
+      []
     )
       .map(
         author =>
-          author.author?.display_name || ""
+          author.author?.display_name ||
+          ""
       )
+      .filter(Boolean)
       .join(" ");
 
   }
@@ -2276,10 +2795,13 @@ function matchesAdvancedCriteria(paper, criteria) {
   // JOURNAL
   // ==========================================
 
-  function getJournal(paper) {
+  function getJournal(
+    paper
+  ) {
 
     return (
       paper.journal_name ||
+      paper.journal ||
       paper.primary_location
         ?.source
         ?.display_name ||
@@ -2293,10 +2815,13 @@ function matchesAdvancedCriteria(paper, criteria) {
   // CONCEPTS
   // ==========================================
 
-  function getConcepts(paper) {
+  function getConcepts(
+    paper
+  ) {
 
     if (
-      typeof paper.concepts_text === "string"
+      typeof paper.concepts_text ===
+      "string"
     ) {
 
       return paper.concepts_text;
@@ -2304,13 +2829,41 @@ function matchesAdvancedCriteria(paper, criteria) {
     }
 
 
+    if (
+      typeof paper.concepts ===
+      "string"
+    ) {
+
+      return paper.concepts;
+
+    }
+
+
     return (
-      paper.concepts || []
+      paper.concepts ||
+      []
     )
       .map(
-        concept =>
-          concept.display_name || ""
+        concept => {
+
+          if (
+            typeof concept ===
+            "string"
+          ) {
+
+            return concept;
+
+          }
+
+
+          return (
+            concept?.display_name ||
+            ""
+          );
+
+        }
       )
+      .filter(Boolean)
       .join(" ");
 
   }
@@ -2326,7 +2879,12 @@ function matchesAdvancedCriteria(paper, criteria) {
   ) {
 
     currentResults =
-      papers;
+      Array.isArray(
+        papers
+      )
+        ? papers
+        : [];
+
 
     currentVisible =
       10;
@@ -2408,7 +2966,9 @@ function matchesAdvancedCriteria(paper, criteria) {
       paper => {
 
         list.appendChild(
-          createPaperCard(paper)
+          createPaperCard(
+            paper
+          )
         );
 
       }
@@ -2423,8 +2983,12 @@ function matchesAdvancedCriteria(paper, criteria) {
     }
 
 
-    loadMoreArea.innerHTML =
-      "";
+    if (loadMoreArea) {
+
+      loadMoreArea.innerHTML =
+        "";
+
+    }
 
 
     if (
@@ -2454,9 +3018,13 @@ function matchesAdvancedCriteria(paper, criteria) {
       );
 
 
-      loadMoreArea.appendChild(
-        button
-      );
+      if (loadMoreArea) {
+
+        loadMoreArea.appendChild(
+          button
+        );
+
+      }
 
     }
 
@@ -2467,10 +3035,14 @@ function matchesAdvancedCriteria(paper, criteria) {
   // PAPER CARD
   // ==========================================
 
-  function createPaperCard(paper) {
+  function createPaperCard(
+    paper
+  ) {
 
     const card =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
 
     card.className =
@@ -2483,12 +3055,16 @@ function matchesAdvancedCriteria(paper, criteria) {
 
 
     const authors =
-      getAuthors(paper) ||
+      getAuthors(
+        paper
+      ) ||
       "Unknown authors";
 
 
     const journal =
-      getJournal(paper) ||
+      getJournal(
+        paper
+      ) ||
       "Unknown source";
 
 
@@ -2512,9 +3088,11 @@ function matchesAdvancedCriteria(paper, criteria) {
     ) {
 
       scoreBadge = `
+
         <span class="badge">
           Relevance: ${score}%
         </span>
+
       `;
 
     }
@@ -2532,21 +3110,29 @@ function matchesAdvancedCriteria(paper, criteria) {
       </span>
 
       <h2>
-        ${escapeHtml(title)}
+        ${escapeHtml(
+          title
+        )}
       </h2>
 
       <p>
         <strong>Authors:</strong>
-        ${escapeHtml(authors)}
+        ${escapeHtml(
+          authors
+        )}
       </p>
 
       <p>
         <strong>Journal:</strong>
-        ${escapeHtml(journal)}
+        ${escapeHtml(
+          journal
+        )}
       </p>
 
       <a
-        href="${escapeAttribute(link)}"
+        href="${escapeAttribute(
+          link
+        )}"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -2581,47 +3167,48 @@ function matchesAdvancedCriteria(paper, criteria) {
 
       criteria: {
 
-  keywords: [
-    ...criteria.keywords
-  ],
+        keywords: [
+          ...criteria.keywords
+        ],
 
-  excluded: [
-    ...criteria.excluded
-  ],
+        excluded: [
+          ...criteria.excluded
+        ],
 
-  // New keyword search settings
-  keywordFields: Array.isArray(
-    criteria.keywordFields
-  )
-    ? [
-        ...criteria.keywordFields
-      ]
-    : [],
+        keywordFields:
+          Array.isArray(
+            criteria.keywordFields
+          )
+            ? [
+                ...criteria.keywordFields
+              ]
+            : [],
 
-  keywordMode:
-    criteria.keywordMode === "any"
-      ? "any"
-      : "all",
+        keywordMode:
+          criteria.keywordMode ===
+          "any"
+            ? "any"
+            : "all",
 
-  author:
-    criteria.author,
+        author:
+          criteria.author,
 
-  journal:
-    criteria.journal,
+        journal:
+          criteria.journal,
 
-  field:
-    criteria.field,
+        field:
+          criteria.field,
 
-  dateRange:
-    criteria.dateRange,
+        dateRange:
+          criteria.dateRange,
 
-  documentType:
-    criteria.documentType,
+        documentType:
+          criteria.documentType,
 
-  accuracy:
-    criteria.accuracy
+        accuracy:
+          criteria.accuracy
 
-},
+      },
 
       createdAt:
         getToday(),
@@ -2630,14 +3217,29 @@ function matchesAdvancedCriteria(paper, criteria) {
         getToday(),
 
       seenPaperIds:
-        papers
-          .map(paper => paper.id),
+        Array.isArray(
+          papers
+        )
+          ? papers
+              .map(
+                paper =>
+                  paper.id
+              )
+          : [],
 
       lastCheckNewPapers:
-        papers.length,
+        Array.isArray(
+          papers
+        )
+          ? papers.length
+          : 0,
 
       totalNewPapers:
-        papers.length
+        Array.isArray(
+          papers
+        )
+          ? papers.length
+          : 0
 
     };
 
@@ -2649,7 +3251,9 @@ function matchesAdvancedCriteria(paper, criteria) {
 
     localStorage.setItem(
       "stracker_advanced",
-      JSON.stringify(trackers)
+      JSON.stringify(
+        trackers
+      )
     );
 
   }
@@ -2677,10 +3281,14 @@ function matchesAdvancedCriteria(paper, criteria) {
 
 
       const parsed =
-        JSON.parse(saved);
+        JSON.parse(
+          saved
+        );
 
 
-      return Array.isArray(parsed)
+      return Array.isArray(
+        parsed
+      )
         ? parsed
         : [];
 
@@ -2706,6 +3314,13 @@ function matchesAdvancedCriteria(paper, criteria) {
 
   function displayTrackedTopics() {
 
+    if (!trackedTopics) {
+
+      return;
+
+    }
+
+
     const trackers =
       getAdvancedTrackers();
 
@@ -2729,19 +3344,27 @@ function matchesAdvancedCriteria(paper, criteria) {
         </h2>
 
         ${trackers.map(
-          (tracker, index) => {
+          (
+            tracker,
+            index
+          ) => {
 
             const criteria =
-              tracker.criteria || {};
+              tracker.criteria ||
+              {};
 
 
             const keywords =
-              Array.isArray(criteria.keywords)
+              Array.isArray(
+                criteria.keywords
+              )
                 ? criteria.keywords
                     .map(
                       keyword =>
                         `<span class="badge">
-                          ${escapeHtml(keyword)}
+                          ${escapeHtml(
+                            keyword
+                          )}
                         </span>`
                     )
                     .join("")
@@ -2749,12 +3372,33 @@ function matchesAdvancedCriteria(paper, criteria) {
 
 
             const excluded =
-              Array.isArray(criteria.excluded)
+              Array.isArray(
+                criteria.excluded
+              )
                 ? criteria.excluded
                     .map(
                       keyword =>
                         `<span class="badge">
-                          ${escapeHtml(keyword)}
+                          ${escapeHtml(
+                            keyword
+                          )}
+                        </span>`
+                    )
+                    .join("")
+                : "";
+
+
+            const keywordFields =
+              Array.isArray(
+                criteria.keywordFields
+              )
+                ? criteria.keywordFields
+                    .map(
+                      field =>
+                        `<span class="badge">
+                          ${escapeHtml(
+                            field
+                          )}
                         </span>`
                     )
                     .join("")
@@ -2769,7 +3413,8 @@ function matchesAdvancedCriteria(paper, criteria) {
               >
 
                 <h3>
-                  🔬 Research profile ${index + 1}
+                  🔬 Research profile
+                  ${index + 1}
                 </h3>
 
 
@@ -2782,6 +3427,41 @@ function matchesAdvancedCriteria(paper, criteria) {
                         </strong>
 
                         ${keywords}
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                ${
+                  keywordFields
+                    ? `
+                      <p>
+                        <strong>
+                          Search fields:
+                        </strong>
+
+                        ${keywordFields}
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                ${
+                  criteria.keywordMode
+                    ? `
+                      <p>
+                        <strong>
+                          Keyword mode:
+                        </strong>
+
+                        ${
+                          criteria.keywordMode ===
+                          "any"
+                            ? "Any"
+                            : "All"
+                        }
                       </p>
                     `
                     : ""
@@ -2857,10 +3537,49 @@ function matchesAdvancedCriteria(paper, criteria) {
                 }
 
 
+                ${
+                  criteria.dateRange &&
+                  criteria.dateRange !== "all"
+                    ? `
+                      <p>
+                        📅
+                        <strong>
+                          Date range:
+                        </strong>
+
+                        Last
+                        ${escapeHtml(
+                          criteria.dateRange
+                        )}
+                        days
+                      </p>
+                    `
+                    : ""
+                }
+
+
+                ${
+                  criteria.documentType
+                    ? `
+                      <p>
+                        📄
+                        <strong>
+                          Type:
+                        </strong>
+
+                        ${escapeHtml(
+                          criteria.documentType
+                        )}
+                      </p>
+                    `
+                    : ""
+                }
+
+
                 <p>
                   🎯
                   <strong>
-                    Accuracy:
+                    Relevance threshold:
                   </strong>
 
                   ${Number(
@@ -2939,49 +3658,57 @@ function matchesAdvancedCriteria(paper, criteria) {
       .querySelectorAll(
         ".view-tracker-button"
       )
-      .forEach(button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            () => {
 
-            const index =
-              Number(
-                button.dataset.index
+              const index =
+                Number(
+                  button.dataset.index
+                );
+
+
+              const trackers =
+                getAdvancedTrackers();
+
+
+              const tracker =
+                trackers[index];
+
+
+              if (!tracker) {
+
+                showMessage(`
+
+                  <h2>
+                    ❌ Tracker not found
+                  </h2>
+
+                  <p>
+                    This tracking profile
+                    no longer exists.
+                  </p>
+
+                `);
+
+                return;
+
+              }
+
+
+              runSavedTracker(
+                tracker.criteria ||
+                {}
               );
 
-
-            const trackers =
-              getAdvancedTrackers();
-
-
-            const tracker =
-              trackers[index];
-
-
-            if (!tracker) {
-
-              showMessage(`
-                <h2>❌ Tracker not found</h2>
-
-                <p>
-                  This tracking profile no longer exists.
-                </p>
-              `);
-
-              return;
-
             }
+          );
 
-
-            runSavedTracker(
-              tracker.criteria || {}
-            );
-
-          }
-        );
-
-      });
+        }
+      );
 
 
     // ========================================
@@ -2992,62 +3719,64 @@ function matchesAdvancedCriteria(paper, criteria) {
       .querySelectorAll(
         ".delete-tracker-button"
       )
-      .forEach(button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            () => {
 
-            const index =
-              Number(
-                button.dataset.index
+              const index =
+                Number(
+                  button.dataset.index
+                );
+
+
+              const trackers =
+                getAdvancedTrackers();
+
+
+              if (!trackers[index]) {
+
+                return;
+
+              }
+
+
+              const confirmed =
+                window.confirm(
+                  "Delete this tracked research profile?"
+                );
+
+
+              if (!confirmed) {
+
+                return;
+
+              }
+
+
+              trackers.splice(
+                index,
+                1
               );
 
 
-            const trackers =
-              getAdvancedTrackers();
-
-
-            if (!trackers[index]) {
-
-              return;
-
-            }
-
-
-            const confirmed =
-              window.confirm(
-                "Delete this tracked research profile?"
+              localStorage.setItem(
+                "stracker_advanced",
+                JSON.stringify(
+                  trackers
+                )
               );
 
 
-            if (!confirmed) {
-
-              return;
+              displayTrackedTopics();
 
             }
+          );
 
-
-            trackers.splice(
-              index,
-              1
-            );
-
-
-            localStorage.setItem(
-              "stracker_advanced",
-              JSON.stringify(
-                trackers
-              )
-            );
-
-
-            displayTrackedTopics();
-
-          }
-        );
-
-      });
+        }
+      );
 
   }
 
@@ -3060,89 +3789,128 @@ function matchesAdvancedCriteria(paper, criteria) {
     criteria
   ) {
 
-    // Normalize saved criteria so older/incomplete
-    // trackers cannot break the search.
+    // ----------------------------------------
+    // NORMALIZE SAVED CRITERIA
+    // ----------------------------------------
+
     const safeCriteria = {
 
       keywords:
-        Array.isArray(criteria?.keywords)
+        Array.isArray(
+          criteria?.keywords
+        )
           ? criteria.keywords
               .map(
                 keyword =>
-                  String(keyword).trim()
+                  String(
+                    keyword
+                  ).trim()
               )
               .filter(Boolean)
           : [],
 
       excluded:
-        Array.isArray(criteria?.excluded)
+        Array.isArray(
+          criteria?.excluded
+        )
           ? criteria.excluded
               .map(
                 keyword =>
-                  String(keyword).trim()
+                  String(
+                    keyword
+                  ).trim()
               )
               .filter(Boolean)
           : [],
 
       keywordFields:
-  Array.isArray(criteria?.keywordFields)
-    ? criteria.keywordFields
-        .filter(field =>
-          [
-            "title",
-            "abstract",
-            "authors",
-            "journal",
-            "concepts"
-          ].includes(field)
+        Array.isArray(
+          criteria?.keywordFields
         )
-    : [],
+          ? criteria.keywordFields
+              .filter(
+                field =>
+                  [
+                    "title",
+                    "abstract",
+                    "authors",
+                    "journal",
+                    "concepts"
+                  ].includes(
+                    field
+                  )
+              )
+          : [],
 
-keywordMode:
-  criteria?.keywordMode === "any"
-    ? "any"
-    : "all",
+      keywordMode:
+        criteria?.keywordMode ===
+        "any"
+          ? "any"
+          : "all",
+
       author:
-        typeof criteria?.author === "string"
+        typeof criteria?.author ===
+        "string"
           ? criteria.author.trim()
           : "",
 
       journal:
-        typeof criteria?.journal === "string"
+        typeof criteria?.journal ===
+        "string"
           ? criteria.journal.trim()
           : "",
 
       field:
-        typeof criteria?.field === "string"
+        typeof criteria?.field ===
+        "string"
           ? criteria.field.trim()
           : "",
 
       dateRange:
-        criteria?.dateRange !== undefined &&
-        criteria?.dateRange !== null &&
-        criteria?.dateRange !== ""
-          ? String(criteria.dateRange)
+        criteria?.dateRange !==
+          undefined &&
+        criteria?.dateRange !==
+          null &&
+        criteria?.dateRange !==
+          ""
+          ? String(
+              criteria.dateRange
+            )
           : "all",
 
       documentType:
-        typeof criteria?.documentType === "string"
+        typeof criteria?.documentType ===
+        "string"
           ? criteria.documentType.trim()
           : "",
 
       accuracy:
         Number.isFinite(
-          Number(criteria?.accuracy)
+          Number(
+            criteria?.accuracy
+          )
         )
-          ? Number(criteria.accuracy)
+          ? Math.max(
+              0,
+              Math.min(
+                100,
+                Number(
+                  criteria.accuracy
+                )
+              )
+            )
           : 0
 
     };
 
 
-    // Make sure the saved tracker contains
-    // at least one searchable criterion.
+    // ----------------------------------------
+    // VALIDATE CRITERIA
+    // ----------------------------------------
+
     const hasCriteria =
-      safeCriteria.keywords.length > 0 ||
+      safeCriteria.keywords.length >
+        0 ||
       safeCriteria.author ||
       safeCriteria.journal ||
       safeCriteria.field;
@@ -3151,16 +3919,21 @@ keywordMode:
     if (!hasCriteria) {
 
       showMessage(`
-        <h2>⚠️ Invalid tracking profile</h2>
+
+        <h2>
+          ⚠️ Invalid tracking profile
+        </h2>
 
         <p>
-          This saved tracking profile does not contain
-          any searchable criteria.
+          This saved tracking profile does
+          not contain any searchable criteria.
         </p>
 
         <p>
-          Delete this profile and create a new one.
+          Delete this profile and create
+          a new one.
         </p>
+
       `);
 
       return;
@@ -3168,20 +3941,10 @@ keywordMode:
     }
 
 
-    results.innerHTML = `
-      <div class="card">
-
-        <h2>
-          🔎 Checking tracked research...
-        </h2>
-
-        <p>
-          Looking for papers matching
-          your saved criteria.
-        </p>
-
-      </div>
-    `;
+    showSearchingMessage(
+      "🔎 Checking tracked research...",
+      "Looking for papers matching your saved criteria."
+    );
 
 
     try {
@@ -3206,8 +3969,8 @@ keywordMode:
           </p>
 
           <p>
-            Try lowering the accuracy level
-            or broadening the search criteria.
+            The tracker still exists and
+            can be checked again later.
           </p>
 
         `);
@@ -3256,10 +4019,43 @@ keywordMode:
 
 
   // ==========================================
+  // SEARCHING MESSAGE
+  // ==========================================
+
+  function showSearchingMessage(
+    heading,
+    message
+  ) {
+
+    showMessage(`
+
+      <h2>
+        ${heading}
+      </h2>
+
+      <p>
+        ${message}
+      </p>
+
+    `);
+
+  }
+
+
+  // ==========================================
   // MESSAGE
   // ==========================================
 
-  function showMessage(html) {
+  function showMessage(
+    html
+  ) {
+
+    if (!results) {
+
+      return;
+
+    }
+
 
     results.innerHTML = `
 
@@ -3289,11 +4085,17 @@ keywordMode:
       "-" +
       String(
         date.getMonth() + 1
-      ).padStart(2, "0") +
+      ).padStart(
+        2,
+        "0"
+      ) +
       "-" +
       String(
         date.getDate()
-      ).padStart(2, "0")
+      ).padStart(
+        2,
+        "0"
+      )
     );
 
   }
@@ -3303,7 +4105,9 @@ keywordMode:
   // ESCAPE HTML
   // ==========================================
 
-  function escapeHtml(text) {
+  function escapeHtml(
+    text
+  ) {
 
     const div =
       document.createElement(
@@ -3312,7 +4116,9 @@ keywordMode:
 
 
     div.textContent =
-      String(text);
+      String(
+        text
+      );
 
 
     return div.innerHTML;
@@ -3324,9 +4130,13 @@ keywordMode:
   // ESCAPE ATTRIBUTE
   // ==========================================
 
-  function escapeAttribute(text) {
+  function escapeAttribute(
+    text
+  ) {
 
-    return String(text)
+    return String(
+      text
+    )
       .replace(
         /&/g,
         "&amp;"
