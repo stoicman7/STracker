@@ -1593,214 +1593,332 @@ accuracyInput.addEventListener(
 // ADVANCED FILTERS
 // ==========================================
 
-function matchesAdvancedCriteria(
-  paper,
-  criteria
-) {
+function matchesAdvancedCriteria(paper, criteria) {
+
+  const safeCriteria = criteria || {};
 
   const title =
-    (paper.title || "")
-      .toLowerCase();
+    String(paper.title || "");
 
   const abstract =
-    getAbstract(paper)
-      .toLowerCase();
+    String(paper.abstract || "");
 
   const authors =
-    getAuthors(paper)
-      .toLowerCase();
+    Array.isArray(paper.authors)
+      ? paper.authors.join(" ")
+      : String(paper.authors || "");
 
   const journal =
-    getJournal(paper)
-      .toLowerCase();
+    String(paper.journal || "");
 
   const concepts =
-    getConcepts(paper)
+    Array.isArray(paper.concepts)
+      ? paper.concepts.join(" ")
+      : String(paper.concepts || "");
+
+  const allText = [
+    title,
+    abstract,
+    authors,
+    journal,
+    concepts
+  ]
+    .join(" ")
+    .toLowerCase();
+
+
+  // ------------------------------------------
+  // EXCLUDED KEYWORDS
+  // ------------------------------------------
+
+  const excluded =
+    Array.isArray(safeCriteria.excluded)
+      ? safeCriteria.excluded
+      : [];
+
+  for (const keyword of excluded) {
+
+    const term =
+      String(keyword || "")
+        .trim()
+        .toLowerCase();
+
+    if (!term) {
+      continue;
+    }
+
+    if (allText.includes(term)) {
+      return false;
+    }
+  }
+
+
+  // ------------------------------------------
+  // REQUIRED KEYWORDS
+  // ------------------------------------------
+
+  const keywords =
+    Array.isArray(safeCriteria.keywords)
+      ? safeCriteria.keywords
+          .map(keyword =>
+            String(keyword || "")
+              .trim()
+              .toLowerCase()
+          )
+          .filter(Boolean)
+      : [];
+
+
+  /*
+    IMPORTANT:
+
+    If the user selected fields, ONLY those
+    fields are searched.
+
+    If the user selected NO fields, we do NOT
+    secretly impose a field restriction.
+    This preserves the normal Quick Search
+    behavior.
+  */
+
+  const selectedFields =
+    Array.isArray(safeCriteria.keywordFields)
+      ? safeCriteria.keywordFields
+      : [];
+
+
+  let searchableText = "";
+
+
+  if (selectedFields.length > 0) {
+
+    const fieldTexts = [];
+
+    if (selectedFields.includes("title")) {
+      fieldTexts.push(title);
+    }
+
+    if (selectedFields.includes("abstract")) {
+      fieldTexts.push(abstract);
+    }
+
+    if (selectedFields.includes("authors")) {
+      fieldTexts.push(authors);
+    }
+
+    if (selectedFields.includes("journal")) {
+      fieldTexts.push(journal);
+    }
+
+    if (selectedFields.includes("concepts")) {
+      fieldTexts.push(concepts);
+    }
+
+    searchableText =
+      fieldTexts
+        .join(" ")
+        .toLowerCase();
+
+  } else {
+
+    /*
+      No field selected:
+      use the paper's complete searchable
+      metadata, without adding a hidden
+      restriction.
+    */
+
+    searchableText = allText;
+  }
+
+
+  // ------------------------------------------
+  // KEYWORD MATCHING
+  // ------------------------------------------
+
+  if (keywords.length > 0) {
+
+    const keywordMode =
+      safeCriteria.keywordMode === "any"
+        ? "any"
+        : "all";
+
+
+    if (keywordMode === "any") {
+
+      const anyMatch =
+        keywords.some(keyword =>
+          searchableText.includes(keyword)
+        );
+
+      if (!anyMatch) {
+        return false;
+      }
+
+    } else {
+
+      const allMatch =
+        keywords.every(keyword =>
+          searchableText.includes(keyword)
+        );
+
+      if (!allMatch) {
+        return false;
+      }
+    }
+  }
+
+
+  // ------------------------------------------
+  // AUTHOR FILTER
+  // ------------------------------------------
+
+  const authorFilter =
+    String(safeCriteria.author || "")
+      .trim()
       .toLowerCase();
 
-  const text =
-    `${title} ${abstract} ${authors} ${journal} ${concepts}`;
-
-
-  // ==========================================
-  // EXCLUDED KEYWORDS
-  // ==========================================
-
-  for (
-    const excluded of
-    (criteria.excluded || [])
+  if (
+    authorFilter &&
+    !authors
+      .toLowerCase()
+      .includes(authorFilter)
   ) {
-
-    if (
-      text.includes(
-        excluded.toLowerCase()
-      )
-    ) {
-
-      return false;
-
-    }
-
+    return false;
   }
 
 
-  // ==========================================
-  // AUTHOR
-  // ==========================================
+  // ------------------------------------------
+  // JOURNAL FILTER
+  // ------------------------------------------
 
-  if (criteria.author) {
-
-    if (
-      !authors.includes(
-        criteria.author.toLowerCase()
-      )
-    ) {
-
-      return false;
-
-    }
-
-  }
-
-
-  // ==========================================
-  // JOURNAL
-  // ==========================================
-
-  if (criteria.journal) {
-
-    if (
-      !journal.includes(
-        criteria.journal.toLowerCase()
-      )
-    ) {
-
-      return false;
-
-    }
-
-  }
-
-
-  // ==========================================
-  // REQUIRED KEYWORDS
-  // ==========================================
-
-  for (
-    const keyword of
-    (criteria.keywords || [])
-  ) {
-
-    if (
-      !text.includes(
-        keyword.toLowerCase()
-      )
-    ) {
-
-      return false;
-
-    }
-
-  }
-
-
-  // ==========================================
-  // DATE RANGE
-  // ==========================================
+  const journalFilter =
+    String(safeCriteria.journal || "")
+      .trim()
+      .toLowerCase();
 
   if (
-    criteria.dateRange &&
-    criteria.dateRange !== "all"
+    journalFilter &&
+    !journal
+      .toLowerCase()
+      .includes(journalFilter)
   ) {
+    return false;
+  }
 
-    const days =
-      Number(criteria.dateRange);
 
-    const cutoff =
-      new Date();
+  // ------------------------------------------
+  // FIELD FILTER
+  // ------------------------------------------
 
-    cutoff.setDate(
-      cutoff.getDate() - days
+  const fieldFilter =
+    String(safeCriteria.field || "")
+      .trim()
+      .toLowerCase();
+
+  if (fieldFilter) {
+
+    const paperField =
+      String(
+        paper.field ||
+        paper.fields ||
+        paper.subject ||
+        paper.category ||
+        ""
+      ).toLowerCase();
+
+    if (
+      !paperField.includes(fieldFilter)
+    ) {
+      return false;
+    }
+  }
+
+
+  // ------------------------------------------
+  // DATE FILTER
+  // ------------------------------------------
+
+  const dateRange =
+    String(
+      safeCriteria.dateRange || "all"
     );
 
-    const publication =
-      new Date(
-        paper.publication_date
-      );
+  if (dateRange !== "all") {
+
+    const days =
+      Number(dateRange);
 
     if (
-      publication < cutoff
+      Number.isFinite(days) &&
+      days > 0
     ) {
 
-      return false;
+      const publicationDate =
+        new Date(
+          paper.published ||
+          paper.publicationDate ||
+          paper.date ||
+          ""
+        );
 
+      if (
+        !Number.isNaN(
+          publicationDate.getTime()
+        )
+      ) {
+
+        const cutoff =
+          new Date();
+
+        cutoff.setDate(
+          cutoff.getDate() - days
+        );
+
+        if (
+          publicationDate < cutoff
+        ) {
+          return false;
+        }
+      }
     }
-
   }
 
 
-  // ==========================================
-  // DOCUMENT TYPE
-  // ==========================================
+  // ------------------------------------------
+  // DOCUMENT TYPE FILTER
+  // ------------------------------------------
 
-  if (
-    criteria.documentType
-  ) {
+  const documentType =
+    String(
+      safeCriteria.documentType || ""
+    )
+      .trim()
+      .toLowerCase();
 
-    const type =
-      (paper.type || "")
-        .toLowerCase();
+  if (documentType) {
 
-    const requested =
-      criteria.documentType
-        .toLowerCase();
-
-
-    if (
-      requested === "article" &&
-      type !== "article"
-    ) {
-
-      return false;
-
-    }
-
+    const paperType =
+      String(
+        paper.type ||
+        paper.documentType ||
+        paper.publicationType ||
+        ""
+      ).toLowerCase();
 
     if (
-      requested === "review" &&
-      type !== "review" &&
-      !text.includes("review")
+      !paperType.includes(documentType)
     ) {
-
       return false;
-
     }
-
-
-    if (
-      requested === "preprint" &&
-      !text.includes("preprint")
-    ) {
-
-      return false;
-
-    }
-
-
-    if (
-      requested === "dataset" &&
-      type !== "dataset"
-    ) {
-
-      return false;
-
-    }
-
   }
 
+
+  // ------------------------------------------
+  // PASSED HARD FILTERS
+  // ------------------------------------------
 
   return true;
-
 }
   // ==========================================
   // RELEVANCE SCORE
