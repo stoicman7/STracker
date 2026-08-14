@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("addExcludeButton");
 
   const selectAllKeywordFields =
-  document.getElementById("selectAllKeywordFields");
+    document.getElementById("selectAllKeywordFields");
 
   const authorInput =
     document.getElementById("authorInput");
@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   let currentResults = [];
+
   let currentVisible = 10;
 
 
@@ -204,9 +205,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (accuracyInput) {
 
-    // Force the range to 0–100.
     accuracyInput.min = "0";
+
     accuracyInput.max = "100";
+
     accuracyInput.step = "1";
 
   }
@@ -276,40 +278,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-// SELECT ALL KEYWORD FIELDS
-// ==========================================
+  // SELECT ALL KEYWORD FIELDS
+  // ==========================================
 
-if (selectAllKeywordFields) {
+  if (selectAllKeywordFields) {
 
-  selectAllKeywordFields.addEventListener(
-    "click",
-    () => {
+    selectAllKeywordFields.addEventListener(
+      "click",
+      () => {
 
-      const checkboxes =
-        document.querySelectorAll(
-          ".keyword-field"
-        );
+        const checkboxes =
+          document.querySelectorAll(
+            ".keyword-field"
+          );
 
-      const allChecked =
-        Array.from(checkboxes).every(
-          checkbox => checkbox.checked
-        );
 
-      checkboxes.forEach(
-        checkbox => {
-          checkbox.checked = !allChecked;
+        if (!checkboxes.length) {
+
+          return;
+
         }
-      );
 
-      selectAllKeywordFields.textContent =
-        allChecked
-          ? "Select all"
-          : "Deselect all";
 
-    }
-  );
+        const allChecked =
+          Array.from(
+            checkboxes
+          ).every(
+            checkbox =>
+              checkbox.checked
+          );
 
-}
+
+        checkboxes.forEach(
+          checkbox => {
+
+            checkbox.checked =
+              !allChecked;
+
+          }
+        );
+
+
+        selectAllKeywordFields.textContent =
+          allChecked
+            ? "Select all"
+            : "Deselect all";
+
+      }
+    );
+
+  }
+
+
+  // ==========================================
+  // CREATE INPUT ROW
+  // ==========================================
+
   function createInputRow(
     container,
     className,
@@ -317,12 +341,16 @@ if (selectAllKeywordFields) {
   ) {
 
     if (!container) {
+
       return;
+
     }
 
 
     const row =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
 
     row.className =
@@ -330,7 +358,9 @@ if (selectAllKeywordFields) {
 
 
     const input =
-      document.createElement("input");
+      document.createElement(
+        "input"
+      );
 
 
     input.type =
@@ -346,7 +376,9 @@ if (selectAllKeywordFields) {
 
 
     const removeButton =
-      document.createElement("button");
+      document.createElement(
+        "button"
+      );
 
 
     removeButton.type =
@@ -371,11 +403,19 @@ if (selectAllKeywordFields) {
     );
 
 
-    row.appendChild(input);
+    row.appendChild(
+      input
+    );
 
-    row.appendChild(removeButton);
 
-    container.appendChild(row);
+    row.appendChild(
+      removeButton
+    );
+
+
+    container.appendChild(
+      row
+    );
 
   }
 
@@ -412,10 +452,6 @@ if (selectAllKeywordFields) {
         .filter(Boolean);
 
 
-    // ----------------------------------------
-    // KEYWORD SEARCH FIELDS
-    // ----------------------------------------
-
     const keywordFields =
       Array.from(
         document.querySelectorAll(
@@ -427,10 +463,6 @@ if (selectAllKeywordFields) {
             input.value
         );
 
-
-    // ----------------------------------------
-    // KEYWORD MATCH MODE
-    // ----------------------------------------
 
     const keywordModeInput =
       document.querySelector(
@@ -444,13 +476,11 @@ if (selectAllKeywordFields) {
         : "all";
 
 
-    // ----------------------------------------
-    // ACCURACY
-    // ----------------------------------------
-
     const accuracy =
       accuracyInput
-        ? Number(accuracyInput.value)
+        ? Number(
+            accuracyInput.value
+          )
         : 0;
 
 
@@ -493,7 +523,9 @@ if (selectAllKeywordFields) {
           : "",
 
       accuracy:
-        Number.isFinite(accuracy)
+        Number.isFinite(
+          accuracy
+        )
           ? Math.max(
               0,
               Math.min(
@@ -598,29 +630,22 @@ if (selectAllKeywordFields) {
 
 
       // ======================================
-      // IMPORTANT:
-      // CREATE TRACKER EVEN IF ZERO RESULTS
+      // CREATE NEW TRACKER
       // ======================================
 
       if (shouldTrack) {
 
-        saveAdvancedTracker(
-          criteria,
-          papers
-        );
+        const tracker =
+          createAdvancedTracker(
+            criteria,
+            papers
+          );
+
 
         displayTrackedTopics();
 
-      }
 
-
-      // ======================================
-      // ZERO RESULTS
-      // ======================================
-
-      if (!papers.length) {
-
-        if (shouldTrack) {
+        if (!papers.length) {
 
           showMessage(`
 
@@ -639,35 +664,52 @@ if (selectAllKeywordFields) {
             </p>
 
             <p>
-              You can open the tracker later
-              to check again.
+              You can check the tracker again later.
             </p>
 
           `);
 
-        } else {
-
-          showMessage(`
-
-            <h2>
-              🔎 No matching papers
-            </h2>
-
-            <p>
-              No papers currently match your
-              research criteria at
-              <strong>${criteria.accuracy}%</strong>
-              relevance.
-            </p>
-
-            <p>
-              Try lowering the relevance threshold
-              or broadening your criteria.
-            </p>
-
-          `);
+          return;
 
         }
+
+
+        displayResults(
+          papers,
+          "🎯 Matching research"
+        );
+
+
+        return;
+
+      }
+
+
+      // ======================================
+      // PREVIEW ONLY
+      // ======================================
+
+      if (!papers.length) {
+
+        showMessage(`
+
+          <h2>
+            🔎 No matching papers
+          </h2>
+
+          <p>
+            No papers currently match your
+            research criteria at
+            <strong>${criteria.accuracy}%</strong>
+            relevance.
+          </p>
+
+          <p>
+            Try lowering the relevance threshold
+            or broadening your criteria.
+          </p>
+
+        `);
 
         return;
 
@@ -689,7 +731,10 @@ if (selectAllKeywordFields) {
 
 
       showMessage(`
-        <h2>❌ Search failed</h2>
+
+        <h2>
+          ❌ Search failed
+        </h2>
 
         <p>
           ${escapeHtml(
@@ -701,6 +746,7 @@ if (selectAllKeywordFields) {
         <p>
           Please try again.
         </p>
+
       `);
 
     }
@@ -751,19 +797,11 @@ if (selectAllKeywordFields) {
     }
 
 
-    // ----------------------------------------
-    // FREE SOURCES
-    // ----------------------------------------
-
     let papers =
       await searchFreeSources(
         query
       );
 
-
-    // ----------------------------------------
-    // HARD FILTERS
-    // ----------------------------------------
 
     papers =
       papers.filter(
@@ -774,10 +812,6 @@ if (selectAllKeywordFields) {
           )
       );
 
-
-    // ----------------------------------------
-    // RELEVANCE SCORE
-    // ----------------------------------------
 
     papers =
       papers.map(
@@ -795,10 +829,6 @@ if (selectAllKeywordFields) {
       );
 
 
-    // ----------------------------------------
-    // 0–100 RELEVANCE THRESHOLD
-    // ----------------------------------------
-
     papers =
       papers.filter(
         paper =>
@@ -806,18 +836,6 @@ if (selectAllKeywordFields) {
           criteria.accuracy
       );
 
-
-    // ----------------------------------------
-    // NEWEST FIRST
-    // ----------------------------------------
-    //
-    // Relevance is used to decide whether
-    // a paper passes the threshold.
-    //
-    // It is NOT used to order results.
-    //
-    // Newest papers appear first.
-    //
 
     sortPapersNewestFirst(
       papers
@@ -851,7 +869,9 @@ if (selectAllKeywordFields) {
       ).getTime();
 
 
-    return Number.isFinite(time)
+    return Number.isFinite(
+      time
+    )
       ? time
       : 0;
 
@@ -878,18 +898,6 @@ if (selectAllKeywordFields) {
   async function searchFreeSources(
     query
   ) {
-
-    /*
-      Free sources:
-
-      1. Europe PMC
-      2. PubMed
-
-      No OpenAlex request is used.
-
-      Results are merged and deduplicated.
-    */
-
 
     const resultsById =
       new Map();
@@ -960,7 +968,9 @@ if (selectAllKeywordFields) {
 
 
           if (
-            !resultsById.has(key)
+            !resultsById.has(
+              key
+            )
           ) {
 
             resultsById.set(
@@ -971,7 +981,9 @@ if (selectAllKeywordFields) {
           } else {
 
             const existing =
-              resultsById.get(key);
+              resultsById.get(
+                key
+              );
 
 
             resultsById.set(
@@ -998,26 +1010,12 @@ if (selectAllKeywordFields) {
     }
 
 
-    const papers =
-      Array.from(
-        resultsById.values()
-      )
-        .filter(
-          isValidDate
-        );
-
-
-    /*
-      IMPORTANT:
-
-      Do NOT throw when zero results are found.
-
-      Returning [] allows the tracker to be
-      created even when there are currently
-      no matching papers.
-    */
-
-    return papers;
+    return Array.from(
+      resultsById.values()
+    )
+      .filter(
+        isValidDate
+      );
 
   }
 
@@ -1149,7 +1147,8 @@ if (selectAllKeywordFields) {
 
 
     if (
-      typeof abstract !== "string"
+      typeof abstract !==
+      "string"
     ) {
 
       abstract =
@@ -1241,8 +1240,7 @@ if (selectAllKeywordFields) {
               )
           : [],
 
-      concepts:
-        [],
+      concepts: [],
 
       type:
         normalizeDocumentType(
@@ -1454,7 +1452,8 @@ if (selectAllKeywordFields) {
       const doiObject =
         record.articleids.find(
           item =>
-            item.idtype === "doi"
+            item.idtype ===
+            "doi"
         );
 
 
@@ -1539,8 +1538,7 @@ if (selectAllKeywordFields) {
 
       },
 
-      concepts:
-        [],
+      concepts: [],
 
       type:
         "article",
@@ -1608,7 +1606,9 @@ if (selectAllKeywordFields) {
 
 
     const month =
-      monthNames[match[2]] ||
+      monthNames[
+        match[2]
+      ] ||
       "01";
 
 
@@ -1652,7 +1652,9 @@ if (selectAllKeywordFields) {
 
 
     if (
-      text.includes("review")
+      text.includes(
+        "review"
+      )
     ) {
 
       return "review";
@@ -1661,7 +1663,9 @@ if (selectAllKeywordFields) {
 
 
     if (
-      text.includes("dataset")
+      text.includes(
+        "dataset"
+      )
     ) {
 
       return "dataset";
@@ -1670,7 +1674,9 @@ if (selectAllKeywordFields) {
 
 
     if (
-      text.includes("preprint")
+      text.includes(
+        "preprint"
+      )
     ) {
 
       return "preprint";
@@ -1894,10 +1900,6 @@ if (selectAllKeywordFields) {
       criteria || {};
 
 
-    // ----------------------------------------
-    // USE THE ACTUAL PAPER DATA STRUCTURE
-    // ----------------------------------------
-
     const title =
       String(
         paper.title ||
@@ -1978,7 +1980,9 @@ if (selectAllKeywordFields) {
 
 
       if (
-        allText.includes(term)
+        allText.includes(
+          term
+        )
       ) {
 
         return false;
@@ -2103,9 +2107,6 @@ if (selectAllKeywordFields) {
 
     } else {
 
-      // No field selected:
-      // search the complete metadata.
-
       searchableText =
         allText;
 
@@ -2121,7 +2122,8 @@ if (selectAllKeywordFields) {
     ) {
 
       const keywordMode =
-        safeCriteria.keywordMode === "any"
+        safeCriteria.keywordMode ===
+        "any"
           ? "any"
           : "all";
 
@@ -2224,15 +2226,6 @@ if (selectAllKeywordFields) {
     // ----------------------------------------
     // FIELD FILTER
     // ----------------------------------------
-    //
-    // Free sources don't provide the same
-    // structured field/concept data that
-    // OpenAlex provided.
-    //
-    // Therefore we use searchable metadata
-    // rather than secretly rejecting every
-    // paper that lacks a "field" property.
-    //
 
     const fieldFilter =
       String(
@@ -2244,18 +2237,13 @@ if (selectAllKeywordFields) {
 
 
     if (
-      fieldFilter
+      fieldFilter &&
+      !allText.includes(
+        fieldFilter
+      )
     ) {
 
-      if (
-        !allText.includes(
-          fieldFilter
-        )
-      ) {
-
-        return false;
-
-      }
+      return false;
 
     }
 
@@ -2368,10 +2356,6 @@ if (selectAllKeywordFields) {
     }
 
 
-    // ----------------------------------------
-    // PASSED ALL HARD FILTERS
-    // ----------------------------------------
-
     return true;
 
   }
@@ -2420,10 +2404,6 @@ if (selectAllKeywordFields) {
       ).toLowerCase();
 
 
-    // ========================================
-    // KEYWORD RELEVANCE
-    // ========================================
-
     const keywords =
       Array.isArray(
         criteria.keywords
@@ -2458,43 +2438,31 @@ if (selectAllKeywordFields) {
         }
 
 
-        // Title = strongest
         if (
           title.includes(k)
         ) {
 
           keywordScore += 40;
 
-        }
-
-        // Abstract = strong
-        else if (
+        } else if (
           abstract.includes(k)
         ) {
 
           keywordScore += 30;
 
-        }
-
-        // Concepts = weaker
-        else if (
+        } else if (
           concepts.includes(k)
         ) {
 
           keywordScore += 20;
 
-        }
-
-        // Author/journal can also contribute
-        else if (
+        } else if (
           authors.includes(k)
         ) {
 
           keywordScore += 10;
 
-        }
-
-        else if (
+        } else if (
           journal.includes(k)
         ) {
 
@@ -2524,9 +2492,9 @@ if (selectAllKeywordFields) {
     }
 
 
-    // ========================================
+    // ----------------------------------------
     // AUTHOR
-    // ========================================
+    // ----------------------------------------
 
     if (
       criteria.author
@@ -2546,9 +2514,9 @@ if (selectAllKeywordFields) {
     }
 
 
-    // ========================================
+    // ----------------------------------------
     // JOURNAL
-    // ========================================
+    // ----------------------------------------
 
     if (
       criteria.journal
@@ -2568,9 +2536,9 @@ if (selectAllKeywordFields) {
     }
 
 
-    // ========================================
+    // ----------------------------------------
     // FIELD
-    // ========================================
+    // ----------------------------------------
 
     if (
       criteria.field
@@ -2589,9 +2557,7 @@ if (selectAllKeywordFields) {
 
         score += 15;
 
-      }
-
-      else if (
+      } else if (
         abstract.includes(
           field
         )
@@ -2599,9 +2565,7 @@ if (selectAllKeywordFields) {
 
         score += 10;
 
-      }
-
-      else if (
+      } else if (
         concepts.includes(
           field
         )
@@ -2614,9 +2578,9 @@ if (selectAllKeywordFields) {
     }
 
 
-    // ========================================
+    // ----------------------------------------
     // RECENCY
-    // ========================================
+    // ----------------------------------------
 
     const publication =
       new Date(
@@ -2656,17 +2620,13 @@ if (selectAllKeywordFields) {
 
         score += 10;
 
-      }
-
-      else if (
+      } else if (
         days <= 90
       ) {
 
         score += 7;
 
-      }
-
-      else if (
+      } else if (
         days <= 365
       ) {
 
@@ -2698,7 +2658,6 @@ if (selectAllKeywordFields) {
     paper
   ) {
 
-    // Europe PMC / free sources
     if (
       typeof paper.abstract_text ===
       "string" &&
@@ -2710,7 +2669,6 @@ if (selectAllKeywordFields) {
     }
 
 
-    // Compatibility with old records
     if (
       typeof paper.abstract ===
       "string"
@@ -2721,7 +2679,6 @@ if (selectAllKeywordFields) {
     }
 
 
-    // Compatibility with old inverted index
     const index =
       paper.abstract_inverted_index;
 
@@ -2767,7 +2724,9 @@ if (selectAllKeywordFields) {
     }
 
 
-    return words.join(" ");
+    return words.join(
+      " "
+    );
 
   }
 
@@ -3136,7 +3095,34 @@ if (selectAllKeywordFields) {
     }
 
 
+    let newBadge =
+      "";
+
+
+    if (
+      paper.isNewToTracker
+    ) {
+
+      newBadge = `
+
+        <span
+          class="badge"
+          style="
+            background:#dcfce7;
+            color:#166534;
+          "
+        >
+          🆕 New
+        </span>
+
+      `;
+
+    }
+
+
     card.innerHTML = `
+
+      ${newBadge}
 
       ${scoreBadge}
 
@@ -3186,10 +3172,10 @@ if (selectAllKeywordFields) {
 
 
   // ==========================================
-  // SAVE TRACKER
+  // CREATE NEW TRACKER
   // ==========================================
 
-  function saveAdvancedTracker(
+  function createAdvancedTracker(
     criteria,
     papers
   ) {
@@ -3198,55 +3184,30 @@ if (selectAllKeywordFields) {
       getAdvancedTrackers();
 
 
+    const paperIds =
+      Array.isArray(
+        papers
+      )
+        ? papers
+            .map(
+              paper =>
+                getStablePaperId(
+                  paper
+                )
+            )
+            .filter(Boolean)
+        : [];
+
+
     const tracker = {
 
       id:
-        Date.now(),
+        createTrackerId(),
 
-      criteria: {
-
-        keywords: [
-          ...criteria.keywords
-        ],
-
-        excluded: [
-          ...criteria.excluded
-        ],
-
-        keywordFields:
-          Array.isArray(
-            criteria.keywordFields
-          )
-            ? [
-                ...criteria.keywordFields
-              ]
-            : [],
-
-        keywordMode:
-          criteria.keywordMode ===
-          "any"
-            ? "any"
-            : "all",
-
-        author:
-          criteria.author,
-
-        journal:
-          criteria.journal,
-
-        field:
-          criteria.field,
-
-        dateRange:
-          criteria.dateRange,
-
-        documentType:
-          criteria.documentType,
-
-        accuracy:
-          criteria.accuracy
-
-      },
+      criteria:
+        cloneCriteria(
+          criteria
+        ),
 
       createdAt:
         getToday(),
@@ -3255,29 +3216,13 @@ if (selectAllKeywordFields) {
         getToday(),
 
       seenPaperIds:
-        Array.isArray(
-          papers
-        )
-          ? papers
-              .map(
-                paper =>
-                  paper.id
-              )
-          : [],
+        paperIds,
 
       lastCheckNewPapers:
-        Array.isArray(
-          papers
-        )
-          ? papers.length
-          : 0,
+        paperIds.length,
 
       totalNewPapers:
-        Array.isArray(
-          papers
-        )
-          ? papers.length
-          : 0
+        paperIds.length
 
     };
 
@@ -3287,12 +3232,291 @@ if (selectAllKeywordFields) {
     );
 
 
-    localStorage.setItem(
-      "stracker_advanced",
-      JSON.stringify(
-        trackers
-      )
+    saveAdvancedTrackers(
+      trackers
     );
+
+
+    return tracker;
+
+  }
+
+
+  // ==========================================
+  // UPDATE EXISTING TRACKER
+  // ==========================================
+
+  function updateTrackerAfterCheck(
+    tracker,
+    papers
+  ) {
+
+    if (!tracker) {
+
+      return {
+        newPapers: [],
+        allPapers: []
+      };
+
+    }
+
+
+    const oldSeen =
+      new Set(
+        Array.isArray(
+          tracker.seenPaperIds
+        )
+          ? tracker.seenPaperIds
+          : []
+      );
+
+
+    const newPapers = [];
+
+
+    const allPapers =
+      Array.isArray(
+        papers
+      )
+        ? papers
+        : [];
+
+
+    const currentIds = [];
+
+
+    allPapers.forEach(
+      paper => {
+
+        const id =
+          getStablePaperId(
+            paper
+          );
+
+
+        if (!id) {
+
+          return;
+
+        }
+
+
+        currentIds.push(
+          id
+        );
+
+
+        if (
+          !oldSeen.has(
+            id
+          )
+        ) {
+
+          newPapers.push(
+            paper
+          );
+
+        }
+
+      }
+    );
+
+
+    const combinedIds =
+      Array.from(
+        new Set(
+          [
+            ...oldSeen,
+            ...currentIds
+          ]
+        )
+      );
+
+
+    tracker.seenPaperIds =
+      combinedIds;
+
+
+    tracker.lastChecked =
+      getToday();
+
+
+    tracker.lastCheckNewPapers =
+      newPapers.length;
+
+
+    tracker.totalNewPapers =
+      Number(
+        tracker.totalNewPapers || 0
+      ) +
+      newPapers.length;
+
+
+    return {
+
+      newPapers,
+
+      allPapers
+
+    };
+
+  }
+
+
+  // ==========================================
+  // STABLE PAPER ID
+  // ==========================================
+
+  function getStablePaperId(
+    paper
+  ) {
+
+    if (!paper) {
+
+      return "";
+
+    }
+
+
+    if (
+      paper.pmid
+    ) {
+
+      return (
+        `pmid:${String(
+          paper.pmid
+        ).trim().toLowerCase()}`
+      );
+
+    }
+
+
+    if (
+      paper.doi
+    ) {
+
+      return (
+        `doi:${String(
+          paper.doi
+        )
+          .replace(
+            /^https?:\/\/doi\.org\//i,
+            ""
+          )
+          .trim()
+          .toLowerCase()}`
+      );
+
+    }
+
+
+    if (
+      paper.id
+    ) {
+
+      return (
+        `id:${String(
+          paper.id
+        ).trim().toLowerCase()}`
+      );
+
+    }
+
+
+    const title =
+      String(
+        paper.title ||
+        ""
+      )
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]+/g,
+          " "
+        )
+        .trim();
+
+
+    if (!title) {
+
+      return "";
+
+    }
+
+
+    return `title:${title}`;
+
+  }
+
+
+  // ==========================================
+  // CLONE CRITERIA
+  // ==========================================
+
+  function cloneCriteria(
+    criteria
+  ) {
+
+    return {
+
+      keywords:
+        Array.isArray(
+          criteria?.keywords
+        )
+          ? [
+              ...criteria.keywords
+            ]
+          : [],
+
+      excluded:
+        Array.isArray(
+          criteria?.excluded
+        )
+          ? [
+              ...criteria.excluded
+            ]
+          : [],
+
+      keywordFields:
+        Array.isArray(
+          criteria?.keywordFields
+        )
+          ? [
+              ...criteria.keywordFields
+            ]
+          : [],
+
+      keywordMode:
+        criteria?.keywordMode ===
+        "any"
+          ? "any"
+          : "all",
+
+      author:
+        criteria?.author ||
+        "",
+
+      journal:
+        criteria?.journal ||
+        "",
+
+      field:
+        criteria?.field ||
+        "",
+
+      dateRange:
+        criteria?.dateRange ||
+        "all",
+
+      documentType:
+        criteria?.documentType ||
+        "",
+
+      accuracy:
+        Number(
+          criteria?.accuracy || 0
+        )
+
+    };
 
   }
 
@@ -3324,12 +3548,18 @@ if (selectAllKeywordFields) {
         );
 
 
-      return Array.isArray(
-        parsed
-      )
-        ? parsed
-        : [];
+      if (
+        !Array.isArray(
+          parsed
+        )
+      ) {
 
+        return [];
+
+      }
+
+
+      return parsed;
 
     } catch (error) {
 
@@ -3342,6 +3572,58 @@ if (selectAllKeywordFields) {
       return [];
 
     }
+
+  }
+
+
+  // ==========================================
+  // SAVE TRACKERS
+  // ==========================================
+
+  function saveAdvancedTrackers(
+    trackers
+  ) {
+
+    try {
+
+      localStorage.setItem(
+        "stracker_advanced",
+        JSON.stringify(
+          trackers
+        )
+      );
+
+
+      return true;
+
+    } catch (error) {
+
+      console.error(
+        "Could not save trackers:",
+        error
+      );
+
+
+      return false;
+
+    }
+
+  }
+
+
+  // ==========================================
+  // CREATE TRACKER ID
+  // ==========================================
+
+  function createTrackerId() {
+
+    return (
+      Date.now() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .slice(2, 9)
+    );
 
   }
 
@@ -3441,6 +3723,28 @@ if (selectAllKeywordFields) {
                     )
                     .join("")
                 : "";
+
+
+            const lastNew =
+              Number(
+                tracker.lastCheckNewPapers ||
+                0
+              );
+
+
+            const totalNew =
+              Number(
+                tracker.totalNewPapers ||
+                0
+              );
+
+
+            const totalSeen =
+              Array.isArray(
+                tracker.seenPaperIds
+              )
+                ? tracker.seenPaperIds.length
+                : 0;
 
 
             return `
@@ -3577,7 +3881,8 @@ if (selectAllKeywordFields) {
 
                 ${
                   criteria.dateRange &&
-                  criteria.dateRange !== "all"
+                  criteria.dateRange !==
+                    "all"
                     ? `
                       <p>
                         📅
@@ -3634,7 +3939,7 @@ if (selectAllKeywordFields) {
 
                   ${escapeHtml(
                     tracker.lastChecked ||
-                    "Unknown"
+                    "Never"
                   )}
                 </p>
 
@@ -3642,16 +3947,30 @@ if (selectAllKeywordFields) {
                 <p>
                   📚
                   <strong>
-                    Papers found:
+                    Papers tracked:
                   </strong>
 
-                  ${
-                    Array.isArray(
-                      tracker.seenPaperIds
-                    )
-                      ? tracker.seenPaperIds.length
-                      : 0
-                  }
+                  ${totalSeen}
+                </p>
+
+
+                <p>
+                  🆕
+                  <strong>
+                    New on last check:
+                  </strong>
+
+                  ${lastNew}
+                </p>
+
+
+                <p>
+                  🔔
+                  <strong>
+                    Total new discovered:
+                  </strong>
+
+                  ${totalNew}
                 </p>
 
 
@@ -3663,6 +3982,15 @@ if (selectAllKeywordFields) {
                     data-index="${index}"
                   >
                     👁️ View
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="check-tracker-button"
+                    data-index="${index}"
+                  >
+                    🔄 Check for new papers
                   </button>
 
 
@@ -3701,7 +4029,7 @@ if (selectAllKeywordFields) {
 
           button.addEventListener(
             "click",
-            () => {
+            async () => {
 
               const index =
                 Number(
@@ -3737,9 +4065,70 @@ if (selectAllKeywordFields) {
               }
 
 
-              runSavedTracker(
-                tracker.criteria ||
-                {}
+              await runSavedTracker(
+                tracker,
+                true
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+    // ========================================
+    // CHECK BUTTONS
+    // ========================================
+
+    document
+      .querySelectorAll(
+        ".check-tracker-button"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const index =
+                Number(
+                  button.dataset.index
+                );
+
+
+              const trackers =
+                getAdvancedTrackers();
+
+
+              const tracker =
+                trackers[index];
+
+
+              if (!tracker) {
+
+                showMessage(`
+
+                  <h2>
+                    ❌ Tracker not found
+                  </h2>
+
+                  <p>
+                    This tracking profile
+                    no longer exists.
+                  </p>
+
+                `);
+
+                return;
+
+              }
+
+
+              await runSavedTracker(
+                tracker,
+                true
               );
 
             }
@@ -3800,11 +4189,8 @@ if (selectAllKeywordFields) {
               );
 
 
-              localStorage.setItem(
-                "stracker_advanced",
-                JSON.stringify(
-                  trackers
-                )
+              saveAdvancedTrackers(
+                trackers
               );
 
 
@@ -3820,12 +4206,20 @@ if (selectAllKeywordFields) {
 
 
   // ==========================================
-  // VIEW SAVED TRACKER
+  // VIEW / CHECK SAVED TRACKER
   // ==========================================
 
   async function runSavedTracker(
-    criteria
+    tracker,
+    showAllResults
   ) {
+
+    if (!tracker) {
+
+      return;
+
+    }
+
 
     // ----------------------------------------
     // NORMALIZE SAVED CRITERIA
@@ -3835,9 +4229,9 @@ if (selectAllKeywordFields) {
 
       keywords:
         Array.isArray(
-          criteria?.keywords
+          tracker.criteria?.keywords
         )
-          ? criteria.keywords
+          ? tracker.criteria.keywords
               .map(
                 keyword =>
                   String(
@@ -3849,9 +4243,9 @@ if (selectAllKeywordFields) {
 
       excluded:
         Array.isArray(
-          criteria?.excluded
+          tracker.criteria?.excluded
         )
-          ? criteria.excluded
+          ? tracker.criteria.excluded
               .map(
                 keyword =>
                   String(
@@ -3863,9 +4257,9 @@ if (selectAllKeywordFields) {
 
       keywordFields:
         Array.isArray(
-          criteria?.keywordFields
+          tracker.criteria?.keywordFields
         )
-          ? criteria.keywordFields
+          ? tracker.criteria.keywordFields
               .filter(
                 field =>
                   [
@@ -3881,51 +4275,51 @@ if (selectAllKeywordFields) {
           : [],
 
       keywordMode:
-        criteria?.keywordMode ===
+        tracker.criteria?.keywordMode ===
         "any"
           ? "any"
           : "all",
 
       author:
-        typeof criteria?.author ===
+        typeof tracker.criteria?.author ===
         "string"
-          ? criteria.author.trim()
+          ? tracker.criteria.author.trim()
           : "",
 
       journal:
-        typeof criteria?.journal ===
+        typeof tracker.criteria?.journal ===
         "string"
-          ? criteria.journal.trim()
+          ? tracker.criteria.journal.trim()
           : "",
 
       field:
-        typeof criteria?.field ===
+        typeof tracker.criteria?.field ===
         "string"
-          ? criteria.field.trim()
+          ? tracker.criteria.field.trim()
           : "",
 
       dateRange:
-        criteria?.dateRange !==
+        tracker.criteria?.dateRange !==
           undefined &&
-        criteria?.dateRange !==
+        tracker.criteria?.dateRange !==
           null &&
-        criteria?.dateRange !==
+        tracker.criteria?.dateRange !==
           ""
           ? String(
-              criteria.dateRange
+              tracker.criteria.dateRange
             )
           : "all",
 
       documentType:
-        typeof criteria?.documentType ===
+        typeof tracker.criteria?.documentType ===
         "string"
-          ? criteria.documentType.trim()
+          ? tracker.criteria.documentType.trim()
           : "",
 
       accuracy:
         Number.isFinite(
           Number(
-            criteria?.accuracy
+            tracker.criteria?.accuracy
           )
         )
           ? Math.max(
@@ -3933,7 +4327,7 @@ if (selectAllKeywordFields) {
               Math.min(
                 100,
                 Number(
-                  criteria.accuracy
+                  tracker.criteria.accuracy
                 )
               )
             )
@@ -3943,7 +4337,7 @@ if (selectAllKeywordFields) {
 
 
     // ----------------------------------------
-    // VALIDATE CRITERIA
+    // VALIDATE
     // ----------------------------------------
 
     const hasCriteria =
@@ -3981,7 +4375,7 @@ if (selectAllKeywordFields) {
 
     showSearchingMessage(
       "🔎 Checking tracked research...",
-      "Looking for papers matching your saved criteria."
+      "Looking for papers matching your saved research profile."
     );
 
 
@@ -3992,6 +4386,65 @@ if (selectAllKeywordFields) {
           safeCriteria
         );
 
+
+      // --------------------------------------
+      // UPDATE TRACKER
+      // --------------------------------------
+
+      const check =
+        updateTrackerAfterCheck(
+          tracker,
+          papers
+        );
+
+
+      // --------------------------------------
+      // SAVE UPDATED TRACKER
+      // --------------------------------------
+
+      const trackers =
+        getAdvancedTrackers();
+
+
+      const trackerIndex =
+        trackers.findIndex(
+          item =>
+            String(
+              item.id
+            ) ===
+            String(
+              tracker.id
+            )
+        );
+
+
+      if (
+        trackerIndex !== -1
+      ) {
+
+        trackers[
+          trackerIndex
+        ] =
+          tracker;
+
+
+        saveAdvancedTrackers(
+          trackers
+        );
+
+      }
+
+
+      // --------------------------------------
+      // REFRESH TRACKER UI
+      // --------------------------------------
+
+      displayTrackedTopics();
+
+
+      // --------------------------------------
+      // ZERO RESULTS
+      // --------------------------------------
 
       if (!papers.length) {
 
@@ -4007,8 +4460,25 @@ if (selectAllKeywordFields) {
           </p>
 
           <p>
-            The tracker still exists and
-            can be checked again later.
+            The tracker was checked successfully.
+          </p>
+
+          <p>
+            📅
+            <strong>
+              Last checked:
+            </strong>
+            ${escapeHtml(
+              tracker.lastChecked
+            )}
+          </p>
+
+          <p>
+            🆕
+            <strong>
+              New papers found:
+            </strong>
+            0
           </p>
 
         `);
@@ -4018,10 +4488,95 @@ if (selectAllKeywordFields) {
       }
 
 
-      displayResults(
-        papers,
-        "📚 Tracked research results"
-      );
+      // --------------------------------------
+      // MARK NEW PAPERS
+      // --------------------------------------
+
+      const newIds =
+        new Set(
+          check.newPapers.map(
+            paper =>
+              getStablePaperId(
+                paper
+              )
+          )
+        );
+
+
+      const markedPapers =
+        papers.map(
+          paper => ({
+
+            ...paper,
+
+            isNewToTracker:
+              newIds.has(
+                getStablePaperId(
+                  paper
+                )
+              )
+
+          })
+        );
+
+
+      // --------------------------------------
+      // SHOW RESULTS
+      // --------------------------------------
+
+      if (
+        showAllResults
+      ) {
+
+        displayResults(
+          markedPapers,
+          `📚 Tracked research — ${check.newPapers.length} new`
+        );
+
+      } else {
+
+        displayResults(
+          markedPapers,
+          "📚 Tracked research results"
+        );
+
+      }
+
+
+      // --------------------------------------
+      // SHOW TRACKER SUMMARY
+      // --------------------------------------
+
+      const counter =
+        document.getElementById(
+          "resultCounter"
+        );
+
+
+      if (counter) {
+
+        counter.innerHTML = `
+
+          Showing
+          ${Math.min(
+            10,
+            markedPapers.length
+          )}
+          of
+          ${markedPapers.length}
+          papers
+
+          &nbsp;•&nbsp;
+
+          🆕
+          <strong>
+            ${check.newPapers.length}
+          </strong>
+          new since last check
+
+        `;
+
+      }
 
 
     } catch (error) {
