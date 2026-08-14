@@ -11,33 +11,33 @@
 
 
     /* =========================================================
-   MINIMAL TRACKER STATISTICS
+   MINIMAL TRACKING STATISTICS
    ========================================================= */
 
 .tracker-stats {
   display: flex;
-
   flex-wrap: wrap;
-
-  gap: 0;
-
-  margin-top: 8px;
-
-  padding: 14px 0;
-
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-
-.tracker-stat {
-  display: flex;
-
   align-items: center;
 
-  gap: 8px;
+  gap: 8px 24px;
 
-  padding: 4px 22px;
+  margin-top: 8px;
+  padding: 14px 17px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 12px;
+}
+
+.tracked-topic .tracker-stat {
+  display: flex;
+  align-items: baseline;
+
+  gap: 5px;
+
+  padding: 0;
 
   background: transparent;
 
@@ -47,38 +47,78 @@
 
   text-align: left;
 
-  box-shadow: none;
-
-  transform: none !important;
+  transform: none;
 
   transition: none;
 }
 
-
-.tracker-stat + .tracker-stat {
-  border-left: 1px solid #e2e8f0;
+.tracked-topic .tracker-stat:hover {
+  background: transparent;
+  transform: none;
 }
 
+.tracker-stat-icon {
+  display: none;
+}
 
 .tracker-stat-value {
-  font-size: 16px;
+  font-size: 15px;
 
   font-weight: 700;
 
   color: #334155;
-
-  white-space: nowrap;
 }
-
 
 .tracker-stat-label {
   font-size: 13px;
 
-  color: #64748b;
-
   font-weight: 500;
 
-  white-space: nowrap;
+  color: #64748b;
+}
+
+.tracker-stat-date {
+  font-size: 13px;
+
+  font-weight: 600;
+
+  color: #475569;
+}
+
+
+/* =========================================================
+   MOBILE STATISTICS
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .tracker-stats {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px 16px;
+
+    padding: 14px 15px;
+  }
+
+  .tracked-topic .tracker-stat {
+    min-width: 0;
+  }
+
+  .tracker-stat-value {
+    font-size: 14px;
+  }
+
+  .tracker-stat-label {
+    font-size: 12px;
+  }
+
+  .tracker-stat-date {
+    font-size: 12px;
+  }
+
 }
 
 
