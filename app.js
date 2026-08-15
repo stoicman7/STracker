@@ -4070,75 +4070,90 @@ document.addEventListener("DOMContentLoaded", () => {
   // TRACKER STATISTICS HTML
   // ==========================================
 
+    // ==========================================
+  // TRACKER STATISTICS HTML
+  // ==========================================
+
   function buildTrackerStatisticsHtml(
-  tracker
-) {
+    tracker
+  ) {
 
-  const papersTracked =
-    getSeenCount(tracker);
+    const papersTracked =
+      getSeenCount(tracker);
 
-  const newOnLastCheck =
-    Number(
-      tracker.lastCheckNewPapers || 0
-    );
+    const newOnLastCheck =
+      Number(
+        tracker.lastCheckNewPapers || 0
+      );
 
-  const totalNewDiscovered =
-    Number(
-      tracker.totalNewPapers || 0
-    );
+    const totalNewDiscovered =
+      Number(
+        tracker.totalNewPapers || 0
+      );
 
-  const lastChecked =
-    tracker.lastChecked || "Never";
+    const lastChecked =
+      tracker.lastChecked || "Never";
 
-  return `
+    return `
 
-    <div class="tracker-stats">
+      <div class="tracker-stats">
 
-      <div class="tracker-stat">
-        <span class="tracker-stat-label">
-          Papers tracked
-        </span>
-        <strong class="tracker-stat-value">
-          ${papersTracked}
-        </strong>
+        <div class="tracker-stat">
+
+          <span class="tracker-stat-label">
+            Papers tracked
+          </span>
+
+          <strong class="tracker-stat-value">
+            ${papersTracked}
+          </strong>
+
+        </div>
+
+
+        <div class="tracker-stat">
+
+          <span class="tracker-stat-label">
+            New on last check
+          </span>
+
+          <strong class="tracker-stat-value">
+            ${newOnLastCheck}
+          </strong>
+
+        </div>
+
+
+        <div class="tracker-stat">
+
+          <span class="tracker-stat-label">
+            Total new
+          </span>
+
+          <strong class="tracker-stat-value">
+            ${totalNewDiscovered}
+          </strong>
+
+        </div>
+
+
+        <div class="tracker-stat">
+
+          <span class="tracker-stat-label">
+            Last checked
+          </span>
+
+          <strong class="tracker-stat-value tracker-stat-date">
+            ${escapeHtml(lastChecked)}
+          </strong>
+
+        </div>
+
       </div>
 
-      <div class="tracker-stat">
-        <span class="tracker-stat-label">
-          New on last check
-        </span>
-        <strong class="tracker-stat-value">
-          ${newOnLastCheck}
-        </strong>
-      </div>
+    `;
 
-      <div class="tracker-stat">
-        <span class="tracker-stat-label">
-          Total new
-        </span>
-        <strong class="tracker-stat-value">
-          ${totalNewDiscovered}
-        </strong>
-      </div>
-
-      <div class="tracker-stat">
-        <span class="tracker-stat-label">
-          Last checked
-        </span>
-        <strong class="tracker-stat-value tracker-stat-date">
-          ${escapeHtml(lastChecked)}
-        </strong>
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-  `;
-
-}
+  }
 
   // ==========================================
   // DISPLAY TRACKED TOPICS
