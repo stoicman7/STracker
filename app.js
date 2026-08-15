@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // PREVIEW ONLY
       // ======================================
 
-      if (!papers.length) {
+            if (papers.length === 0) {
 
         showMessage(`
 
@@ -708,14 +708,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <p>
             No papers currently match your
-            research criteria at
-            <strong>${criteria.accuracy}%</strong>
-            relevance.
+            selected research criteria.
           </p>
 
           <p>
-            Try lowering the relevance threshold
-            or broadening your criteria.
+            Try adding or removing keywords,
+            changing the search fields, or
+            broadening your other filters.
           </p>
 
         `);
@@ -763,11 +762,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // ==========================================
+    // ==========================================
   // SEARCH WITH CRITERIA
   // ==========================================
 
-  async function searchWithCriteria(criteria) {
+  async function searchWithCriteria(
+    criteria
+  ) {
 
     let query =
       criteria.keywords.join(" ");
@@ -804,9 +805,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    let papers =
-      await searchFreeSources(query);
+    // Use the exact same research sources
+    // as Quick Search.
 
+    let papers =
+      await searchFreeSources(
+        query
+      );
+
+
+    // Apply ONLY the criteria explicitly
+    // selected by the user.
 
     papers =
       papers.filter(
@@ -818,37 +827,17 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    papers =
-      papers.map(
-        paper => ({
+    // Newest papers first.
+    // No artificial relevance score.
 
-          ...paper,
-
-          strackerScore:
-            calculateScore(
-              paper,
-              criteria
-            )
-
-        })
-      );
-
-
-    papers =
-      papers.filter(
-        paper =>
-          paper.strackerScore >=
-          criteria.accuracy
-      );
-
-
-    sortPapersNewestFirst(papers);
+    sortPapersNewestFirst(
+      papers
+    );
 
 
     return papers;
 
   }
-
 
   // ==========================================
   // PAPER DATE
@@ -2147,243 +2136,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // ==========================================
-  // RELEVANCE SCORE
-  // ==========================================
-
-  function calculateScore(
-    paper,
-    criteria
-  ) {
-
-    let score = 0;
-
-
-    const title =
-      String(
-        paper.title || ""
-      ).toLowerCase();
-
-
-    const abstract =
-      getAbstract(
-        paper
-      ).toLowerCase();
-
-
-    const concepts =
-      getConcepts(
-        paper
-      ).toLowerCase();
-
-
-    const authors =
-      getAuthors(
-        paper
-      ).toLowerCase();
-
-
-    const journal =
-      getJournal(
-        paper
-      ).toLowerCase();
-
-
-    const keywords =
-      Array.isArray(
-        criteria.keywords
-      )
-        ? criteria.keywords
-        : [];
-
-
-    if (keywords.length > 0) {
-
-      let keywordScore = 0;
-
-
-      for (const keyword of keywords) {
-
-        const k =
-          String(keyword || "")
-            .toLowerCase()
-            .trim();
-
-
-        if (!k) {
-
-          continue;
-
-        }
-
-
-        if (title.includes(k)) {
-
-          keywordScore += 40;
-
-        } else if (
-          abstract.includes(k)
-        ) {
-
-          keywordScore += 30;
-
-        } else if (
-          concepts.includes(k)
-        ) {
-
-          keywordScore += 20;
-
-        } else if (
-          authors.includes(k)
-        ) {
-
-          keywordScore += 10;
-
-        } else if (
-          journal.includes(k)
-        ) {
-
-          keywordScore += 10;
-
-        }
-
-      }
-
-
-      const maxKeywordScore =
-        keywords.length * 40;
-
-
-      if (maxKeywordScore > 0) {
-
-        score +=
-          (
-            keywordScore /
-            maxKeywordScore
-          ) * 60;
-
-      }
-
-    }
-
-
-    if (criteria.author) {
-
-      if (
-        authors.includes(
-          criteria.author.toLowerCase()
-        )
-      ) {
-
-        score += 15;
-
-      }
-
-    }
-
-
-    if (criteria.journal) {
-
-      if (
-        journal.includes(
-          criteria.journal.toLowerCase()
-        )
-      ) {
-
-        score += 15;
-
-      }
-
-    }
-
-
-    if (criteria.field) {
-
-      const field =
-        criteria.field.toLowerCase();
-
-
-      if (title.includes(field)) {
-
-        score += 15;
-
-      } else if (
-        abstract.includes(field)
-      ) {
-
-        score += 10;
-
-      } else if (
-        concepts.includes(field)
-      ) {
-
-        score += 5;
-
-      }
-
-    }
-
-
-    const publication =
-      new Date(
-        paper.publication_date || ""
-      );
-
-
-    const now =
-      new Date();
-
-
-    const publicationTime =
-      publication.getTime();
-
-
-    if (
-      Number.isFinite(publicationTime)
-    ) {
-
-      const days =
-        Math.floor(
-          (
-            now -
-            publication
-          ) / 86400000
-        );
-
-
-      if (
-        days >= 0 &&
-        days <= 30
-      ) {
-
-        score += 10;
-
-      } else if (
-        days <= 90
-      ) {
-
-        score += 7;
-
-      } else if (
-        days <= 365
-      ) {
-
-        score += 4;
-
-      }
-
-    }
-
-
-    return Math.min(
-      100,
-      Math.max(
-        0,
-        Math.round(score)
-      )
-    );
-
-  }
+  
 
 
   // ==========================================
