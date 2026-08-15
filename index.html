@@ -1285,6 +1285,259 @@
   }
 
 }
+
+    /* =========================================================
+   FINAL MINIMAL TRACKER DESIGN
+   ========================================================= */
+
+.tracker-dashboard {
+  padding: 18px 20px;
+}
+
+.tracker-dashboard-header {
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.tracker-dashboard-header h2 {
+  margin: 0;
+}
+
+
+/* Tracker card */
+
+.tracked-topic.tracker-card {
+  margin-bottom: 12px;
+  padding: 0;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+.tracked-topic.tracker-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+
+/* Header */
+
+.tracker-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 14px 8px;
+
+  min-height: 0;
+}
+
+.tracker-card-title {
+  display: flex;
+  align-items: center;
+}
+
+.tracker-id-label {
+  margin: 0;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  color: #334155;
+}
+
+
+/* Completely hide old number/profile elements */
+
+.tracker-number,
+.tracker-card-title h3,
+.tracker-card-title .tracker-id-label + h3 {
+  display: none !important;
+}
+
+
+/* Status */
+
+.tracker-card-status {
+  margin: 0;
+  padding: 0;
+}
+
+.tracker-status {
+  padding: 4px 8px;
+
+  font-size: 11px;
+}
+
+
+/* Statistics */
+
+.tracker-section {
+  margin: 0;
+  padding: 4px 14px 10px;
+}
+
+.tracker-section-heading {
+  margin: 0 0 6px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  color: #475569;
+}
+
+
+/* Horizontal statistics */
+
+.tracker-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 6px 18px;
+
+  margin: 0;
+  padding: 0;
+}
+
+.tracker-stat {
+  display: inline-flex;
+  align-items: baseline;
+
+  gap: 5px;
+
+  margin: 0;
+  padding: 0;
+
+  background: transparent;
+  border: none;
+
+  text-align: left;
+
+  box-shadow: none;
+}
+
+.tracker-stat:hover {
+  background: transparent;
+  transform: none;
+}
+
+.tracker-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #64748b;
+}
+
+.tracker-stat-value {
+  font-size: 13px;
+  font-weight: 700;
+
+  color: #334155;
+}
+
+.tracker-stat-icon {
+  display: none !important;
+}
+
+
+/* Buttons */
+
+.tracker-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin: 0;
+  padding: 8px 14px 12px;
+
+  border-top: 1px solid #f1f5f9;
+}
+
+.tracker-actions button {
+  margin: 0 !important;
+
+  padding: 8px 12px;
+
+  border-radius: 8px;
+
+  background: #64748b;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+.tracker-actions button:hover {
+  background: #475569;
+
+  transform: none;
+  box-shadow: none;
+}
+
+
+/* Remove old red Delete styling */
+
+.tracker-actions .delete-tracker-button,
+.tracker-actions .danger {
+  background: #64748b;
+}
+
+.tracker-actions .delete-tracker-button:hover,
+.tracker-actions .danger:hover {
+  background: #475569;
+}
+
+
+/* =========================================================
+   MOBILE — KEEP IT SHORT
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .tracker-dashboard {
+    padding: 14px;
+  }
+
+  .tracker-card-header {
+    padding: 10px 12px 6px;
+  }
+
+  .tracker-section {
+    padding: 3px 12px 8px;
+  }
+
+  .tracker-stats {
+    gap: 5px 12px;
+  }
+
+  .tracker-stat-label {
+    font-size: 11px;
+  }
+
+  .tracker-stat-value {
+    font-size: 12px;
+  }
+
+  .tracker-actions {
+    padding: 7px 12px 10px;
+
+    gap: 5px;
+  }
+
+  .tracker-actions button {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+}
   </style>
 </head>
 
