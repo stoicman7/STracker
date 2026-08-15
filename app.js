@@ -1902,77 +1902,233 @@ function createInputRow(
 
 
   // ==========================================
-  // ADVANCED FILTERS
-  // ==========================================
+// ADVANCED FILTERS
+// ==========================================
 
-  function matchesAdvancedCriteria(
-    paper,
-    criteria
-  ) {
+function matchesAdvancedCriteria(
+  paper,
+  criteria
+) {
 
-    const safeCriteria =
-      criteria || {};
+  const safeCriteria =
+    criteria || {};
 
 
-    const title =
-      String(
-        paper.title || ""
+  const title =
+    String(
+      paper.title || ""
+    );
+
+
+  const abstract =
+    getAbstract(paper);
+
+
+  const authors =
+    getAuthors(paper);
+
+
+  const journal =
+    getJournal(paper);
+
+
+  const concepts =
+    getConcepts(paper);
+
+
+  const allText = [
+
+    title,
+    abstract,
+    authors,
+    journal,
+    concepts
+
+  ]
+    .join(" ")
+    .toLowerCase();
+
+
+  // ========================================
+  // EXCLUDED KEYWORDS
+  // ========================================
+
+  const excluded =
+    Array.isArray(
+      safeCriteria.excluded
+    )
+      ? safeCriteria.excluded
+      : [];
+
+
+  for (const keyword of excluded) {
+
+    const term =
+      String(keyword || "")
+        .trim()
+        .toLowerCase();
+
+
+    if (!term) {
+
+      continue;
+
+    }
+
+
+    if (allText.includes(term)) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ========================================
+  // REQUIRED KEYWORDS
+  // ========================================
+
+  const keywordData =
+    Array.isArray(
+      safeCriteria.keywordData
+    )
+      ? safeCriteria.keywordData
+          .filter(
+            item =>
+              item &&
+              String(
+                item.keyword || ""
+              ).trim()
+          )
+          .map(
+            item => ({
+
+              keyword:
+                String(
+                  item.keyword
+                )
+                  .trim()
+                  .toLowerCase(),
+
+              fields:
+                Array.isArray(item.fields)
+                  ? item.fields
+                  : []
+
+            })
+          )
+      : [];
+
+
+  /*
+   * Each keyword now keeps its own fields.
+   *
+   * Example:
+   *
+   * memory       -> title
+   * inflammation -> abstract
+   *
+   * They are evaluated independently.
+   */
+
+
+  if (keywordData.length > 0) {
+
+    const keywordMode =
+      safeCriteria.keywordMode === "any"
+        ? "any"
+        : "all";
+
+
+    const keywordMatches =
+      keywordData.map(
+        item => {
+
+          const fieldTexts = [];
+
+
+          // ----------------------------------
+          // Use ONLY the fields belonging
+          // to this specific keyword.
+          // ----------------------------------
+
+          if (
+            item.fields.includes("title")
+          ) {
+
+            fieldTexts.push(title);
+
+          }
+
+
+          if (
+            item.fields.includes("abstract")
+          ) {
+
+            fieldTexts.push(abstract);
+
+          }
+
+
+          if (
+            item.fields.includes("authors")
+          ) {
+
+            fieldTexts.push(authors);
+
+          }
+
+
+          if (
+            item.fields.includes("journal")
+          ) {
+
+            fieldTexts.push(journal);
+
+          }
+
+
+          if (
+            item.fields.includes("concepts")
+          ) {
+
+            fieldTexts.push(concepts);
+
+          }
+
+
+          /*
+           * If this particular keyword has
+           * no fields selected, preserve the
+           * old behavior and search all fields.
+           */
+
+          const searchableText =
+            fieldTexts.length > 0
+              ? fieldTexts
+                  .join(" ")
+                  .toLowerCase()
+              : allText;
+
+
+          return searchableText.includes(
+            item.keyword
+          );
+
+        }
       );
 
 
-    const abstract =
-      getAbstract(paper);
+    // --------------------------------------
+    // ANY keyword
+    // --------------------------------------
 
+    if (keywordMode === "any") {
 
-    const authors =
-      getAuthors(paper);
-
-
-    const journal =
-      getJournal(paper);
-
-
-    const concepts =
-      getConcepts(paper);
-
-
-    const allText = [
-
-      title,
-      abstract,
-      authors,
-      journal,
-      concepts
-
-    ]
-      .join(" ")
-      .toLowerCase();
-
-
-    const excluded =
-      Array.isArray(
-        safeCriteria.excluded
-      )
-        ? safeCriteria.excluded
-        : [];
-
-
-    for (const keyword of excluded) {
-
-      const term =
-        String(keyword || "")
-          .trim()
-          .toLowerCase();
-
-
-      if (!term) {
-
-        continue;
-
-      }
-
-
-      if (allText.includes(term)) {
+      if (
+        !keywordMatches.some(Boolean)
+      ) {
 
         return false;
 
@@ -1980,6 +2136,37 @@ function createInputRow(
 
     }
 
+
+    // --------------------------------------
+    // ALL keywords
+    // --------------------------------------
+
+    else {
+
+      if (
+        !keywordMatches.every(Boolean)
+      ) {
+
+        return false;
+
+      }
+
+    }
+
+  }
+
+
+  // ========================================
+  // LEGACY KEYWORD FALLBACK
+  // ========================================
+
+  /*
+   * Keeps compatibility with older saved
+   * criteria that have "keywords" but do
+   * not have "keywordData".
+   */
+
+  else {
 
     const keywords =
       Array.isArray(
@@ -2004,7 +2191,8 @@ function createInputRow(
         : [];
 
 
-    let searchableText = "";
+    let searchableText =
+      allText;
 
 
     if (selectedFields.length > 0) {
@@ -2062,11 +2250,6 @@ function createInputRow(
           .join(" ")
           .toLowerCase();
 
-    } else {
-
-      searchableText =
-        allText;
-
     }
 
 
@@ -2083,7 +2266,9 @@ function createInputRow(
         const anyMatch =
           keywords.some(
             keyword =>
-              searchableText.includes(keyword)
+              searchableText.includes(
+                keyword
+              )
           );
 
 
@@ -2093,12 +2278,16 @@ function createInputRow(
 
         }
 
-      } else {
+      }
+
+      else {
 
         const allMatch =
           keywords.every(
             keyword =>
-              searchableText.includes(keyword)
+              searchableText.includes(
+                keyword
+              )
           );
 
 
@@ -2112,114 +2301,130 @@ function createInputRow(
 
     }
 
+  }
 
-    const authorFilter =
-      String(
-        safeCriteria.author || ""
-      )
-        .trim()
-        .toLowerCase();
+
+  // ========================================
+  // AUTHOR
+  // ========================================
+
+  const authorFilter =
+    String(
+      safeCriteria.author || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    authorFilter &&
+    !authors
+      .toLowerCase()
+      .includes(authorFilter)
+  ) {
+
+    return false;
+
+  }
+
+
+  // ========================================
+  // JOURNAL
+  // ========================================
+
+  const journalFilter =
+    String(
+      safeCriteria.journal || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    journalFilter &&
+    !journal
+      .toLowerCase()
+      .includes(journalFilter)
+  ) {
+
+    return false;
+
+  }
+
+
+  // ========================================
+  // RESEARCH FIELD
+  // ========================================
+
+  const fieldFilter =
+    String(
+      safeCriteria.field || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    fieldFilter &&
+    !allText.includes(fieldFilter)
+  ) {
+
+    return false;
+
+  }
+
+
+  // ========================================
+  // DATE RANGE
+  // ========================================
+
+  const dateRange =
+    String(
+      safeCriteria.dateRange || "all"
+    );
+
+
+  if (dateRange !== "all") {
+
+    const days =
+      Number(dateRange);
 
 
     if (
-      authorFilter &&
-      !authors
-        .toLowerCase()
-        .includes(authorFilter)
+      Number.isFinite(days) &&
+      days > 0
     ) {
 
-      return false;
-
-    }
-
-
-    const journalFilter =
-      String(
-        safeCriteria.journal || ""
-      )
-        .trim()
-        .toLowerCase();
-
-
-    if (
-      journalFilter &&
-      !journal
-        .toLowerCase()
-        .includes(journalFilter)
-    ) {
-
-      return false;
-
-    }
-
-
-    const fieldFilter =
-      String(
-        safeCriteria.field || ""
-      )
-        .trim()
-        .toLowerCase();
-
-
-    if (
-      fieldFilter &&
-      !allText.includes(fieldFilter)
-    ) {
-
-      return false;
-
-    }
-
-
-    const dateRange =
-      String(
-        safeCriteria.dateRange || "all"
-      );
-
-
-    if (dateRange !== "all") {
-
-      const days =
-        Number(dateRange);
+      const publicationDate =
+        new Date(
+          paper.publication_date ||
+          paper.published ||
+          paper.publicationDate ||
+          paper.date ||
+          ""
+        );
 
 
       if (
-        Number.isFinite(days) &&
-        days > 0
+        !Number.isNaN(
+          publicationDate.getTime()
+        )
       ) {
 
-        const publicationDate =
-          new Date(
-            paper.publication_date ||
-            paper.published ||
-            paper.publicationDate ||
-            paper.date ||
-            ""
-          );
+        const cutoff =
+          new Date();
+
+
+        cutoff.setDate(
+          cutoff.getDate() - days
+        );
 
 
         if (
-          !Number.isNaN(
-            publicationDate.getTime()
-          )
+          publicationDate < cutoff
         ) {
 
-          const cutoff =
-            new Date();
-
-
-          cutoff.setDate(
-            cutoff.getDate() - days
-          );
-
-
-          if (
-            publicationDate < cutoff
-          ) {
-
-            return false;
-
-          }
+          return false;
 
         }
 
@@ -2227,42 +2432,49 @@ function createInputRow(
 
     }
 
+  }
 
-    const documentType =
+
+  // ========================================
+  // DOCUMENT TYPE
+  // ========================================
+
+  const documentType =
+    String(
+      safeCriteria.documentType || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (documentType) {
+
+    const paperType =
       String(
-        safeCriteria.documentType || ""
+        paper.type ||
+        paper.documentType ||
+        paper.publicationType ||
+        ""
       )
-        .trim()
         .toLowerCase();
 
 
-    if (documentType) {
+    if (
+      !paperType.includes(
+        documentType
+      )
+    ) {
 
-      const paperType =
-        String(
-          paper.type ||
-          paper.documentType ||
-          paper.publicationType ||
-          ""
-        )
-          .toLowerCase();
-
-
-      if (
-        !paperType.includes(documentType)
-      ) {
-
-        return false;
-
-      }
+      return false;
 
     }
 
-
-    return true;
-
   }
 
+
+  return true;
+
+}
 
   
 
