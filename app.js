@@ -4447,7 +4447,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         tracker.id || ""
                       )}"
                     >
-                       View
+                      👁️ View
                     </button>
 
 
@@ -4458,7 +4458,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         tracker.id || ""
                       )}"
                     >
-                       Check for new papers
+                      🔄 Check for new papers
                     </button>
 
 
@@ -4469,7 +4469,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         tracker.id || ""
                       )}"
                     >
-                       Delete
+                      🗑️ Delete
                     </button>
 
                   </div>
