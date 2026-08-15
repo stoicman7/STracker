@@ -4164,185 +4164,87 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function displayTrackedTopics() {
 
-  if (!trackedTopics) {
+    if (!trackedTopics) {
 
-    return;
+      return;
 
-  }
-
-
-  const trackers =
-    getAdvancedTrackers();
+    }
 
 
-  if (!trackers.length) {
-
-    trackedTopics.innerHTML = `
-
-      <div class="card">
-
-        <h2>
-          📚 My tracked research
-        </h2>
-
-        <p>
-          You don't have any tracked research
-          profiles yet.
-        </p>
-
-      </div>
-
-    `;
-
-    return;
-
-  }
+    const trackers =
+      getAdvancedTrackers();
 
 
-  trackedTopics.innerHTML = `
+    if (!trackers.length) {
 
-    <div class="card tracker-dashboard">
+      trackedTopics.innerHTML = `
 
-      <div class="tracker-dashboard-header">
-
-        <div>
+        <div class="card">
 
           <h2>
             📚 My tracked research
           </h2>
 
+          <p>
+            You don't have any tracked research
+            profiles yet.
+          </p>
+
         </div>
 
-      </div>
+      `;
+
+      return;
+
+    }
 
 
-      <div class="tracker-list">
+    trackedTopics.innerHTML = `
 
-        ${trackers.map(
-          (tracker, index) => {
+      <div class="card tracker-dashboard">
 
-            const criteria =
-              tracker.criteria || {};
+        <div class="tracker-dashboard-header">
 
+          <div>
 
-            return `
+            <h2>
+              📚 My tracked research
+            </h2>
 
-              <div
-                class="tracked-topic tracker-card"
-                data-tracker-id="${escapeAttribute(
-                  tracker.id || ""
-                )}"
-                data-tracker-index="${index}"
-              >
+            <p>
+              ${trackers.length}
+              tracked research
+              ${trackers.length === 1 ? "profile" : "profiles"}
+            </p>
 
-                <!-- ======================
-                     CARD HEADER
-                ======================= -->
+          </div>
 
-                <div class="tracker-card-header">
-
-                  <div class="tracker-card-title">
-
-                    <div>
-
-                      <div class="tracker-id-label">
-                        ${escapeHtml(
-                          getTrackerShortLabel(
-                            tracker
-                          )
-                        )}
-                      </div>
-
-                    </div>
-
-                  </div>
+        </div>
 
 
-                  <div class="tracker-card-status">
+        <div class="tracker-list">
 
-                    ${getTrackerStatusHtml(
-                      tracker
-                    )}
+          ${trackers.map(
+            (tracker, index) => {
 
-                  </div>
-
-                </div>
+              const criteria =
+                tracker.criteria || {};
 
 
-                <!-- ======================
-                     STATISTICS
-                ======================= -->
-
-                <div class="tracker-section">
-
-                  <div class="tracker-section-heading">
-                    Tracking statistics
-                  </div>
-
-                  ${buildTrackerStatisticsHtml(
-                    tracker
-                  )}
-
-                </div>
+              const createdAt =
+                tracker.createdAt ||
+                "Unknown";
 
 
-                <!-- ======================
-                     ACTIONS
-                ======================= -->
+              return `
 
-                <div class="tracker-actions">
-
-                  <button
-                    type="button"
-                    class="view-tracker-button"
-                    data-tracker-id="${escapeAttribute(
-                      tracker.id || ""
-                    )}"
-                  >
-                    View
-                  </button>
-
-
-                  <button
-                    type="button"
-                    class="check-tracker-button"
-                    data-tracker-id="${escapeAttribute(
-                      tracker.id || ""
-                    )}"
-                  >
-                    Check for new papers
-                  </button>
-
-
-                  <button
-                    type="button"
-                    class="delete-tracker-button danger"
-                    data-tracker-id="${escapeAttribute(
-                      tracker.id || ""
-                    )}"
-                  >
-                    Delete
-                  </button>
-
-                </div>
-
-              </div>
-
-            `;
-
-          }
-        ).join("")}
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  attachTrackerDashboardEvents();
-
-}
+                <div
+                  class="tracked-topic tracker-card"
+                  data-tracker-id="${escapeAttribute(
+                    tracker.id || ""
+                  )}"
+                  data-tracker-index="${index}"
+                >
 
                   <!-- ======================
                        CARD HEADER
