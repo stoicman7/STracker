@@ -1039,6 +1039,119 @@
         border-radius: 14px;
       }
     }
+
+    /* =========================================================
+   COMPACT TRACKING STATISTICS
+   Matches the "Search keywords in" design
+   ========================================================= */
+
+.tracker-statistics-compact {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px 18px;
+
+  margin-top: 8px;
+
+  padding: 14px 16px;
+
+  background: #f8fafc;
+
+  border:
+    1px solid #e2e8f0;
+
+  border-radius: 12px;
+
+}
+
+
+.tracker-stat-item {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 30px;
+
+}
+
+
+.tracker-stat-label {
+
+  font-size: 13px;
+
+  color: #475569;
+
+  font-weight: 500;
+
+}
+
+
+.tracker-stat-value {
+
+  font-size: 13px;
+
+  color: #172033;
+
+  font-weight: 700;
+
+}
+
+
+/* Small separator between statistics */
+
+.tracker-stat-item:not(:last-child)::after {
+
+  content: "•";
+
+  color: #cbd5e1;
+
+  margin-left: 10px;
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .tracker-statistics-compact {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 6px;
+
+    padding: 14px 16px;
+
+  }
+
+
+  .tracker-stat-item {
+
+    width: 100%;
+
+    justify-content: space-between;
+
+  }
+
+
+  .tracker-stat-item:not(:last-child)::after {
+
+    display: none;
+
+  }
+
+}
   </style>
 </head>
 
