@@ -302,99 +302,264 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // CREATE INPUT ROW
-  // ==========================================
+// CREATE INPUT ROW
+// ==========================================
 
-  function createInputRow(
-    container,
-    className,
-    placeholder
-  ) {
+function createInputRow(
+  container,
+  className,
+  placeholder
+) {
 
-    if (!container) {
+  if (!container) {
 
-      return;
-
-    }
-
-
-    const row =
-      document.createElement("div");
-
-
-    row.className =
-      "keyword-row";
-
-
-    const input =
-      document.createElement("input");
-
-
-    input.type =
-      "text";
-
-
-    input.className =
-      className;
-
-
-    input.placeholder =
-      placeholder;
-
-
-    const removeButton =
-      document.createElement("button");
-
-
-    removeButton.type =
-      "button";
-
-
-    removeButton.textContent =
-      "×";
-
-
-    removeButton.className =
-      "danger";
-
-
-    removeButton.addEventListener(
-      "click",
-      () => {
-
-        row.remove();
-
-      }
-    );
-
-
-    row.appendChild(input);
-
-    row.appendChild(removeButton);
-
-    container.appendChild(row);
+    return;
 
   }
 
 
-  // ==========================================
+  const row =
+    document.createElement("div");
+
+
+  row.className =
+    "keyword-row";
+
+
+  const input =
+    document.createElement("input");
+
+
+  input.type =
+    "text";
+
+
+  input.className =
+    className;
+
+
+  input.placeholder =
+    placeholder;
+
+
+  row.appendChild(
+    input
+  );
+
+
+  // ========================================
+  // KEYWORD SEARCH FIELDS
+  // ========================================
+
+  if (
+    className ===
+    "required-keyword"
+  ) {
+
+    const options =
+      document.createElement("div");
+
+
+    options.className =
+      "keyword-options";
+
+
+    options.innerHTML = `
+
+      <label>
+        Search keywords in:
+      </label>
+
+      <div class="checkbox-group">
+
+        <label>
+
+          <input
+            type="checkbox"
+            class="keyword-field"
+            value="title"
+          >
+
+          Title
+
+        </label>
+
+
+        <label>
+
+          <input
+            type="checkbox"
+            class="keyword-field"
+            value="abstract"
+          >
+
+          Abstract
+
+        </label>
+
+
+        <label>
+
+          <input
+            type="checkbox"
+            class="keyword-field"
+            value="authors"
+          >
+
+          Authors
+
+        </label>
+
+
+        <label>
+
+          <input
+            type="checkbox"
+            class="keyword-field"
+            value="journal"
+          >
+
+          Journal
+
+        </label>
+
+
+        <label>
+
+          <input
+            type="checkbox"
+            class="keyword-field"
+            value="concepts"
+          >
+
+          Concepts
+
+        </label>
+
+      </div>
+
+    `;
+
+
+    row.appendChild(
+      options
+    );
+
+  }
+
+
+  // ========================================
+  // REMOVE BUTTON
+  // ========================================
+
+  const removeButton =
+    document.createElement("button");
+
+
+  removeButton.type =
+    "button";
+
+
+  removeButton.textContent =
+    "×";
+
+
+  removeButton.className =
+    "danger";
+
+
+  removeButton.addEventListener(
+    "click",
+    () => {
+
+      row.remove();
+
+    }
+  );
+
+
+  row.appendChild(
+    removeButton
+  );
+
+
+  container.appendChild(
+    row
+  );
+
+}
+
+    // ==========================================
   // GET ADVANCED CRITERIA
   // ==========================================
 
   function getCriteria() {
 
-    const keywords =
+    const keywordRows =
       Array.from(
         document.querySelectorAll(
-          ".required-keyword"
+          ".keyword-row"
         )
-      )
-        .map(
-          input =>
-            input.value.trim()
-        )
-        .filter(Boolean);
+      );
 
+
+    const keywordData = [];
+
+
+    keywordRows.forEach(
+      row => {
+
+        const input =
+          row.querySelector(
+            ".required-keyword"
+          );
+
+
+        if (!input) {
+
+          return;
+
+        }
+
+
+        const keyword =
+          input.value.trim();
+
+
+        if (!keyword) {
+
+          return;
+
+        }
+
+
+        const fields =
+          Array.from(
+            row.querySelectorAll(
+              ".keyword-field:checked"
+            )
+          )
+            .map(
+              checkbox =>
+                checkbox.value
+            );
+
+
+        keywordData.push({
+
+          keyword,
+
+          fields
+
+        });
+
+      }
+    );
+
+
+    // ========================================
+    // EXCLUDED KEYWORDS
+    // ========================================
 
     const excluded =
       Array.from(
@@ -409,17 +574,9 @@ document.addEventListener("DOMContentLoaded", () => {
         .filter(Boolean);
 
 
-    const keywordFields =
-      Array.from(
-        document.querySelectorAll(
-          ".keyword-field:checked"
-        )
-      )
-        .map(
-          input =>
-            input.value
-        );
-
+    // ========================================
+    // KEYWORD MODE
+    // ========================================
 
     const keywordModeInput =
       document.querySelector(
@@ -433,48 +590,59 @@ document.addEventListener("DOMContentLoaded", () => {
         : "all";
 
 
-    
-
+    // ========================================
+    // RETURN CRITERIA
+    // ========================================
 
     return {
 
-      keywords,
+      keywords:
+        keywordData.map(
+          item =>
+            item.keyword
+        ),
+
+
+      keywordData,
+
 
       excluded,
 
-      keywordFields,
 
       keywordMode:
         keywordMode === "any"
           ? "any"
           : "all",
 
+
       author:
         authorInput
           ? authorInput.value.trim()
           : "",
+
 
       journal:
         journalInput
           ? journalInput.value.trim()
           : "",
 
+
       field:
         fieldInput
           ? fieldInput.value
           : "",
+
 
       dateRange:
         dateRangeInput
           ? dateRangeInput.value
           : "all",
 
+
       documentType:
         documentTypeInput
           ? documentTypeInput.value
-          : "",
-
-      
+          : ""
 
     };
 
