@@ -1152,6 +1152,139 @@
   }
 
 }
+
+    /* =========================================================
+   MINIMAL TRACKER CARD
+   ========================================================= */
+
+.tracker-card-header {
+  padding: 18px 20px 12px;
+}
+
+
+.tracker-card-title {
+  display: flex;
+  align-items: center;
+}
+
+
+.tracker-id-label {
+  font-size: 17px;
+
+  font-weight: 700;
+
+  color: #334155;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   TRACKING STATISTICS
+   ========================================================= */
+
+.tracker-section {
+  padding: 0 20px 14px;
+}
+
+
+.tracker-section-heading {
+  font-size: 14px;
+
+  font-weight: 700;
+
+  color: #334155;
+
+  margin-bottom: 8px;
+}
+
+
+.tracker-statistics-compact {
+  margin-top: 0;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.tracker-actions {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  padding: 12px 20px 18px;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+
+.tracker-actions button {
+  background: #64748b;
+
+  color: #ffffff;
+
+  box-shadow: none;
+}
+
+
+.tracker-actions button:hover {
+  background: #475569;
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+
+/* Delete uses the same quiet style */
+
+.tracker-actions .delete-tracker-button {
+  background: #64748b;
+}
+
+
+.tracker-actions .delete-tracker-button:hover {
+  background: #475569;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .tracker-card-header {
+    padding: 16px 16px 10px;
+  }
+
+
+  .tracker-section {
+    padding: 0 16px 12px;
+  }
+
+
+  .tracker-actions {
+    padding: 10px 16px 16px;
+
+    gap: 7px;
+  }
+
+
+  .tracker-actions button {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 10px 12px;
+
+    font-size: 13px;
+  }
+
+}
   </style>
 </head>
 
