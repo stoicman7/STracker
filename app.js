@@ -4099,55 +4099,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
   return `
 
-    <div class="tracker-stats">
+    <div class="tracker-statistics-compact">
 
-      <div class="tracker-stat">
-
-        <span class="tracker-stat-value">
-          ${papersTracked}
-        </span>
+      <div class="tracker-stat-item">
 
         <span class="tracker-stat-label">
           Papers tracked
         </span>
 
+        <span class="tracker-stat-value">
+          ${papersTracked}
+        </span>
+
       </div>
 
 
-      <div class="tracker-stat">
-
-        <span class="tracker-stat-value">
-          ${newOnLastCheck}
-        </span>
+      <div class="tracker-stat-item">
 
         <span class="tracker-stat-label">
           New on last check
         </span>
 
+        <span class="tracker-stat-value">
+          ${newOnLastCheck}
+        </span>
+
       </div>
 
 
-      <div class="tracker-stat">
+      <div class="tracker-stat-item">
+
+        <span class="tracker-stat-label">
+          Total new discovered
+        </span>
 
         <span class="tracker-stat-value">
           ${totalNewDiscovered}
         </span>
 
-        <span class="tracker-stat-label">
-          Total new
-        </span>
-
       </div>
 
 
-      <div class="tracker-stat">
-
-        <span class="tracker-stat-value">
-          ${escapeHtml(lastChecked)}
-        </span>
+      <div class="tracker-stat-item">
 
         <span class="tracker-stat-label">
           Last checked
+        </span>
+
+        <span class="tracker-stat-value">
+          ${escapeHtml(lastChecked)}
         </span>
 
       </div>
