@@ -202,38 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // ==========================================
-  // ACCURACY SLIDER
-  // ==========================================
-
-  if (accuracyInput) {
-
-    accuracyInput.min = "0";
-
-    accuracyInput.max = "100";
-
-    accuracyInput.step = "1";
-
-  }
-
-
-  if (accuracyValue && accuracyInput) {
-
-    accuracyValue.textContent =
-      `${accuracyInput.value}%`;
-
-
-    accuracyInput.addEventListener(
-      "input",
-      () => {
-
-        accuracyValue.textContent =
-          `${accuracyInput.value}%`;
-
-      }
-    );
-
-  }
+  
 
 
   // ==========================================
@@ -464,10 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : "all";
 
 
-    const accuracy =
-      accuracyInput
-        ? Number(accuracyInput.value)
-        : 0;
+    
 
 
     return {
@@ -508,13 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? documentTypeInput.value
           : "",
 
-      accuracy:
-        Number.isFinite(accuracy)
-          ? Math.max(
-              0,
-              Math.min(100, accuracy)
-            )
-          : 0
+      
 
     };
 
