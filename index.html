@@ -1594,45 +1594,74 @@
 
 
     <!-- =====================================================
-     ADVANCED TRACKER
-     ===================================================== -->
+         ADVANCED TRACKER
+         ===================================================== -->
 
-<div class="card">
+    <div class="card">
 
-  <h2>
-    🔬 Advanced Research Tracker
-  </h2>
+      <h2>
+        🔬 Advanced Research Tracker
+      </h2>
 
-  <p>
-    Create a precise research profile to monitor.
-  </p>
-
-
-  <div class="advanced-grid">
+      <p>
+        Create a precise research profile to monitor.
+      </p>
 
 
-    <!-- REQUIRED KEYWORDS -->
-
-    <div class="field full-width">
-
-      <label>
-        Required keywords
-      </label>
+      <div class="advanced-grid">
 
 
-      <div id="keywordGroupsContainer"></div>
+        <!-- REQUIRED KEYWORDS -->
+
+<div class="field full-width">
+
+  <label>
+    Required keywords
+  </label>
+
+  <div id="keywordContainer"></div>
+
+  <button
+    type="button"
+    id="addKeywordButton"
+    class="secondary"
+  >
+    + Add keyword
+  </button>
 
 
-      <button
-        type="button"
-        id="addKeywordGroupButton"
-        class="secondary"
+  <div class="keyword-mode">
+
+    <label>
+      Match keywords:
+    </label>
+
+
+    <label>
+
+      <input
+        type="radio"
+        name="keywordMode"
+        value="all"
+        checked
       >
-        + Add keyword group
-      </button>
 
-    </div>
+      All keywords
 
+    </label>
+
+
+    <label>
+
+      <input
+        type="radio"
+        name="keywordMode"
+        value="any"
+      >
+
+      Any keyword
+
+    </label>
 
   </div>
 
