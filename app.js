@@ -492,12 +492,18 @@ function createKeywordGroup() {
 
   const container =
     document.getElementById(
-      "keywordGroupsContainer"
+      "keywordContainer"
     );
 
 
   if (!container) {
+
+    console.error(
+      "keywordContainer not found."
+    );
+
     return;
+
   }
 
 
@@ -507,6 +513,12 @@ function createKeywordGroup() {
 
   group.className =
     "keyword-group";
+
+
+  const groupId =
+    `keyword-group-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}`;
 
 
   group.innerHTML = `
@@ -549,7 +561,7 @@ function createKeywordGroup() {
 
         <input
           type="radio"
-          name="group-mode-${Date.now()}"
+          name="${groupId}"
           value="all"
         >
 
@@ -562,7 +574,7 @@ function createKeywordGroup() {
 
         <input
           type="radio"
-          name="group-mode-${Date.now()}"
+          name="${groupId}"
           value="any"
           checked
         >
@@ -587,7 +599,20 @@ function createKeywordGroup() {
     );
 
 
-  // First keyword automatically
+  if (!rows) {
+
+    console.error(
+      "Keyword group rows container not found."
+    );
+
+    return;
+
+  }
+
+
+  // ========================================
+  // FIRST KEYWORD
+  // ========================================
 
   createInputRow(
     rows,
@@ -596,15 +621,19 @@ function createKeywordGroup() {
   );
 
 
-  // ----------------------------------------
-  // ADD KEYWORD TO GROUP
-  // ----------------------------------------
+  // ========================================
+  // ADD KEYWORD TO THIS GROUP
+  // ========================================
 
-  group
-    .querySelector(
+  const addKeywordButton =
+    group.querySelector(
       ".add-keyword-to-group"
-    )
-    .addEventListener(
+    );
+
+
+  if (addKeywordButton) {
+
+    addKeywordButton.addEventListener(
       "click",
       () => {
 
@@ -617,16 +646,22 @@ function createKeywordGroup() {
       }
     );
 
+  }
 
-  // ----------------------------------------
-  // REMOVE GROUP
-  // ----------------------------------------
 
-  group
-    .querySelector(
+  // ========================================
+  // REMOVE THIS GROUP
+  // ========================================
+
+  const removeGroupButton =
+    group.querySelector(
       ".remove-keyword-group"
-    )
-    .addEventListener(
+    );
+
+
+  if (removeGroupButton) {
+
+    removeGroupButton.addEventListener(
       "click",
       () => {
 
@@ -635,8 +670,9 @@ function createKeywordGroup() {
       }
     );
 
-}
+  }
 
+}
  
 // ==========================================
 // GET ADVANCED CRITERIA
