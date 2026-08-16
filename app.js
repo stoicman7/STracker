@@ -6420,4 +6420,3 @@ function matchesAdvancedCriteria(
   displayTrackedTopics();
 
 });
-```[cite: 1]
