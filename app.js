@@ -16,17 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const trackedTopics =
     document.getElementById("trackedTopics");
 
-  const container =
-  document.getElementById(
-    "keywordGroupsContainer" );
+  const keywordContainer =
+    document.getElementById("keywordContainer");
 
   const excludeContainer =
     document.getElementById("excludeContainer");
 
-  const addKeywordGroupButton =
-  document.getElementById(
-    "addKeywordGroupButton"
-  );
+  const addKeywordButton =
+    document.getElementById("addKeywordButton");
 
   const addExcludeButton =
     document.getElementById("addExcludeButton");
@@ -208,53 +205,27 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
 
- // ==========================================
-// ADD KEYWORD GROUP
+  // ==========================================
+// ADD REQUIRED KEYWORD
 // ==========================================
 
-document.addEventListener(
-  "click",
-  event => {
+if (addKeywordButton) {
 
-    const button =
-      event.target.closest(
-        "#addKeywordGroupButton"
+  addKeywordButton.addEventListener(
+    "click",
+    () => {
+
+      createInputRow(
+        keywordContainer,
+        "required-keyword",
+        "Example: memory formation"
       );
 
-
-    if (!button) {
-
-      return;
-
     }
+  );
 
+}
 
-    event.preventDefault();
-
-
-    console.log(
-      "Add keyword group button clicked"
-    );
-
-
-    if (
-      typeof createKeywordGroup !==
-      "function"
-    ) {
-
-      console.error(
-        "createKeywordGroup() is not available."
-      );
-
-      return;
-
-    }
-
-
-    createKeywordGroup();
-
-  }
-);
 
   // ==========================================
   // ADD EXCLUDED KEYWORD
@@ -341,7 +312,9 @@ function createInputRow(
 ) {
 
   if (!container) {
+
     return;
+
   }
 
 
@@ -394,9 +367,8 @@ function createInputRow(
     options.innerHTML = `
 
       <label>
-        Search keyword in:
+        Search keywords in:
       </label>
-
 
       <div class="checkbox-group">
 
@@ -517,196 +489,7 @@ function createInputRow(
 
 }
 
-  // ==========================================
-// CREATE KEYWORD GROUP
-// ==========================================
 
-function createKeywordGroup() {
-
-  const container =
-    document.getElementById(
-      "keywordGroupsContainer"
-    );
-
-
-  if (!container) {
-
-    console.error(
-      "keywordGroupsContainer not found."
-    );
-
-    return;
-
-  }
-
-
-  const group =
-    document.createElement("div");
-
-
-  group.className =
-    "keyword-group";
-
-
-  const groupId =
-    `keyword-group-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}`;
-
-
-  group.innerHTML = `
-
-    <div class="keyword-group-header">
-
-      <strong>
-        Keyword group
-      </strong>
-
-
-      <button
-        type="button"
-        class="danger remove-keyword-group"
-      >
-        Remove group
-      </button>
-
-    </div>
-
-
-    <div class="keyword-group-rows"></div>
-
-
-    <button
-      type="button"
-      class="secondary add-keyword-to-group"
-    >
-      + Add keyword
-    </button>
-
-
-    <div class="keyword-group-mode">
-
-      <label>
-        Match within this group:
-      </label>
-
-
-      <label>
-
-        <input
-          type="radio"
-          name="${groupId}"
-          value="all"
-        >
-
-        ALL
-
-      </label>
-
-
-      <label>
-
-        <input
-          type="radio"
-          name="${groupId}"
-          value="any"
-          checked
-        >
-
-        ANY
-
-      </label>
-
-    </div>
-
-  `;
-
-
-  container.appendChild(
-    group
-  );
-
-
-  const rows =
-    group.querySelector(
-      ".keyword-group-rows"
-    );
-
-
-  if (!rows) {
-
-    console.error(
-      "Keyword group rows container not found."
-    );
-
-    return;
-
-  }
-
-
-  // ========================================
-  // FIRST KEYWORD
-  // ========================================
-
-  createInputRow(
-    rows,
-    "required-keyword",
-    "Example: memory formation"
-  );
-
-
-  // ========================================
-  // ADD KEYWORD TO THIS GROUP
-  // ========================================
-
-  const addKeywordButton =
-    group.querySelector(
-      ".add-keyword-to-group"
-    );
-
-
-  if (addKeywordButton) {
-
-    addKeywordButton.addEventListener(
-      "click",
-      () => {
-
-        createInputRow(
-          rows,
-          "required-keyword",
-          "Example: cognition"
-        );
-
-      }
-    );
-
-  }
-
-
-  // ========================================
-  // REMOVE THIS GROUP
-  // ========================================
-
-  const removeGroupButton =
-    group.querySelector(
-      ".remove-keyword-group"
-    );
-
-
-  if (removeGroupButton) {
-
-    removeGroupButton.addEventListener(
-      "click",
-      () => {
-
-        group.remove();
-
-      }
-    );
-
-  }
-
-}
  
 // ==========================================
 // GET ADVANCED CRITERIA
@@ -714,82 +497,62 @@ function createKeywordGroup() {
 
 function getCriteria() {
 
-  const groups =
+  const keywordRows =
     Array.from(
       document.querySelectorAll(
-        "#keywordGroupsContainer .keyword-group"
+        "#keywordContainer .keyword-row"
       )
-    )
-    .map(group => {
+    );
 
-      const rows =
-        Array.from(
-          group.querySelectorAll(
-            ".keyword-row"
-          )
+
+  const keywordData = [];
+
+
+  keywordRows.forEach(
+    row => {
+
+      const input =
+        row.querySelector(
+          ".required-keyword"
         );
 
-      const keywords =
-        rows
-          .map(row => {
 
-            const input =
-              row.querySelector(
-                ".required-keyword"
-              );
+      if (!input) {
+        return;
+      }
 
-            return input
-              ? input.value.trim()
-              : "";
 
-          })
-          .filter(Boolean);
+      const keyword =
+        input.value.trim();
+
+
+      if (!keyword) {
+        return;
+      }
 
 
       const fields =
-        rows.map(row => {
-
-          const checked =
-            Array.from(
-              row.querySelectorAll(
-                ".keyword-field:checked"
-              )
-            )
-            .map(
-              checkbox =>
-                checkbox.value
-            );
-
-          return checked;
-
-        });
+        Array.from(
+          row.querySelectorAll(
+            ".keyword-field:checked"
+          )
+        )
+          .map(
+            checkbox =>
+              checkbox.value
+          );
 
 
-      const modeInput =
-        group.querySelector(
-          'input[type="radio"]:checked'
-        );
+      keywordData.push({
 
+        keyword,
 
-      return {
+        fields
 
-        keywords,
+      });
 
-        fields,
-
-        mode:
-          modeInput &&
-          modeInput.value === "all"
-            ? "all"
-            : "any"
-
-      };
-
-    })
-    .filter(
-      group =>
-        group.keywords.length > 0
-    );
+    }
+  );
 
 
   // ========================================
@@ -802,11 +565,27 @@ function getCriteria() {
         ".excluded-keyword"
       )
     )
-    .map(
-      input =>
-        input.value.trim()
-    )
-    .filter(Boolean);
+      .map(
+        input =>
+          input.value.trim()
+      )
+      .filter(Boolean);
+
+
+  // ========================================
+  // KEYWORD MODE
+  // ========================================
+
+  const keywordModeInput =
+    document.querySelector(
+      'input[name="keywordMode"]:checked'
+    );
+
+
+  const keywordMode =
+    keywordModeInput
+      ? keywordModeInput.value
+      : "all";
 
 
   // ========================================
@@ -815,39 +594,48 @@ function getCriteria() {
 
   return {
 
-    keywordGroups:
-      groups,
-
-    // Keep a flat keyword list too
-    // so older code doesn't immediately break.
-
     keywords:
-      groups.flatMap(
-        group =>
-          group.keywords
+      keywordData.map(
+        item =>
+          item.keyword
       ),
 
+
+    keywordData,
+
+
     excluded,
+
+
+    keywordMode:
+      keywordMode === "any"
+        ? "any"
+        : "all",
+
 
     author:
       authorInput
         ? authorInput.value.trim()
         : "",
 
+
     journal:
       journalInput
         ? journalInput.value.trim()
         : "",
+
 
     field:
       fieldInput
         ? fieldInput.value
         : "",
 
+
     dateRange:
       dateRangeInput
         ? dateRangeInput.value
         : "all",
+
 
     documentType:
       documentTypeInput
@@ -857,6 +645,42 @@ function getCriteria() {
   };
 
 }
+  // ==========================================
+  // PREVIEW
+  // ==========================================
+
+  if (previewButton) {
+
+    previewButton.addEventListener(
+      "click",
+      () => {
+
+        runAdvancedSearch(false);
+
+      }
+    );
+
+  }
+
+
+  // ==========================================
+  // TRACK
+  // ==========================================
+
+  if (advancedTrackButton) {
+
+    advancedTrackButton.addEventListener(
+      "click",
+      () => {
+
+        runAdvancedSearch(true);
+
+      }
+    );
+
+  }
+
+
   // ==========================================
   // ADVANCED SEARCH
   // ==========================================
@@ -3965,122 +3789,74 @@ function matchesAdvancedCriteria(
 
 
   // ==========================================
-// CLONE CRITERIA
-// ==========================================
+  // CLONE CRITERIA
+  // ==========================================
 
-function cloneCriteria(criteria) {
+  function cloneCriteria(criteria) {
 
-  return {
+    return {
 
-    keywords:
-      Array.isArray(
-        criteria?.keywords
-      )
-        ? [
-            ...criteria.keywords
-          ]
-        : [],
+      keywords:
+        Array.isArray(
+          criteria?.keywords
+        )
+          ? [
+              ...criteria.keywords
+            ]
+          : [],
 
+      excluded:
+        Array.isArray(
+          criteria?.excluded
+        )
+          ? [
+              ...criteria.excluded
+            ]
+          : [],
 
-    // ----------------------------------------
-    // PRESERVE PER-KEYWORD FIELD SELECTIONS
-    // ----------------------------------------
+      keywordFields:
+        Array.isArray(
+          criteria?.keywordFields
+        )
+          ? [
+              ...criteria.keywordFields
+            ]
+          : [],
 
-    keywordData:
-      Array.isArray(
-        criteria?.keywordData
-      )
-        ? criteria.keywordData
-            .map(
-              item => ({
+      keywordMode:
+        criteria?.keywordMode === "any"
+          ? "any"
+          : "all",
 
-                keyword:
-                  String(
-                    item?.keyword || ""
-                  )
-                    .trim(),
+      author:
+        criteria?.author ||
+        "",
 
-                fields:
-                  Array.isArray(
-                    item?.fields
-                  )
-                    ? [
-                        ...item.fields
-                      ]
-                    : []
+      journal:
+        criteria?.journal ||
+        "",
 
-              })
-            )
-            .filter(
-              item =>
-                item.keyword
-            )
-        : [],
+      field:
+        criteria?.field ||
+        "",
 
+      dateRange:
+        criteria?.dateRange ||
+        "all",
 
-    excluded:
-      Array.isArray(
-        criteria?.excluded
-      )
-        ? [
-            ...criteria.excluded
-          ]
-        : [],
+      documentType:
+        criteria?.documentType ||
+        "",
 
+      accuracy:
+        Number(
+          criteria?.accuracy || 0
+        )
 
-    // ----------------------------------------
-    // LEGACY FIELD SUPPORT
-    // ----------------------------------------
+    };
 
-    keywordFields:
-      Array.isArray(
-        criteria?.keywordFields
-      )
-        ? [
-            ...criteria.keywordFields
-          ]
-        : [],
+  }
 
-
-    keywordMode:
-      criteria?.keywordMode === "any"
-        ? "any"
-        : "all",
-
-
-    author:
-      criteria?.author ||
-      "",
-
-
-    journal:
-      criteria?.journal ||
-      "",
-
-
-    field:
-      criteria?.field ||
-      "",
-
-
-    dateRange:
-      criteria?.dateRange ||
-      "all",
-
-
-    documentType:
-      criteria?.documentType ||
-      "",
-
-
-    accuracy:
-      Number(
-        criteria?.accuracy || 0
-      )
-
-  };
-
-}
 
   // ==========================================
   // GET TRACKERS
