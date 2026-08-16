@@ -16,14 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const trackedTopics =
     document.getElementById("trackedTopics");
 
-  const keywordContainer =
-    document.getElementById("keywordContainer");
+  const keywordGroupsContainer =
+    document.getElementById("keywordGroupsContainer");
 
   const excludeContainer =
     document.getElementById("excludeContainer");
 
-  const addKeywordButton =
-    document.getElementById("addKeywordButton");
+  const addKeywordGroupButton =
+    document.getElementById("addKeywordGroupButton");
 
   const addExcludeButton =
     document.getElementById("addExcludeButton");
@@ -73,6 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
 
   let trackerActionInProgress = false;
+
+
+  // ==========================================
+  // KEYWORD GROUP UI STATE
+  // ==========================================
+
+  let keywordGroupCounter = 0;
 
 
   // ==========================================
@@ -202,29 +209,375 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  
+  // ==========================================
+  // KEYWORD FIELD OPTIONS (shared markup)
+  // ==========================================
+
+  function buildKeywordFieldOptionsHtml() {
+
+    return `
+
+      <label>
+        Search keywords in:
+      </label>
+
+      <div class="checkbox-group">
+
+        <label>
+          <input type="checkbox" class="keyword-field" value="title">
+          Title
+        </label>
+
+        <label>
+          <input type="checkbox" class="keyword-field" value="abstract">
+          Abstract
+        </label>
+
+        <label>
+          <input type="checkbox" class="keyword-field" value="authors">
+          Authors
+        </label>
+
+        <label>
+          <input type="checkbox" class="keyword-field" value="journal">
+          Journal
+        </label>
+
+        <label>
+          <input type="checkbox" class="keyword-field" value="concepts">
+          Concepts
+        </label>
+
+      </div>
+
+    `;
+
+  }
 
 
   // ==========================================
-// ADD REQUIRED KEYWORD
-// ==========================================
+  // ADD A KEYWORD ROW INSIDE A GROUP
+  // ==========================================
 
-if (addKeywordButton) {
+  function createKeywordGroupRow(rowsContainer) {
 
-  addKeywordButton.addEventListener(
-    "click",
-    () => {
+    if (!rowsContainer) {
 
-      createInputRow(
-        keywordContainer,
-        "required-keyword",
-        "Example: memory formation"
+      return;
+
+    }
+
+
+    const row =
+      document.createElement("div");
+
+
+    row.className =
+      "keyword-row";
+
+
+    const input =
+      document.createElement("input");
+
+
+    input.type =
+      "text";
+
+
+    input.className =
+      "required-keyword";
+
+
+    input.placeholder =
+      "Example: memory formation";
+
+
+    row.appendChild(
+      input
+    );
+
+
+    const options =
+      document.createElement("div");
+
+
+    options.className =
+      "keyword-options";
+
+
+    options.innerHTML =
+      buildKeywordFieldOptionsHtml();
+
+
+    row.appendChild(
+      options
+    );
+
+
+    const removeButton =
+      document.createElement("button");
+
+
+    removeButton.type =
+      "button";
+
+
+    removeButton.textContent =
+      "×";
+
+
+    removeButton.className =
+      "danger";
+
+
+    removeButton.addEventListener(
+      "click",
+      () => {
+
+        row.remove();
+
+      }
+    );
+
+
+    row.appendChild(
+      removeButton
+    );
+
+
+    rowsContainer.appendChild(
+      row
+    );
+
+  }
+
+
+  // ==========================================
+  // CREATE A KEYWORD GROUP
+  // ==========================================
+
+  function createKeywordGroup() {
+
+    if (!keywordGroupsContainer) {
+
+      return;
+
+    }
+
+
+    keywordGroupCounter += 1;
+
+
+    const groupId =
+      `kwgroup-${keywordGroupCounter}-${Date.now()}`;
+
+
+    // Visual "AND" divider between this group and
+    // whichever group already precedes it.
+
+    if (keywordGroupsContainer.children.length > 0) {
+
+      const divider =
+        document.createElement("div");
+
+
+      divider.className =
+        "keyword-group-divider";
+
+
+      divider.textContent =
+        "AND";
+
+
+      keywordGroupsContainer.appendChild(
+        divider
       );
 
     }
-  );
 
-}
+
+    const group =
+      document.createElement("div");
+
+
+    group.className =
+      "keyword-group";
+
+
+    group.dataset.groupId =
+      groupId;
+
+
+    group.innerHTML = `
+
+      <div class="keyword-group-header">
+
+        <span class="keyword-group-title">
+          Keyword Group
+        </span>
+
+      </div>
+
+      <div class="keyword-group-rows"></div>
+
+      <div class="keyword-group-controls">
+
+        <button
+          type="button"
+          class="secondary add-keyword-to-group-button"
+        >
+          + Add keyword
+        </button>
+
+        <div class="keyword-mode">
+
+          <label>
+            Match within group:
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="keywordGroupMode-${groupId}"
+              value="any"
+              checked
+            >
+            ANY
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="keywordGroupMode-${groupId}"
+              value="all"
+            >
+            ALL
+          </label>
+
+        </div>
+
+        <button
+          type="button"
+          class="danger remove-keyword-group-button"
+        >
+          Remove group
+        </button>
+
+      </div>
+
+    `;
+
+
+    keywordGroupsContainer.appendChild(
+      group
+    );
+
+
+    const rowsContainer =
+      group.querySelector(
+        ".keyword-group-rows"
+      );
+
+
+    // Every group starts with one keyword row.
+
+    createKeywordGroupRow(
+      rowsContainer
+    );
+
+
+    const addRowButton =
+      group.querySelector(
+        ".add-keyword-to-group-button"
+      );
+
+
+    if (addRowButton) {
+
+      addRowButton.addEventListener(
+        "click",
+        () => {
+
+          createKeywordGroupRow(
+            rowsContainer
+          );
+
+        }
+      );
+
+    }
+
+
+    const removeGroupButton =
+      group.querySelector(
+        ".remove-keyword-group-button"
+      );
+
+
+    if (removeGroupButton) {
+
+      removeGroupButton.addEventListener(
+        "click",
+        () => {
+
+          // Remove exactly one adjacent "AND"
+          // divider so the chain stays valid.
+
+          const previousSibling =
+            group.previousElementSibling;
+
+
+          const nextSibling =
+            group.nextElementSibling;
+
+
+          if (
+            previousSibling &&
+            previousSibling.classList.contains(
+              "keyword-group-divider"
+            )
+          ) {
+
+            previousSibling.remove();
+
+          } else if (
+            nextSibling &&
+            nextSibling.classList.contains(
+              "keyword-group-divider"
+            )
+          ) {
+
+            nextSibling.remove();
+
+          }
+
+
+          group.remove();
+
+        }
+      );
+
+    }
+
+  }
+
+
+  // ==========================================
+  // ADD KEYWORD GROUP BUTTON
+  // ==========================================
+
+  if (addKeywordGroupButton) {
+
+    addKeywordGroupButton.addEventListener(
+      "click",
+      () => {
+
+        createKeywordGroup();
+
+      }
+    );
+
+  }
 
 
   // ==========================================
@@ -302,192 +655,91 @@ if (addKeywordButton) {
 
 
   // ==========================================
-// CREATE INPUT ROW
-// ==========================================
+  // CREATE GENERIC INPUT ROW (excluded keywords)
+  // ==========================================
 
-function createInputRow(
-  container,
-  className,
-  placeholder
-) {
-
-  if (!container) {
-
-    return;
-
-  }
-
-
-  const row =
-    document.createElement("div");
-
-
-  row.className =
-    "keyword-row";
-
-
-  const input =
-    document.createElement("input");
-
-
-  input.type =
-    "text";
-
-
-  input.className =
-    className;
-
-
-  input.placeholder =
-    placeholder;
-
-
-  row.appendChild(
-    input
-  );
-
-
-  // ========================================
-  // KEYWORD SEARCH FIELDS
-  // ========================================
-
-  if (
-    className ===
-    "required-keyword"
+  function createInputRow(
+    container,
+    className,
+    placeholder
   ) {
 
-    const options =
+    if (!container) {
+
+      return;
+
+    }
+
+
+    const row =
       document.createElement("div");
 
 
-    options.className =
-      "keyword-options";
+    row.className =
+      "keyword-row";
 
 
-    options.innerHTML = `
-
-      <label>
-        Search keywords in:
-      </label>
-
-      <div class="checkbox-group">
-
-        <label>
-
-          <input
-            type="checkbox"
-            class="keyword-field"
-            value="title"
-          >
-
-          Title
-
-        </label>
+    const input =
+      document.createElement("input");
 
 
-        <label>
-
-          <input
-            type="checkbox"
-            class="keyword-field"
-            value="abstract"
-          >
-
-          Abstract
-
-        </label>
+    input.type =
+      "text";
 
 
-        <label>
-
-          <input
-            type="checkbox"
-            class="keyword-field"
-            value="authors"
-          >
-
-          Authors
-
-        </label>
+    input.className =
+      className;
 
 
-        <label>
-
-          <input
-            type="checkbox"
-            class="keyword-field"
-            value="journal"
-          >
-
-          Journal
-
-        </label>
-
-
-        <label>
-
-          <input
-            type="checkbox"
-            class="keyword-field"
-            value="concepts"
-          >
-
-          Concepts
-
-        </label>
-
-      </div>
-
-    `;
+    input.placeholder =
+      placeholder;
 
 
     row.appendChild(
-      options
+      input
+    );
+
+
+    // ========================================
+    // REMOVE BUTTON
+    // ========================================
+
+    const removeButton =
+      document.createElement("button");
+
+
+    removeButton.type =
+      "button";
+
+
+    removeButton.textContent =
+      "×";
+
+
+    removeButton.className =
+      "danger";
+
+
+    removeButton.addEventListener(
+      "click",
+      () => {
+
+        row.remove();
+
+      }
+    );
+
+
+    row.appendChild(
+      removeButton
+    );
+
+
+    container.appendChild(
+      row
     );
 
   }
-
-
-  // ========================================
-  // REMOVE BUTTON
-  // ========================================
-
-  const removeButton =
-    document.createElement("button");
-
-
-  removeButton.type =
-    "button";
-
-
-  removeButton.textContent =
-    "×";
-
-
-  removeButton.className =
-    "danger";
-
-
-  removeButton.addEventListener(
-    "click",
-    () => {
-
-      row.remove();
-
-    }
-  );
-
-
-  row.appendChild(
-    removeButton
-  );
-
-
-  container.appendChild(
-    row
-  );
-
-}
 
 
  
@@ -497,59 +749,140 @@ function createInputRow(
 
 function getCriteria() {
 
-  const keywordRows =
+  // ========================================
+  // KEYWORD GROUPS
+  // ========================================
+
+  const groupElements =
     Array.from(
       document.querySelectorAll(
-        "#keywordContainer .keyword-row"
+        "#keywordGroupsContainer .keyword-group"
       )
     );
 
 
-  const keywordData = [];
+  const keywordGroups = [];
 
 
-  keywordRows.forEach(
-    row => {
+  groupElements.forEach(
+    groupElement => {
 
-      const input =
-        row.querySelector(
-          ".required-keyword"
+      const rows =
+        Array.from(
+          groupElement.querySelectorAll(
+            ".keyword-group-rows .keyword-row"
+          )
         );
 
 
-      if (!input) {
+      const groupKeywords = [];
+
+
+      rows.forEach(
+        row => {
+
+          const input =
+            row.querySelector(
+              ".required-keyword"
+            );
+
+
+          if (!input) {
+            return;
+          }
+
+
+          const keyword =
+            input.value.trim();
+
+
+          if (!keyword) {
+            return;
+          }
+
+
+          const fields =
+            Array.from(
+              row.querySelectorAll(
+                ".keyword-field:checked"
+              )
+            )
+              .map(
+                checkbox =>
+                  checkbox.value
+              );
+
+
+          groupKeywords.push({
+
+            keyword,
+
+            fields
+
+          });
+
+        }
+      );
+
+
+      // Skip groups where every keyword field
+      // was left empty.
+
+      if (!groupKeywords.length) {
+
         return;
+
       }
 
 
-      const keyword =
-        input.value.trim();
+      const modeInput =
+        groupElement.querySelector(
+          'input[type="radio"]:checked'
+        );
 
 
-      if (!keyword) {
-        return;
-      }
+      const mode =
+        modeInput &&
+        modeInput.value === "all"
+          ? "all"
+          : "any";
 
 
-      const fields =
-        Array.from(
-          row.querySelectorAll(
-            ".keyword-field:checked"
-          )
-        )
-          .map(
-            checkbox =>
-              checkbox.value
-          );
+      keywordGroups.push({
 
+        keywords:
+          groupKeywords,
 
-      keywordData.push({
-
-        keyword,
-
-        fields
+        mode
 
       });
+
+    }
+  );
+
+
+  // Flattened keyword list. Used only to build the
+  // free-text search query sent to the paper sources
+  // (PubMed / Europe PMC) and for quick "is anything
+  // filled in" checks. Grouping/AND/OR is NOT derived
+  // from this — that logic lives in keywordGroups and
+  // is applied afterwards by matchesAdvancedCriteria().
+
+  const keywords = [];
+
+
+  keywordGroups.forEach(
+    group => {
+
+      group.keywords.forEach(
+        item => {
+
+          keywords.push(
+            item.keyword
+          );
+
+        }
+      );
 
     }
   );
@@ -573,44 +906,17 @@ function getCriteria() {
 
 
   // ========================================
-  // KEYWORD MODE
-  // ========================================
-
-  const keywordModeInput =
-    document.querySelector(
-      'input[name="keywordMode"]:checked'
-    );
-
-
-  const keywordMode =
-    keywordModeInput
-      ? keywordModeInput.value
-      : "all";
-
-
-  // ========================================
   // RETURN CRITERIA
   // ========================================
 
   return {
 
-    keywords:
-      keywordData.map(
-        item =>
-          item.keyword
-      ),
+    keywordGroups,
 
-
-    keywordData,
+    keywords,
 
 
     excluded,
-
-
-    keywordMode:
-      keywordMode === "any"
-        ? "any"
-        : "all",
 
 
     author:
@@ -767,10 +1073,6 @@ function getCriteria() {
             <p>
               There are currently no papers
               matching your criteria.
-            </p>
-
-            <p>
-              You can check the tracker again later.
             </p>
 
             <p>
@@ -1898,6 +2200,139 @@ function getCriteria() {
 
 
   // ==========================================
+  // KEYWORD TERM MATCH (single keyword vs its
+  // own selected fields)
+  // ==========================================
+
+  function keywordTermMatches(
+    item,
+    fieldTextsMap,
+    allText
+  ) {
+
+    const fields =
+      Array.isArray(item?.fields)
+        ? item.fields
+        : [];
+
+
+    const fieldTexts = [];
+
+
+    if (fields.includes("title")) {
+
+      fieldTexts.push(
+        fieldTextsMap.title
+      );
+
+    }
+
+
+    if (fields.includes("abstract")) {
+
+      fieldTexts.push(
+        fieldTextsMap.abstract
+      );
+
+    }
+
+
+    if (fields.includes("authors")) {
+
+      fieldTexts.push(
+        fieldTextsMap.authors
+      );
+
+    }
+
+
+    if (fields.includes("journal")) {
+
+      fieldTexts.push(
+        fieldTextsMap.journal
+      );
+
+    }
+
+
+    if (fields.includes("concepts")) {
+
+      fieldTexts.push(
+        fieldTextsMap.concepts
+      );
+
+    }
+
+
+    /*
+     * If this particular keyword has no fields
+     * selected, search across every field (same
+     * fallback behavior as before groups existed).
+     */
+
+    const searchableText =
+      fieldTexts.length > 0
+        ? fieldTexts
+            .join(" ")
+            .toLowerCase()
+        : allText;
+
+
+    return searchableText.includes(
+      String(item?.keyword || "")
+        .trim()
+        .toLowerCase()
+    );
+
+  }
+
+
+  // ==========================================
+  // KEYWORD GROUP MATCH
+  // (ANY = OR between its keywords,
+  //  ALL = AND between its keywords)
+  // ==========================================
+
+  function keywordGroupMatches(
+    group,
+    fieldTextsMap,
+    allText
+  ) {
+
+    const items =
+      Array.isArray(group?.keywords)
+        ? group.keywords
+        : [];
+
+
+    if (!items.length) {
+
+      // An empty group imposes no constraint.
+
+      return true;
+
+    }
+
+
+    const itemMatches =
+      items.map(
+        item =>
+          keywordTermMatches(
+            item,
+            fieldTextsMap,
+            allText
+          )
+      );
+
+
+    return group?.mode === "all"
+      ? itemMatches.every(Boolean)
+      : itemMatches.some(Boolean);
+
+  }
+
+
+  // ==========================================
 // ADVANCED FILTERS
 // ==========================================
 
@@ -1945,6 +2380,26 @@ function matchesAdvancedCriteria(
     .toLowerCase();
 
 
+  const fieldTextsMap = {
+
+    title:
+      title.toLowerCase(),
+
+    abstract:
+      abstract.toLowerCase(),
+
+    authors:
+      authors.toLowerCase(),
+
+    journal:
+      journal.toLowerCase(),
+
+    concepts:
+      concepts.toLowerCase()
+
+  };
+
+
   // ========================================
   // EXCLUDED KEYWORDS
   // ========================================
@@ -1982,54 +2437,96 @@ function matchesAdvancedCriteria(
 
 
   // ========================================
-  // REQUIRED KEYWORDS
+  // REQUIRED KEYWORDS — GROUPS (AND / OR)
   // ========================================
 
-  const keywordData =
+  /*
+   * keywordGroups is the current data model:
+   *
+   *   [
+   *     { keywords: [{keyword, fields}, ...], mode: "any" | "all" },
+   *     { keywords: [{keyword, fields}, ...], mode: "any" | "all" },
+   *     ...
+   *   ]
+   *
+   * Groups are always combined with AND. Inside a
+   * group, "any" means OR between its keywords and
+   * "all" means AND between its keywords. Each
+   * keyword keeps its own field selection.
+   */
+
+  const keywordGroups =
     Array.isArray(
-      safeCriteria.keywordData
+      safeCriteria.keywordGroups
     )
-      ? safeCriteria.keywordData
-          .filter(
-            item =>
-              item &&
-              String(
-                item.keyword || ""
-              ).trim()
-          )
-          .map(
-            item => ({
-
-              keyword:
-                String(
-                  item.keyword
-                )
-                  .trim()
-                  .toLowerCase(),
-
-              fields:
-                Array.isArray(item.fields)
-                  ? item.fields
-                  : []
-
-            })
-          )
+      ? safeCriteria.keywordGroups
       : [];
 
 
+  if (keywordGroups.length > 0) {
+
+    const allGroupsMatch =
+      keywordGroups.every(
+        group =>
+          keywordGroupMatches(
+            group,
+            fieldTextsMap,
+            allText
+          )
+      );
+
+
+    if (!allGroupsMatch) {
+
+      return false;
+
+    }
+
+  }
+
+
+  // ========================================
+  // REQUIRED KEYWORDS — LEGACY FORMATS
+  // ========================================
+
   /*
-   * Each keyword now keeps its own fields.
-   *
-   * Example:
-   *
-   * memory       -> title
-   * inflammation -> abstract
-   *
-   * They are evaluated independently.
+   * Kept so tracking profiles saved before the
+   * keyword-group feature existed keep matching
+   * exactly the way they used to.
    */
 
+  else if (
+    Array.isArray(safeCriteria.keywordData) &&
+    safeCriteria.keywordData.length > 0
+  ) {
 
-  if (keywordData.length > 0) {
+    const keywordData =
+      safeCriteria.keywordData
+        .filter(
+          item =>
+            item &&
+            String(
+              item.keyword || ""
+            ).trim()
+        )
+        .map(
+          item => ({
+
+            keyword:
+              String(
+                item.keyword
+              )
+                .trim()
+                .toLowerCase(),
+
+            fields:
+              Array.isArray(item.fields)
+                ? item.fields
+                : []
+
+          })
+        );
+
 
     const keywordMode =
       safeCriteria.keywordMode === "any"
@@ -2039,86 +2536,14 @@ function matchesAdvancedCriteria(
 
     const keywordMatches =
       keywordData.map(
-        item => {
-
-          const fieldTexts = [];
-
-
-          // ----------------------------------
-          // Use ONLY the fields belonging
-          // to this specific keyword.
-          // ----------------------------------
-
-          if (
-            item.fields.includes("title")
-          ) {
-
-            fieldTexts.push(title);
-
-          }
-
-
-          if (
-            item.fields.includes("abstract")
-          ) {
-
-            fieldTexts.push(abstract);
-
-          }
-
-
-          if (
-            item.fields.includes("authors")
-          ) {
-
-            fieldTexts.push(authors);
-
-          }
-
-
-          if (
-            item.fields.includes("journal")
-          ) {
-
-            fieldTexts.push(journal);
-
-          }
-
-
-          if (
-            item.fields.includes("concepts")
-          ) {
-
-            fieldTexts.push(concepts);
-
-          }
-
-
-          /*
-           * If this particular keyword has
-           * no fields selected, preserve the
-           * old behavior and search all fields.
-           */
-
-          const searchableText =
-            fieldTexts.length > 0
-              ? fieldTexts
-                  .join(" ")
-                  .toLowerCase()
-              : allText;
-
-
-          return searchableText.includes(
-            item.keyword
-          );
-
-        }
+        item =>
+          keywordTermMatches(
+            item,
+            fieldTextsMap,
+            allText
+          )
       );
 
-
-    // --------------------------------------
-    // ANY keyword
-    // --------------------------------------
 
     if (keywordMode === "any") {
 
@@ -2130,14 +2555,7 @@ function matchesAdvancedCriteria(
 
       }
 
-    }
-
-
-    // --------------------------------------
-    // ALL keywords
-    // --------------------------------------
-
-    else {
+    } else {
 
       if (
         !keywordMatches.every(Boolean)
@@ -2153,14 +2571,8 @@ function matchesAdvancedCriteria(
 
 
   // ========================================
-  // LEGACY KEYWORD FALLBACK
+  // REQUIRED KEYWORDS — FLAT LEGACY FALLBACK
   // ========================================
-
-  /*
-   * Keeps compatibility with older saved
-   * criteria that have "keywords" but do
-   * not have "keywordData".
-   */
 
   else {
 
@@ -3624,58 +4036,178 @@ function matchesAdvancedCriteria(
     criteria
   ) {
 
+    const safeCriteria =
+      criteria || {};
+
+
+    const hasGroups =
+      Array.isArray(
+        safeCriteria.keywordGroups
+      ) &&
+      safeCriteria.keywordGroups.length > 0;
+
+
+    /*
+     * Groups are combined with AND, which is
+     * commutative, so the profile key sorts
+     * groups (and the keywords within each
+     * group) into a canonical order. That way
+     * the same set of groups always produces
+     * the same key, no matter what order they
+     * were added in the UI.
+     */
+
+    const normalizedGroups =
+      hasGroups
+        ? safeCriteria.keywordGroups
+            .map(
+              group => ({
+
+                mode:
+                  group?.mode === "all"
+                    ? "all"
+                    : "any",
+
+                keywords:
+                  Array.isArray(group?.keywords)
+                    ? group.keywords
+                        .map(
+                          item => ({
+
+                            keyword:
+                              normalizeString(
+                                item?.keyword
+                              ),
+
+                            fields:
+                              normalizeStringArray(
+                                item?.fields
+                              )
+
+                          })
+                        )
+                        .filter(
+                          item =>
+                            item.keyword
+                        )
+                        .sort(
+                          (a, b) =>
+                            a.keyword.localeCompare(
+                              b.keyword
+                            )
+                        )
+                    : []
+
+              })
+            )
+            .filter(
+              group =>
+                group.keywords.length > 0
+            )
+            .sort(
+              (a, b) =>
+                JSON.stringify(a)
+                  .localeCompare(
+                    JSON.stringify(b)
+                  )
+            )
+        : [];
+
+
     const normalized = {
 
-      keywords:
-        normalizeStringArray(
-          criteria?.keywords
-        ),
+      keywordGroups:
+        normalizedGroups,
 
-      excluded:
-        normalizeStringArray(
-          criteria?.excluded
-        ),
+
+      // Legacy fields, only populated when this
+      // criteria object predates keyword groups.
+      // Keeping them in the key means an old
+      // tracker and a brand-new group-based
+      // tracker never collide.
+
+      keywords:
+        !hasGroups
+          ? normalizeStringArray(
+              safeCriteria.keywords
+            )
+          : [],
+
+      keywordData:
+        !hasGroups &&
+        Array.isArray(safeCriteria.keywordData)
+          ? safeCriteria.keywordData
+              .map(
+                item => ({
+
+                  keyword:
+                    normalizeString(
+                      item?.keyword
+                    ),
+
+                  fields:
+                    normalizeStringArray(
+                      item?.fields
+                    )
+
+                })
+              )
+              .sort(
+                (a, b) =>
+                  a.keyword.localeCompare(
+                    b.keyword
+                  )
+              )
+          : [],
 
       keywordFields:
-        normalizeStringArray(
-          criteria?.keywordFields
-        ),
+        !hasGroups
+          ? normalizeStringArray(
+              safeCriteria.keywordFields
+            )
+          : [],
 
       keywordMode:
-        criteria?.keywordMode === "any"
+        safeCriteria.keywordMode === "any"
           ? "any"
           : "all",
 
+
+      excluded:
+        normalizeStringArray(
+          safeCriteria.excluded
+        ),
+
       author:
         normalizeString(
-          criteria?.author
+          safeCriteria.author
         ),
 
       journal:
         normalizeString(
-          criteria?.journal
+          safeCriteria.journal
         ),
 
       field:
         normalizeString(
-          criteria?.field
+          safeCriteria.field
         ),
 
       dateRange:
         String(
-          criteria?.dateRange || "all"
+          safeCriteria.dateRange || "all"
         )
           .trim()
           .toLowerCase(),
 
       documentType:
         normalizeString(
-          criteria?.documentType
+          safeCriteria.documentType
         ),
 
       accuracy:
         Number(
-          criteria?.accuracy || 0
+          safeCriteria.accuracy || 0
         )
 
     };
@@ -3794,66 +4326,167 @@ function matchesAdvancedCriteria(
 
   function cloneCriteria(criteria) {
 
-    return {
+    const safeCriteria =
+      criteria || {};
+
+
+    const hasGroups =
+      Array.isArray(
+        safeCriteria.keywordGroups
+      ) &&
+      safeCriteria.keywordGroups.length > 0;
+
+
+    const clonedGroups =
+      hasGroups
+        ? safeCriteria.keywordGroups.map(
+            group => ({
+
+              keywords:
+                Array.isArray(group?.keywords)
+                  ? group.keywords.map(
+                      item => ({
+
+                        keyword:
+                          String(
+                            item?.keyword || ""
+                          ),
+
+                        fields:
+                          Array.isArray(item?.fields)
+                            ? [...item.fields]
+                            : []
+
+                      })
+                    )
+                  : [],
+
+              mode:
+                group?.mode === "all"
+                  ? "all"
+                  : "any"
+
+            })
+          )
+        : [];
+
+
+    // Flat keyword list, regenerated from the
+    // groups when present. Used to build the
+    // free-text search query and for the
+    // "is anything filled in" check — grouping
+    // itself is preserved separately above.
+
+    const flatKeywords =
+      hasGroups
+        ? clonedGroups.flatMap(
+            group =>
+              group.keywords.map(
+                item =>
+                  item.keyword
+              )
+          )
+        : (
+            Array.isArray(safeCriteria.keywords)
+              ? [...safeCriteria.keywords]
+              : []
+          );
+
+
+    const cloned = {
+
+      keywordGroups:
+        clonedGroups,
 
       keywords:
-        Array.isArray(
-          criteria?.keywords
-        )
-          ? [
-              ...criteria.keywords
-            ]
-          : [],
+        flatKeywords,
 
       excluded:
-        Array.isArray(
-          criteria?.excluded
-        )
-          ? [
-              ...criteria.excluded
-            ]
+        Array.isArray(safeCriteria.excluded)
+          ? [...safeCriteria.excluded]
           : [],
-
-      keywordFields:
-        Array.isArray(
-          criteria?.keywordFields
-        )
-          ? [
-              ...criteria.keywordFields
-            ]
-          : [],
-
-      keywordMode:
-        criteria?.keywordMode === "any"
-          ? "any"
-          : "all",
 
       author:
-        criteria?.author ||
+        safeCriteria.author ||
         "",
 
       journal:
-        criteria?.journal ||
+        safeCriteria.journal ||
         "",
 
       field:
-        criteria?.field ||
+        safeCriteria.field ||
         "",
 
       dateRange:
-        criteria?.dateRange ||
+        safeCriteria.dateRange ||
         "all",
 
       documentType:
-        criteria?.documentType ||
+        safeCriteria.documentType ||
         "",
 
       accuracy:
         Number(
-          criteria?.accuracy || 0
+          safeCriteria.accuracy || 0
         )
 
     };
+
+
+    // Preserve pre-migration fields verbatim so a
+    // tracker saved before keyword groups existed
+    // keeps using its original ALL/ANY behavior.
+
+    if (!hasGroups) {
+
+      if (
+        Array.isArray(safeCriteria.keywordData)
+      ) {
+
+        cloned.keywordData =
+          safeCriteria.keywordData.map(
+            item => ({
+
+              keyword:
+                String(
+                  item?.keyword || ""
+                ),
+
+              fields:
+                Array.isArray(item?.fields)
+                  ? [...item.fields]
+                  : []
+
+            })
+          );
+
+      }
+
+
+      if (safeCriteria.keywordMode) {
+
+        cloned.keywordMode =
+          safeCriteria.keywordMode === "any"
+            ? "any"
+            : "all";
+
+      }
+
+
+      if (
+        Array.isArray(safeCriteria.keywordFields)
+      ) {
+
+        cloned.keywordFields =
+          [...safeCriteria.keywordFields];
+
+      }
+
+    }
+
+
+    return cloned;
 
   }
 
@@ -4111,9 +4744,44 @@ function matchesAdvancedCriteria(
   let topic = "";
 
   if (
-    Array.isArray(criteria.keywords) &&
-    criteria.keywords.length
+    Array.isArray(criteria.keywordGroups) &&
+    criteria.keywordGroups.length
   ) {
+
+    topic =
+      criteria.keywordGroups
+        .map(group => {
+
+          const words =
+            Array.isArray(group.keywords)
+              ? group.keywords
+                  .map(item => item.keyword)
+                  .filter(Boolean)
+              : [];
+
+          if (!words.length) {
+            return "";
+          }
+
+          const joiner =
+            group.mode === "all"
+              ? " AND "
+              : " OR ";
+
+          const text =
+            words.join(joiner);
+
+          return words.length > 1
+            ? `(${text})`
+            : text;
+
+        })
+        .filter(Boolean)
+        .join(" AND ");
+
+  }
+
+  if (!topic && Array.isArray(criteria.keywords) && criteria.keywords.length) {
 
     topic =
       criteria.keywords
@@ -4373,6 +5041,76 @@ function matchesAdvancedCriteria(
     const criteria =
       tracker?.criteria || {};
 
+
+    // ----------------------------------------
+    // NEW FORMAT: keyword groups
+    // ----------------------------------------
+
+    if (
+      Array.isArray(criteria.keywordGroups) &&
+      criteria.keywordGroups.length
+    ) {
+
+      const groupLabels =
+        criteria.keywordGroups
+          .map(
+            group => {
+
+              const words =
+                Array.isArray(group.keywords)
+                  ? group.keywords
+                      .map(
+                        item =>
+                          item.keyword
+                      )
+                      .filter(Boolean)
+                  : [];
+
+
+              if (!words.length) {
+
+                return "";
+
+              }
+
+
+              const joiner =
+                group.mode === "all"
+                  ? " AND "
+                  : " OR ";
+
+
+              const text =
+                words.join(joiner);
+
+
+              return words.length > 1
+                ? `(${text})`
+                : text;
+
+            }
+          )
+          .filter(Boolean);
+
+
+      if (groupLabels.length) {
+
+        const combined =
+          groupLabels.join(" AND ");
+
+
+        return combined.length > 60
+          ? `${combined.slice(0, 57)}...`
+          : combined;
+
+      }
+
+    }
+
+
+    // ----------------------------------------
+    // LEGACY FORMAT: flat keywords
+    // ----------------------------------------
 
     const keywords =
       Array.isArray(criteria.keywords)
@@ -5243,6 +5981,13 @@ function matchesAdvancedCriteria(
   // ==========================================
   // INITIALIZE
   // ==========================================
+
+  // Start the Advanced Research Tracker with one
+  // empty keyword group so the AND/OR UI is ready
+  // to use right away.
+
+  createKeywordGroup();
+
 
   displayTrackedTopics();
 
