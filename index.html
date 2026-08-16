@@ -1538,6 +1538,119 @@
   }
 
 }
+
+    /* =========================================================
+       KEYWORD GROUPS (AND / OR)
+       ========================================================= */
+
+    #keywordGroupsContainer {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .keyword-group {
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+
+      border-radius: 12px;
+
+      padding: 16px;
+
+      margin-top: 10px;
+    }
+
+    .keyword-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom: 10px;
+    }
+
+    .keyword-group-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .keyword-group-rows .keyword-row {
+      margin-bottom: 8px;
+    }
+
+    .keyword-group-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+
+      gap: 12px 18px;
+
+      margin-top: 12px;
+      padding-top: 12px;
+
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .keyword-group-controls .keyword-mode {
+      margin: 0;
+      padding: 0;
+
+      background: transparent;
+      border: none;
+
+      display: inline-flex;
+      align-items: center;
+
+      gap: 14px;
+
+      flex-wrap: wrap;
+    }
+
+    .keyword-group-controls .keyword-mode > label:first-child {
+      margin-bottom: 0;
+
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .keyword-group-controls .keyword-mode > label:not(:first-child) {
+      display: inline-flex;
+      align-items: center;
+
+      gap: 6px;
+
+      margin-right: 0;
+
+      font-weight: normal;
+      color: #475569;
+    }
+
+    .keyword-group-divider {
+      text-align: center;
+
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+
+      color: #2563eb;
+
+      margin: 4px 0;
+    }
+
+    @media (max-width: 600px) {
+
+      .keyword-group {
+        padding: 12px;
+      }
+
+      .keyword-group-controls {
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 10px;
+      }
+
+    }
   </style>
 </head>
 
@@ -1619,51 +1732,21 @@
     Required keywords
   </label>
 
-  <div id="keywordContainer"></div>
+  <p class="hint">
+    Keyword groups are combined with AND. Inside a group, choose
+    ANY (OR) or ALL (AND) to control how its keywords are matched.
+    Example: (memory OR cognition) AND (inflammation OR neuroinflammation).
+  </p>
+
+  <div id="keywordGroupsContainer"></div>
 
   <button
     type="button"
-    id="addKeywordButton"
+    id="addKeywordGroupButton"
     class="secondary"
   >
-    + Add keyword
+    + Add keyword group
   </button>
-
-
-  <div class="keyword-mode">
-
-    <label>
-      Match keywords:
-    </label>
-
-
-    <label>
-
-      <input
-        type="radio"
-        name="keywordMode"
-        value="all"
-        checked
-      >
-
-      All keywords
-
-    </label>
-
-
-    <label>
-
-      <input
-        type="radio"
-        name="keywordMode"
-        value="any"
-      >
-
-      Any keyword
-
-    </label>
-
-  </div>
 
 </div>
 
