@@ -209,14 +209,94 @@ document.addEventListener("DOMContentLoaded", () => {
   // KEYWORD GROUPS UI
   // ==========================================
   
-  const groupsWrapper = document.getElementById("groupsWrapper");
-  const addGroupButton = document.getElementById("addGroupButton");
   let groupCount = 0;
 
-  if (addGroupButton) {
-    addGroupButton.addEventListener("click", () => createGroupUI());
-    // Create one default group on load
-    createGroupUI(); 
+  // Wait for the HTML to load before attaching the button listener
+  document.addEventListener("DOMContentLoaded", () => {
+    const addGroupButton = document.getElementById("addGroupButton");
+    
+    if (addGroupButton) {
+      addGroupButton.addEventListener("click", () => createGroupUI());
+      // Create one default group on load
+      createGroupUI(); 
+    }
+  });
+
+  function createGroupUI() {
+    const groupsWrapper = document.getElementById("groupsWrapper");
+    if (!groupsWrapper) return;
+    
+    groupCount++;
+
+    const groupDiv = document.createElement("div");
+    groupDiv.className = "keyword-group-ui";
+    
+    // Add "AND" divider if it's not the first group
+    if (groupsWrapper.children.length > 0) {
+      const divider = document.createElement("div");
+      divider.className = "and-divider";
+      divider.textContent = "AND";
+      groupsWrapper.appendChild(divider);
+    }
+
+    groupDiv.innerHTML = `
+      <div class="group-header">
+        <span>Keyword Group</span>
+        <button type="button" class="danger remove-group-btn" style="padding: 4px 8px; font-size: 12px;">Remove group</button>
+      </div>
+      <div class="group-keywords"></div>
+      <button type="button" class="secondary add-group-keyword-btn" style="padding: 6px 12px; margin-top: 4px; font-size: 13px;">+ Add keyword</button>
+      
+      <div class="group-logic">
+        <strong>Match within group:</strong>
+        <label><input type="radio" name="groupMode_${groupCount}" value="all"> ALL (AND)</label>
+        <label><input type="radio" name="groupMode_${groupCount}" value="any" checked> ANY (OR)</label>
+      </div>
+    `;
+
+    // Remove group logic
+    groupDiv.querySelector(".remove-group-btn").addEventListener("click", () => {
+      // Remove the preceding 'AND' divider if it exists
+      if (groupDiv.previousElementSibling && groupDiv.previousElementSibling.className === "and-divider") {
+        groupDiv.previousElementSibling.remove();
+      } else if (groupDiv.nextElementSibling && groupDiv.nextElementSibling.className === "and-divider") {
+        // If it was the first item, remove the next 'AND' instead
+        groupDiv.nextElementSibling.remove();
+      }
+      groupDiv.remove();
+    });
+
+    const keywordsContainer = groupDiv.querySelector(".group-keywords");
+    
+    // Add Keyword logic
+    groupDiv.querySelector(".add-group-keyword-btn").addEventListener("click", () => {
+      createKeywordUI(keywordsContainer);
+    });
+
+    // Initialize with one empty keyword
+    createKeywordUI(keywordsContainer);
+    groupsWrapper.appendChild(groupDiv);
+  }
+
+  function createKeywordUI(container) {
+    const row = document.createElement("div");
+    row.className = "keyword-row-ui";
+    
+    row.innerHTML = `
+      <input type="text" class="keyword-input" placeholder="Example: memory formation">
+      <select class="keyword-field-select">
+        <option value="all">All fields</option>
+        <option value="title">Title</option>
+        <option value="abstract">Abstract</option>
+        <option value="authors">Authors</option>
+        <option value="journal">Journal</option>
+        <option value="concepts">Concepts</option>
+      </select>
+      <button type="button" class="danger remove-keyword-btn" style="padding: 0 12px;">×</button>
+    `;
+
+    row.querySelector(".remove-keyword-btn").addEventListener("click", () => row.remove());
+    container.appendChild(row);
   }
 
   function createGroupUI() {
