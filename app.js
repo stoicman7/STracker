@@ -213,44 +213,179 @@ document.addEventListener("DOMContentLoaded", () => {
   // KEYWORD FIELD OPTIONS (shared markup)
   // ==========================================
 
+  const KEYWORD_FIELD_LABELS = {
+
+    title: "Title",
+    abstract: "Abstract",
+    authors: "Authors",
+    journal: "Journal",
+    concepts: "Concepts"
+
+  };
+
+
   function buildKeywordFieldOptionsHtml() {
 
     return `
 
       <label>
-        Search keywords in:
+        <input type="checkbox" class="keyword-field" value="title">
+        Title
       </label>
 
-      <div class="checkbox-group">
+      <label>
+        <input type="checkbox" class="keyword-field" value="abstract">
+        Abstract
+      </label>
 
-        <label>
-          <input type="checkbox" class="keyword-field" value="title">
-          Title
-        </label>
+      <label>
+        <input type="checkbox" class="keyword-field" value="authors">
+        Authors
+      </label>
 
-        <label>
-          <input type="checkbox" class="keyword-field" value="abstract">
-          Abstract
-        </label>
+      <label>
+        <input type="checkbox" class="keyword-field" value="journal">
+        Journal
+      </label>
 
-        <label>
-          <input type="checkbox" class="keyword-field" value="authors">
-          Authors
-        </label>
-
-        <label>
-          <input type="checkbox" class="keyword-field" value="journal">
-          Journal
-        </label>
-
-        <label>
-          <input type="checkbox" class="keyword-field" value="concepts">
-          Concepts
-        </label>
-
-      </div>
+      <label>
+        <input type="checkbox" class="keyword-field" value="concepts">
+        Concepts
+      </label>
 
     `;
+
+  }
+
+
+  // ==========================================
+  // COLLAPSIBLE FIELD SELECTOR — SUMMARY CHIPS
+  // ==========================================
+
+  function updateKeywordFieldsSummary(row) {
+
+    if (!row) {
+
+      return;
+
+    }
+
+
+    const summaryEl =
+      row.querySelector(
+        ".keyword-fields-summary"
+      );
+
+
+    if (!summaryEl) {
+
+      return;
+
+    }
+
+
+    const checkedValues =
+      Array.from(
+        row.querySelectorAll(
+          ".keyword-field:checked"
+        )
+      )
+        .map(
+          checkbox =>
+            KEYWORD_FIELD_LABELS[
+              checkbox.value
+            ] || checkbox.value
+        );
+
+
+    if (!checkedValues.length) {
+
+      summaryEl.innerHTML =
+        `<span class="keyword-fields-chip keyword-fields-chip-muted">All fields</span>`;
+
+      return;
+
+    }
+
+
+    summaryEl.innerHTML =
+      checkedValues
+        .map(
+          label =>
+            `<span class="keyword-fields-chip">${escapeHtml(label)}</span>`
+        )
+        .join("");
+
+  }
+
+
+  // ==========================================
+  // COLLAPSIBLE FIELD SELECTOR — OUTSIDE CLICK
+  // ==========================================
+  //
+  // Each field-selector card tracks its own
+  // expanded/collapsed state via its own class list
+  // (no shared/global state), so opening one keyword's
+  // selector never affects any other keyword's.
+
+  let keywordFieldsOutsideClickBound = false;
+
+
+  function ensureKeywordFieldsOutsideClickHandler() {
+
+    if (keywordFieldsOutsideClickBound) {
+
+      return;
+
+    }
+
+
+    keywordFieldsOutsideClickBound = true;
+
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        document
+          .querySelectorAll(
+            ".keyword-fields-card.expanded"
+          )
+          .forEach(
+            card => {
+
+              if (card.contains(event.target)) {
+
+                return;
+
+              }
+
+
+              card.classList.remove(
+                "expanded"
+              );
+
+
+              const toggle =
+                card.querySelector(
+                  ".keyword-fields-toggle"
+                );
+
+
+              if (toggle) {
+
+                toggle.setAttribute(
+                  "aria-expanded",
+                  "false"
+                );
+
+              }
+
+            }
+          );
+
+      }
+    );
 
   }
 
@@ -268,6 +403,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    ensureKeywordFieldsOutsideClickHandler();
+
+
     const row =
       document.createElement("div");
 
@@ -276,76 +414,171 @@ document.addEventListener("DOMContentLoaded", () => {
       "keyword-row";
 
 
-    const input =
-      document.createElement("input");
+    row.innerHTML = `
 
+      <div class="keyword-row-main">
 
-    input.type =
-      "text";
+        <input
+          type="text"
+          class="required-keyword"
+          placeholder="Example: memory formation"
+        >
 
+        <button
+          type="button"
+          class="keyword-remove-button"
+          title="Remove keyword"
+          aria-label="Remove keyword"
+        >
+          ×
+        </button>
 
-    input.className =
-      "required-keyword";
+      </div>
 
+      <div class="keyword-fields-card expanded">
 
-    input.placeholder =
-      "Example: memory formation";
+        <button
+          type="button"
+          class="keyword-fields-toggle"
+          aria-expanded="true"
+        >
 
+          <span class="keyword-fields-toggle-text">
+            Search keywords in
+          </span>
 
-    row.appendChild(
-      input
-    );
+          <span class="keyword-fields-summary"></span>
 
+          <svg
+            class="keyword-fields-chevron"
+            viewBox="0 0 20 20"
+            width="14"
+            height="14"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 7l5 5 5-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
 
-    const options =
-      document.createElement("div");
+        </button>
 
+        <div class="keyword-fields-panel">
+          <div class="keyword-fields-panel-inner">
+            <div class="checkbox-group">
+              ${buildKeywordFieldOptionsHtml()}
+            </div>
+          </div>
+        </div>
 
-    options.className =
-      "keyword-options";
+      </div>
 
-
-    options.innerHTML =
-      buildKeywordFieldOptionsHtml();
-
-
-    row.appendChild(
-      options
-    );
-
-
-    const removeButton =
-      document.createElement("button");
-
-
-    removeButton.type =
-      "button";
-
-
-    removeButton.textContent =
-      "×";
-
-
-    removeButton.className =
-      "danger";
-
-
-    removeButton.addEventListener(
-      "click",
-      () => {
-
-        row.remove();
-
-      }
-    );
-
-
-    row.appendChild(
-      removeButton
-    );
+    `;
 
 
     rowsContainer.appendChild(
+      row
+    );
+
+
+    // ------------------------------------------
+    // REMOVE KEYWORD
+    // ------------------------------------------
+
+    const removeButton =
+      row.querySelector(
+        ".keyword-remove-button"
+      );
+
+
+    if (removeButton) {
+
+      removeButton.addEventListener(
+        "click",
+        () => {
+
+          row.remove();
+
+        }
+      );
+
+    }
+
+
+    // ------------------------------------------
+    // COLLAPSE / EXPAND TOGGLE (independent per row)
+    // ------------------------------------------
+
+    const fieldsCard =
+      row.querySelector(
+        ".keyword-fields-card"
+      );
+
+
+    const toggleButton =
+      row.querySelector(
+        ".keyword-fields-toggle"
+      );
+
+
+    if (toggleButton && fieldsCard) {
+
+      toggleButton.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+
+          const expanded =
+            fieldsCard.classList.toggle(
+              "expanded"
+            );
+
+
+          toggleButton.setAttribute(
+            "aria-expanded",
+            String(expanded)
+          );
+
+        }
+      );
+
+    }
+
+
+    // ------------------------------------------
+    // KEEP SUMMARY CHIPS IN SYNC
+    // ------------------------------------------
+
+    row
+      .querySelectorAll(
+        ".keyword-field"
+      )
+      .forEach(
+        checkbox => {
+
+          checkbox.addEventListener(
+            "change",
+            () => {
+
+              updateKeywordFieldsSummary(
+                row
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+    updateKeywordFieldsSummary(
       row
     );
 
@@ -643,6 +876,21 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
+        document
+          .querySelectorAll(
+            ".keyword-row"
+          )
+          .forEach(
+            row => {
+
+              updateKeywordFieldsSummary(
+                row
+              );
+
+            }
+          );
+
+
         selectAllKeywordFields.textContent =
           allChecked
             ? "Select all"
@@ -676,7 +924,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     row.className =
-      "keyword-row";
+      "keyword-row keyword-row-simple";
 
 
     const input =
@@ -1192,12 +1440,67 @@ function getCriteria() {
   // SEARCH WITH CRITERIA
   // ==========================================
 
+  // ==========================================
+  // BUILD A BROAD SOURCE QUERY FROM KEYWORDS
+  // ==========================================
+  //
+  // The exact AND/OR/field logic is enforced
+  // afterwards by matchesAdvancedCriteria(), so this
+  // query only needs to be broad enough that every
+  // paper which COULD match isn't excluded before
+  // that filtering ever runs. Joining terms with a
+  // plain space causes most sources (PubMed
+  // included) to treat them as an implicit AND,
+  // which silently drops papers that should have
+  // matched under OR logic or a different field.
+  // Joining with OR instead casts the widest net.
+
+  function buildSourceQuery(keywords) {
+
+    const uniqueTerms =
+      Array.from(
+        new Set(
+          (Array.isArray(keywords) ? keywords : [])
+            .map(
+              term =>
+                String(term || "").trim()
+            )
+            .filter(Boolean)
+        )
+      );
+
+
+    if (!uniqueTerms.length) {
+
+      return "";
+
+    }
+
+
+    const parts =
+      uniqueTerms.map(
+        term =>
+          term.includes(" ")
+            ? `"${term.replace(/"/g, "")}"`
+            : term
+      );
+
+
+    return parts.length > 1
+      ? parts.join(" OR ")
+      : parts[0];
+
+  }
+
+
   async function searchWithCriteria(
     criteria
   ) {
 
     let query =
-      criteria.keywords.join(" ");
+      buildSourceQuery(
+        criteria.keywords
+      );
 
 
     if (!query) {
@@ -1429,7 +1732,16 @@ function getCriteria() {
 
     params.set("resultType", "core");
 
-    params.set("pageSize", "100");
+    // Fetch a much larger candidate pool than before.
+    // The previous 100-result cap, combined with
+    // date-recency bias elsewhere in the pipeline,
+    // was cutting off older matching papers before
+    // client-side keyword/field filtering ever saw
+    // them. Europe PMC's default sort is relevance,
+    // so this widens coverage without skewing toward
+    // only the newest results.
+
+    params.set("pageSize", "500");
 
 
     const url =
@@ -1650,15 +1962,24 @@ function getCriteria() {
       "json"
     );
 
-    searchParams.set(
-      "retmax",
-      "100"
-    );
+    // Fetch a much larger candidate pool than before
+    // (was 100) — the previous cap was the main reason
+    // valid older papers never made it past the fetch
+    // stage in the first place.
 
     searchParams.set(
-      "sort",
-      "pub date"
+      "retmax",
+      "500"
     );
+
+    // Deliberately NOT sorting by "pub date" here.
+    // Sorting newest-first while retmax truncates the
+    // result set means older-but-matching papers get
+    // pushed past the cutoff and are silently dropped
+    // before any keyword/field filtering runs. Relying
+    // on PubMed's default relevance ranking keeps the
+    // candidate pool representative across all years;
+    // the app re-sorts newest-first for display later.
 
 
     const searchUrl =
@@ -1695,74 +2016,100 @@ function getCriteria() {
     }
 
 
-    const summaryParams =
-      new URLSearchParams();
+    // esummary is fetched in chunks so a large
+    // retmax (up to 500 ids) doesn't produce an
+    // excessively long request URL.
+
+    const CHUNK_SIZE = 150;
+
+    const idChunks = [];
 
 
-    summaryParams.set(
-      "db",
-      "pubmed"
-    );
+    for (
+      let i = 0;
+      i < ids.length;
+      i += CHUNK_SIZE
+    ) {
 
-    summaryParams.set(
-      "id",
-      ids.join(",")
-    );
-
-    summaryParams.set(
-      "retmode",
-      "json"
-    );
-
-
-    const summaryUrl =
-      "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" +
-      summaryParams.toString();
-
-
-    const summaryResponse =
-      await fetch(summaryUrl);
-
-
-    if (!summaryResponse.ok) {
-
-      throw new Error(
-        `PubMed metadata request failed (${summaryResponse.status}).`
+      idChunks.push(
+        ids.slice(i, i + CHUNK_SIZE)
       );
 
     }
 
 
-    const summaryData =
-      await summaryResponse.json();
-
-
     const records = [];
 
 
-    ids.forEach(
-      pmid => {
+    for (const chunk of idChunks) {
 
-        const record =
-          summaryData?.result?.[pmid];
-
-
-        if (!record) {
-
-          return;
-
-        }
+      const summaryParams =
+        new URLSearchParams();
 
 
-        records.push(
-          mapPubMedRecord(
-            record,
-            pmid
-          )
+      summaryParams.set(
+        "db",
+        "pubmed"
+      );
+
+      summaryParams.set(
+        "id",
+        chunk.join(",")
+      );
+
+      summaryParams.set(
+        "retmode",
+        "json"
+      );
+
+
+      const summaryUrl =
+        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" +
+        summaryParams.toString();
+
+
+      const summaryResponse =
+        await fetch(summaryUrl);
+
+
+      if (!summaryResponse.ok) {
+
+        throw new Error(
+          `PubMed metadata request failed (${summaryResponse.status}).`
         );
 
       }
-    );
+
+
+      const summaryData =
+        await summaryResponse.json();
+
+
+      chunk.forEach(
+        pmid => {
+
+          const record =
+            summaryData?.result?.[pmid];
+
+
+          if (!record) {
+
+            return;
+
+          }
+
+
+          records.push(
+            mapPubMedRecord(
+              record,
+              pmid
+            )
+          );
+
+        }
+      );
+
+    }
 
 
     return records;
@@ -2204,6 +2551,86 @@ function getCriteria() {
   // own selected fields)
   // ==========================================
 
+  // ==========================================
+  // WHOLE-WORD / WHOLE-PHRASE KEYWORD MATCH
+  // ==========================================
+  //
+  // Prevents substring false-positives such as a
+  // keyword "old" matching inside "holds", "bold",
+  // "fold", or "older". Multi-word keywords (e.g.
+  // "oxidative stress") are matched as a phrase —
+  // boundaries are enforced only at the start and
+  // end of the whole phrase, so internal whitespace
+  // still matches normally.
+
+  function keywordMatchesText(
+    text,
+    keyword
+  ) {
+
+    const term =
+      String(keyword || "")
+        .trim();
+
+
+    if (!term) {
+
+      return false;
+
+    }
+
+
+    const haystack =
+      String(text || "");
+
+
+    const escapedTerm =
+      term.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+
+
+    // Collapse any run of whitespace in the term so
+    // "oxidative   stress" still matches normally-
+    // spaced text.
+
+    const pattern =
+      escapedTerm.replace(
+        /\s+/g,
+        "\\s+"
+      );
+
+
+    let regex;
+
+    try {
+
+      regex =
+        new RegExp(
+          "\\b" + pattern + "\\b",
+          "i"
+        );
+
+    } catch (error) {
+
+      // Fall back to substring matching if the term
+      // somehow produces an invalid pattern.
+
+      return haystack
+        .toLowerCase()
+        .includes(
+          term.toLowerCase()
+        );
+
+    }
+
+
+    return regex.test(haystack);
+
+  }
+
+
   function keywordTermMatches(
     item,
     fieldTextsMap,
@@ -2278,10 +2705,9 @@ function getCriteria() {
         : allText;
 
 
-    return searchableText.includes(
-      String(item?.keyword || "")
-        .trim()
-        .toLowerCase()
+    return keywordMatchesText(
+      searchableText,
+      item?.keyword
     );
 
   }
@@ -2427,7 +2853,7 @@ function matchesAdvancedCriteria(
     }
 
 
-    if (allText.includes(term)) {
+    if (keywordMatchesText(allText, term)) {
 
       return false;
 
@@ -2674,7 +3100,8 @@ function matchesAdvancedCriteria(
         const anyMatch =
           keywords.some(
             keyword =>
-              searchableText.includes(
+              keywordMatchesText(
+                searchableText,
                 keyword
               )
           );
@@ -2693,7 +3120,8 @@ function matchesAdvancedCriteria(
         const allMatch =
           keywords.every(
             keyword =>
-              searchableText.includes(
+              keywordMatchesText(
+                searchableText,
                 keyword
               )
           );
@@ -5992,3 +6420,4 @@ function matchesAdvancedCriteria(
   displayTrackedTopics();
 
 });
+```[cite: 1]
