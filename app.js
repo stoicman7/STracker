@@ -206,25 +206,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // ADD REQUIRED KEYWORD
-  // ==========================================
+// ADD REQUIRED KEYWORD
+// ==========================================
 
-  if (addKeywordButton) {
+if (addKeywordButton) {
 
-    addKeywordButton.addEventListener(
-      "click",
-      () => {
+  addKeywordButton.addEventListener(
+    "click",
+    () => {
 
-        createInputRow(
-          keywordContainer,
-          "required-keyword",
-          "Example: memory formation"
-        );
+      createInputRow(
+        keywordContainer,
+        "required-keyword",
+        "Example: memory formation"
+      );
 
-      }
-    );
+    }
+  );
 
-  }
+}
 
 
   // ==========================================
