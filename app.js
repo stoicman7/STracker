@@ -489,7 +489,122 @@ function createInputRow(
 
 }
 
-   function getCriteria
+
+  // ==========================================
+// GET ADVANCED CRITERIA
+// ==========================================
+
+function getCriteria() {
+
+  const keywordRows =
+    Array.from(
+      document.querySelectorAll(
+        ".keyword-row"
+      )
+    );
+
+
+  const keywordData = [];
+
+
+  keywordRows.forEach(
+    row => {
+
+      const input =
+        row.querySelector(
+          ".required-keyword"
+        );
+
+
+      if (!input) {
+        return;
+      }
+
+
+      const keyword =
+        input.value.trim();
+
+
+      if (!keyword) {
+        return;
+      }
+
+
+      const fields =
+        Array.from(
+          row.querySelectorAll(
+            ".keyword-field:checked"
+          )
+        )
+          .map(
+            checkbox =>
+              checkbox.value
+          );
+
+
+      keywordData.push({
+
+        keyword,
+
+        fields
+
+      });
+
+    }
+  );
+
+
+  const keywords =
+    keywordData.map(
+      item =>
+        item.keyword
+    );
+
+
+  const keywordMode =
+    document.querySelector(
+      'input[name="keywordMode"]:checked'
+    )?.value || "all";
+
+
+  return {
+
+    keywords,
+
+    keywordData,
+
+    keywordMode,
+
+    author:
+      document
+        .getElementById("authorInput")
+        ?.value
+        .trim() || "",
+
+    journal:
+      document
+        .getElementById("journalInput")
+        ?.value
+        .trim() || "",
+
+    field:
+      document
+        .getElementById("fieldInput")
+        ?.value || "",
+
+    dateRange:
+      document
+        .getElementById("dateRangeInput")
+        ?.value || "all",
+
+    documentType:
+      document
+        .getElementById("documentTypeInput")
+        ?.value || ""
+
+  };
+
+}
 
     // ========================================
     // EXCLUDED KEYWORDS
