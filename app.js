@@ -23,8 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const excludeContainer =
     document.getElementById("excludeContainer");
 
-  const addKeywordButton =
-    document.getElementById("addKeywordButton");
+  const addKeywordGroupButton =
+  document.getElementById(
+    "addKeywordGroupButton"
+  );
 
   const addExcludeButton =
     document.getElementById("addExcludeButton");
@@ -709,28 +711,16 @@ function createKeywordGroup() {
 // ==========================================
 // GET ADVANCED CRITERIA
 // ==========================================
-// GET ADVANCED CRITERIA
-// ==========================================
 
 function getCriteria() {
-
-  // ========================================
-  // KEYWORD GROUPS
-  // ========================================
 
   const groups =
     Array.from(
       document.querySelectorAll(
         "#keywordGroupsContainer .keyword-group"
       )
-    );
-
-
-  const keywordGroups = [];
-
-
-  groups.forEach(
-    group => {
+    )
+    .map(group => {
 
       const rows =
         Array.from(
@@ -739,60 +729,41 @@ function getCriteria() {
           )
         );
 
+      const keywords =
+        rows
+          .map(row => {
 
-      const keywords = [];
+            const input =
+              row.querySelector(
+                ".required-keyword"
+              );
 
+            return input
+              ? input.value.trim()
+              : "";
 
-      rows.forEach(
-        row => {
-
-          const input =
-            row.querySelector(
-              ".required-keyword"
-            );
-
-
-          if (!input) {
-            return;
-          }
-
-
-          const keyword =
-            input.value.trim();
+          })
+          .filter(Boolean);
 
 
-          if (!keyword) {
-            return;
-          }
+      const fields =
+        rows.map(row => {
 
-
-          const fields =
+          const checked =
             Array.from(
               row.querySelectorAll(
                 ".keyword-field:checked"
               )
             )
-              .map(
-                checkbox =>
-                  checkbox.value
-              );
+            .map(
+              checkbox =>
+                checkbox.value
+            );
 
+          return checked;
 
-          keywords.push({
+        });
 
-            keyword,
-
-            fields
-
-          });
-
-        }
-      );
-
-
-      // --------------------------------------
-      // GROUP MODE
-      // --------------------------------------
 
       const modeInput =
         group.querySelector(
@@ -800,53 +771,25 @@ function getCriteria() {
         );
 
 
-      const mode =
-        modeInput
-          ? modeInput.value
-          : "any";
+      return {
 
+        keywords,
 
-      // Only save non-empty groups
+        fields,
 
-      if (keywords.length > 0) {
+        mode:
+          modeInput &&
+          modeInput.value === "all"
+            ? "all"
+            : "any"
 
-        keywordGroups.push({
+      };
 
-          keywords,
-
-          mode:
-            mode === "all"
-              ? "all"
-              : "any"
-
-        });
-
-      }
-
-    }
-  );
-
-
-  // ========================================
-  // FLAT KEYWORD LIST
-  // ========================================
-
-  const allKeywordData = [];
-
-
-  keywordGroups.forEach(
-    group => {
-
-      group.keywords.forEach(
-        item => {
-
-          allKeywordData.push(item);
-
-        }
-      );
-
-    }
-  );
+    })
+    .filter(
+      group =>
+        group.keywords.length > 0
+    );
 
 
   // ========================================
@@ -859,61 +802,11 @@ function getCriteria() {
         ".excluded-keyword"
       )
     )
-      .map(
-        input =>
-          input.value.trim()
-      )
-      .filter(Boolean);
-
-
-  // ========================================
-  // AUTHOR
-  // ========================================
-
-  const authorInput =
-    document.getElementById(
-      "authorInput"
-    );
-
-
-  // ========================================
-  // JOURNAL
-  // ========================================
-
-  const journalInput =
-    document.getElementById(
-      "journalInput"
-    );
-
-
-  // ========================================
-  // FIELD
-  // ========================================
-
-  const fieldInput =
-    document.getElementById(
-      "fieldInput"
-    );
-
-
-  // ========================================
-  // DATE RANGE
-  // ========================================
-
-  const dateRangeInput =
-    document.getElementById(
-      "dateRangeInput"
-    );
-
-
-  // ========================================
-  // DOCUMENT TYPE
-  // ========================================
-
-  const documentTypeInput =
-    document.getElementById(
-      "documentTypeInput"
-    );
+    .map(
+      input =>
+        input.value.trim()
+    )
+    .filter(Boolean);
 
 
   // ========================================
@@ -922,58 +815,39 @@ function getCriteria() {
 
   return {
 
-    // New group structure
+    keywordGroups:
+      groups,
 
-    keywordGroups,
-
-
-    // Compatibility with existing code
+    // Keep a flat keyword list too
+    // so older code doesn't immediately break.
 
     keywords:
-      allKeywordData.map(
-        item =>
-          item.keyword
+      groups.flatMap(
+        group =>
+          group.keywords
       ),
 
-
-    keywordData:
-      allKeywordData,
-
-
     excluded,
-
-
-    // Old global keywordMode is no longer
-    // the main mode. Groups have their
-    // own ALL / ANY mode.
-
-    keywordMode:
-      "all",
-
 
     author:
       authorInput
         ? authorInput.value.trim()
         : "",
 
-
     journal:
       journalInput
         ? journalInput.value.trim()
         : "",
-
 
     field:
       fieldInput
         ? fieldInput.value
         : "",
 
-
     dateRange:
       dateRangeInput
         ? dateRangeInput.value
         : "all",
-
 
     documentType:
       documentTypeInput
