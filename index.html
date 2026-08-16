@@ -1611,57 +1611,60 @@
       <div class="advanced-grid">
 
 
-        <!-- ADD THIS TO YOUR <style> BLOCK IN index.html -->
-<style>
-  .keyword-group-ui {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    font-weight: 700;
-    color: #334155;
-  }
-  .keyword-row-ui {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .keyword-row-ui input { flex: 2; }
-  .keyword-row-ui select { flex: 1; }
-  .group-logic {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px dashed #cbd5e1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: #475569;
-  }
-  .and-divider {
-    text-align: center;
-    font-weight: 800;
-    color: #94a3b8;
-    margin: 4px 0 16px;
-  }
-</style>
+        <!-- REQUIRED KEYWORDS -->
 
-<!-- REPLACE THE REQUIRED KEYWORDS FIELD IN index.html WITH THIS -->
-<div class="field full-width" id="keywordGroupsContainer">
-  <label>Required keywords (Groups are connected by AND)</label>
-  
-  <div id="groupsWrapper"></div>
-  
-  <button type="button" id="addGroupButton" class="secondary" style="margin-top: 8px;">
-    + Add keyword group
+<div class="field full-width">
+
+  <label>
+    Required keywords
+  </label>
+
+  <div id="keywordContainer"></div>
+
+  <button
+    type="button"
+    id="addKeywordButton"
+    class="secondary"
+  >
+    + Add keyword
   </button>
+
+
+  <div class="keyword-mode">
+
+    <label>
+      Match keywords:
+    </label>
+
+
+    <label>
+
+      <input
+        type="radio"
+        name="keywordMode"
+        value="all"
+        checked
+      >
+
+      All keywords
+
+    </label>
+
+
+    <label>
+
+      <input
+        type="radio"
+        name="keywordMode"
+        value="any"
+      >
+
+      Any keyword
+
+    </label>
+
+  </div>
+
 </div>
 
         <!-- EXCLUDED KEYWORDS -->
