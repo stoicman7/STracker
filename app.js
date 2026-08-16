@@ -312,9 +312,7 @@ function createInputRow(
 ) {
 
   if (!container) {
-
     return;
-
   }
 
 
@@ -367,8 +365,9 @@ function createInputRow(
     options.innerHTML = `
 
       <label>
-        Search keywords in:
+        Search keyword in:
       </label>
+
 
       <div class="checkbox-group">
 
@@ -489,6 +488,158 @@ function createInputRow(
 
 }
 
+  // ==========================================
+// CREATE KEYWORD GROUP
+// ==========================================
+
+function createKeywordGroup() {
+
+  const container =
+    document.getElementById(
+      "keywordGroupsContainer"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const group =
+    document.createElement("div");
+
+
+  group.className =
+    "keyword-group";
+
+
+  group.innerHTML = `
+
+    <div class="keyword-group-header">
+
+      <strong>
+        Keyword group
+      </strong>
+
+      <button
+        type="button"
+        class="danger remove-keyword-group"
+      >
+        Remove group
+      </button>
+
+    </div>
+
+
+    <div class="keyword-group-rows"></div>
+
+
+    <button
+      type="button"
+      class="secondary add-keyword-to-group"
+    >
+      + Add keyword
+    </button>
+
+
+    <div class="keyword-group-mode">
+
+      <label>
+        Match within this group:
+      </label>
+
+
+      <label>
+
+        <input
+          type="radio"
+          name="group-mode-${Date.now()}"
+          value="all"
+        >
+
+        ALL
+
+      </label>
+
+
+      <label>
+
+        <input
+          type="radio"
+          name="group-mode-${Date.now()}"
+          value="any"
+          checked
+        >
+
+        ANY
+
+      </label>
+
+    </div>
+
+  `;
+
+
+  container.appendChild(
+    group
+  );
+
+
+  const rows =
+    group.querySelector(
+      ".keyword-group-rows"
+    );
+
+
+  // First keyword automatically
+
+  createInputRow(
+    rows,
+    "required-keyword",
+    "Example: memory formation"
+  );
+
+
+  // ----------------------------------------
+  // ADD KEYWORD TO GROUP
+  // ----------------------------------------
+
+  group
+    .querySelector(
+      ".add-keyword-to-group"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        createInputRow(
+          rows,
+          "required-keyword",
+          "Example: cognition"
+        );
+
+      }
+    );
+
+
+  // ----------------------------------------
+  // REMOVE GROUP
+  // ----------------------------------------
+
+  group
+    .querySelector(
+      ".remove-keyword-group"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        group.remove();
+
+      }
+    );
+
+}
 
  
 // ==========================================
