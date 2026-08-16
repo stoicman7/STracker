@@ -572,132 +572,160 @@ function getCriteria() {
     keywords,
 
     keywordData,
+// ==========================================
+// GET ADVANCED CRITERIA
+// ==========================================
 
-    keywordMode,
+function getCriteria() {
+
+  const keywordRows =
+    Array.from(
+      document.querySelectorAll(
+        "#keywordContainer .keyword-row"
+      )
+    );
+
+
+  const keywordData = [];
+
+
+  keywordRows.forEach(
+    row => {
+
+      const input =
+        row.querySelector(
+          ".required-keyword"
+        );
+
+
+      if (!input) {
+        return;
+      }
+
+
+      const keyword =
+        input.value.trim();
+
+
+      if (!keyword) {
+        return;
+      }
+
+
+      const fields =
+        Array.from(
+          row.querySelectorAll(
+            ".keyword-field:checked"
+          )
+        )
+          .map(
+            checkbox =>
+              checkbox.value
+          );
+
+
+      keywordData.push({
+
+        keyword,
+
+        fields
+
+      });
+
+    }
+  );
+
+
+  // ========================================
+  // EXCLUDED KEYWORDS
+  // ========================================
+
+  const excluded =
+    Array.from(
+      document.querySelectorAll(
+        ".excluded-keyword"
+      )
+    )
+      .map(
+        input =>
+          input.value.trim()
+      )
+      .filter(Boolean);
+
+
+  // ========================================
+  // KEYWORD MODE
+  // ========================================
+
+  const keywordModeInput =
+    document.querySelector(
+      'input[name="keywordMode"]:checked'
+    );
+
+
+  const keywordMode =
+    keywordModeInput
+      ? keywordModeInput.value
+      : "all";
+
+
+  // ========================================
+  // RETURN CRITERIA
+  // ========================================
+
+  return {
+
+    keywords:
+      keywordData.map(
+        item =>
+          item.keyword
+      ),
+
+
+    keywordData,
+
+
+    excluded,
+
+
+    keywordMode:
+      keywordMode === "any"
+        ? "any"
+        : "all",
+
 
     author:
-      document
-        .getElementById("authorInput")
-        ?.value
-        .trim() || "",
+      authorInput
+        ? authorInput.value.trim()
+        : "",
+
 
     journal:
-      document
-        .getElementById("journalInput")
-        ?.value
-        .trim() || "",
+      journalInput
+        ? journalInput.value.trim()
+        : "",
+
 
     field:
-      document
-        .getElementById("fieldInput")
-        ?.value || "",
+      fieldInput
+        ? fieldInput.value
+        : "",
+
 
     dateRange:
-      document
-        .getElementById("dateRangeInput")
-        ?.value || "all",
+      dateRangeInput
+        ? dateRangeInput.value
+        : "all",
+
 
     documentType:
-      document
-        .getElementById("documentTypeInput")
-        ?.value || ""
+      documentTypeInput
+        ? documentTypeInput.value
+        : ""
 
   };
 
 }
-
-    // ========================================
-    // EXCLUDED KEYWORDS
-    // ========================================
-
-    const excluded =
-      Array.from(
-        document.querySelectorAll(
-          ".excluded-keyword"
-        )
-      )
-        .map(
-          input =>
-            input.value.trim()
-        )
-        .filter(Boolean);
-
-
-    // ========================================
-    // KEYWORD MODE
-    // ========================================
-
-    const keywordModeInput =
-      document.querySelector(
-        'input[name="keywordMode"]:checked'
-      );
-
-
-    const keywordMode =
-      keywordModeInput
-        ? keywordModeInput.value
-        : "all";
-
-
-    // ========================================
-    // RETURN CRITERIA
-    // ========================================
-
-    return {
-
-      keywords:
-        keywordData.map(
-          item =>
-            item.keyword
-        ),
-
-
-      keywordData,
-
-
-      excluded,
-
-
-      keywordMode:
-        keywordMode === "any"
-          ? "any"
-          : "all",
-
-
-      author:
-        authorInput
-          ? authorInput.value.trim()
-          : "",
-
-
-      journal:
-        journalInput
-          ? journalInput.value.trim()
-          : "",
-
-
-      field:
-        fieldInput
-          ? fieldInput.value
-          : "",
-
-
-      dateRange:
-        dateRangeInput
-          ? dateRangeInput.value
-          : "all",
-
-
-      documentType:
-        documentTypeInput
-          ? documentTypeInput.value
-          : ""
-
-    };
-
-  }
-
-
   // ==========================================
   // PREVIEW
   // ==========================================
