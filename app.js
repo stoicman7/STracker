@@ -3789,74 +3789,122 @@ function matchesAdvancedCriteria(
 
 
   // ==========================================
-  // CLONE CRITERIA
-  // ==========================================
+// CLONE CRITERIA
+// ==========================================
 
-  function cloneCriteria(criteria) {
+function cloneCriteria(criteria) {
 
-    return {
+  return {
 
-      keywords:
-        Array.isArray(
-          criteria?.keywords
-        )
-          ? [
-              ...criteria.keywords
-            ]
-          : [],
+    keywords:
+      Array.isArray(
+        criteria?.keywords
+      )
+        ? [
+            ...criteria.keywords
+          ]
+        : [],
 
-      excluded:
-        Array.isArray(
-          criteria?.excluded
-        )
-          ? [
-              ...criteria.excluded
-            ]
-          : [],
 
-      keywordFields:
-        Array.isArray(
-          criteria?.keywordFields
-        )
-          ? [
-              ...criteria.keywordFields
-            ]
-          : [],
+    // ----------------------------------------
+    // PRESERVE PER-KEYWORD FIELD SELECTIONS
+    // ----------------------------------------
 
-      keywordMode:
-        criteria?.keywordMode === "any"
-          ? "any"
-          : "all",
+    keywordData:
+      Array.isArray(
+        criteria?.keywordData
+      )
+        ? criteria.keywordData
+            .map(
+              item => ({
 
-      author:
-        criteria?.author ||
-        "",
+                keyword:
+                  String(
+                    item?.keyword || ""
+                  )
+                    .trim(),
 
-      journal:
-        criteria?.journal ||
-        "",
+                fields:
+                  Array.isArray(
+                    item?.fields
+                  )
+                    ? [
+                        ...item.fields
+                      ]
+                    : []
 
-      field:
-        criteria?.field ||
-        "",
+              })
+            )
+            .filter(
+              item =>
+                item.keyword
+            )
+        : [],
 
-      dateRange:
-        criteria?.dateRange ||
-        "all",
 
-      documentType:
-        criteria?.documentType ||
-        "",
+    excluded:
+      Array.isArray(
+        criteria?.excluded
+      )
+        ? [
+            ...criteria.excluded
+          ]
+        : [],
 
-      accuracy:
-        Number(
-          criteria?.accuracy || 0
-        )
 
-    };
+    // ----------------------------------------
+    // LEGACY FIELD SUPPORT
+    // ----------------------------------------
 
-  }
+    keywordFields:
+      Array.isArray(
+        criteria?.keywordFields
+      )
+        ? [
+            ...criteria.keywordFields
+          ]
+        : [],
 
+
+    keywordMode:
+      criteria?.keywordMode === "any"
+        ? "any"
+        : "all",
+
+
+    author:
+      criteria?.author ||
+      "",
+
+
+    journal:
+      criteria?.journal ||
+      "",
+
+
+    field:
+      criteria?.field ||
+      "",
+
+
+    dateRange:
+      criteria?.dateRange ||
+      "all",
+
+
+    documentType:
+      criteria?.documentType ||
+      "",
+
+
+    accuracy:
+      Number(
+        criteria?.accuracy || 0
+      )
+
+  };
+
+}
 
   // ==========================================
   // GET TRACKERS
