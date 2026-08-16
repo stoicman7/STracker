@@ -522,14 +522,14 @@ function createKeywordGroup() {
 
   const container =
     document.getElementById(
-      "keywordContainer"
+      "keywordGroupsContainer"
     );
 
 
   if (!container) {
 
     console.error(
-      "keywordContainer not found."
+      "keywordGroupsContainer not found."
     );
 
     return;
@@ -558,6 +558,7 @@ function createKeywordGroup() {
       <strong>
         Keyword group
       </strong>
+
 
       <button
         type="button"
@@ -710,62 +711,131 @@ function createKeywordGroup() {
 
 function getCriteria() {
 
-  const keywordRows =
+  const keywordGroups =
     Array.from(
       document.querySelectorAll(
-        "#keywordContainer .keyword-row"
+        "#keywordGroupsContainer .keyword-group"
       )
     );
 
 
-  const keywordData = [];
+  const groups = [];
 
 
-  keywordRows.forEach(
-    row => {
+  // ========================================
+  // READ KEYWORD GROUPS
+  // ========================================
 
-      const input =
-        row.querySelector(
-          ".required-keyword"
+  keywordGroups.forEach(
+    group => {
+
+      const rows =
+        Array.from(
+          group.querySelectorAll(
+            ".keyword-row"
+          )
         );
 
 
-      if (!input) {
+      const keywords = [];
+
+
+      rows.forEach(
+        row => {
+
+          const input =
+            row.querySelector(
+              ".required-keyword"
+            );
+
+
+          if (!input) {
+            return;
+          }
+
+
+          const keyword =
+            input.value.trim();
+
+
+          if (!keyword) {
+            return;
+          }
+
+
+          const fields =
+            Array.from(
+              row.querySelectorAll(
+                ".keyword-field:checked"
+              )
+            )
+              .map(
+                checkbox =>
+                  checkbox.value
+              );
+
+
+          keywords.push({
+
+            keyword,
+
+            fields
+
+          });
+
+        }
+      );
+
+
+      if (!keywords.length) {
         return;
       }
 
 
-      const keyword =
-        input.value.trim();
+      // --------------------------------------
+      // GROUP MODE
+      // --------------------------------------
+
+      const modeInput =
+        group.querySelector(
+          'input[type="radio"]:checked'
+        );
 
 
-      if (!keyword) {
-        return;
-      }
+      const mode =
+        modeInput?.value === "all"
+          ? "all"
+          : "any";
 
 
-      const fields =
-        Array.from(
-          row.querySelectorAll(
-            ".keyword-field:checked"
-          )
-        )
-          .map(
-            checkbox =>
-              checkbox.value
-          );
+      groups.push({
 
+        keywords,
 
-      keywordData.push({
-
-        keyword,
-
-        fields
+        mode
 
       });
 
     }
   );
+
+
+  // ========================================
+  // FLAT KEYWORDS
+  // ========================================
+
+  const keywordData =
+    groups.flatMap(
+      group =>
+        group.keywords
+    );
+
+
+  const keywords =
+    keywordData.map(
+      item =>
+        item.keyword
+    );
 
 
   // ========================================
@@ -786,7 +856,7 @@ function getCriteria() {
 
 
   // ========================================
-  // KEYWORD MODE
+  // LEGACY KEYWORD MODE
   // ========================================
 
   const keywordModeInput =
@@ -807,18 +877,14 @@ function getCriteria() {
 
   return {
 
-    keywords:
-      keywordData.map(
-        item =>
-          item.keyword
-      ),
-
+    keywords,
 
     keywordData,
 
+    keywordGroups:
+      groups,
 
     excluded,
-
 
     keywordMode:
       keywordMode === "any"
@@ -858,41 +924,6 @@ function getCriteria() {
   };
 
 }
-  // ==========================================
-  // PREVIEW
-  // ==========================================
-
-  if (previewButton) {
-
-    previewButton.addEventListener(
-      "click",
-      () => {
-
-        runAdvancedSearch(false);
-
-      }
-    );
-
-  }
-
-
-  // ==========================================
-  // TRACK
-  // ==========================================
-
-  if (advancedTrackButton) {
-
-    advancedTrackButton.addEventListener(
-      "click",
-      () => {
-
-        runAdvancedSearch(true);
-
-      }
-    );
-
-  }
-
 
   // ==========================================
   // ADVANCED SEARCH
