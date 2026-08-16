@@ -209,19 +209,49 @@ document.addEventListener("DOMContentLoaded", () => {
 // ADD KEYWORD GROUP
 // ==========================================
 
-if (addKeywordButton) {
+document.addEventListener(
+  "click",
+  event => {
 
-  addKeywordButton.addEventListener(
-    "click",
-    () => {
+    const button =
+      event.target.closest(
+        "#addKeywordButton"
+      );
 
-      createKeywordGroup();
+
+    if (!button) {
+
+      return;
 
     }
-  );
 
-}
 
+    event.preventDefault();
+
+
+    console.log(
+      "Add keyword button clicked"
+    );
+
+
+    if (
+      typeof createKeywordGroup !==
+      "function"
+    ) {
+
+      console.error(
+        "createKeywordGroup() is not available."
+      );
+
+      return;
+
+    }
+
+
+    createKeywordGroup();
+
+  }
+);
 
   // ==========================================
   // ADD EXCLUDED KEYWORD
