@@ -205,174 +205,27 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
 
- // ==========================================
-  // KEYWORD GROUPS UI
   // ==========================================
-  
-  let groupCount = 0;
+// ADD REQUIRED KEYWORD
+// ==========================================
 
-  // Wait for the HTML to load before attaching the button listener
-  document.addEventListener("DOMContentLoaded", () => {
-    const addGroupButton = document.getElementById("addGroupButton");
-    
-    if (addGroupButton) {
-      addGroupButton.addEventListener("click", () => createGroupUI());
-      // Create one default group on load
-      createGroupUI(); 
+if (addKeywordButton) {
+
+  addKeywordButton.addEventListener(
+    "click",
+    () => {
+
+      createInputRow(
+        keywordContainer,
+        "required-keyword",
+        "Example: memory formation"
+      );
+
     }
-  });
+  );
 
-  function createGroupUI() {
-    const groupsWrapper = document.getElementById("groupsWrapper");
-    if (!groupsWrapper) return;
-    
-    groupCount++;
+}
 
-    const groupDiv = document.createElement("div");
-    groupDiv.className = "keyword-group-ui";
-    
-    // Add "AND" divider if it's not the first group
-    if (groupsWrapper.children.length > 0) {
-      const divider = document.createElement("div");
-      divider.className = "and-divider";
-      divider.textContent = "AND";
-      groupsWrapper.appendChild(divider);
-    }
-
-    groupDiv.innerHTML = `
-      <div class="group-header">
-        <span>Keyword Group</span>
-        <button type="button" class="danger remove-group-btn" style="padding: 4px 8px; font-size: 12px;">Remove group</button>
-      </div>
-      <div class="group-keywords"></div>
-      <button type="button" class="secondary add-group-keyword-btn" style="padding: 6px 12px; margin-top: 4px; font-size: 13px;">+ Add keyword</button>
-      
-      <div class="group-logic">
-        <strong>Match within group:</strong>
-        <label><input type="radio" name="groupMode_${groupCount}" value="all"> ALL (AND)</label>
-        <label><input type="radio" name="groupMode_${groupCount}" value="any" checked> ANY (OR)</label>
-      </div>
-    `;
-
-    // Remove group logic
-    groupDiv.querySelector(".remove-group-btn").addEventListener("click", () => {
-      // Remove the preceding 'AND' divider if it exists
-      if (groupDiv.previousElementSibling && groupDiv.previousElementSibling.className === "and-divider") {
-        groupDiv.previousElementSibling.remove();
-      } else if (groupDiv.nextElementSibling && groupDiv.nextElementSibling.className === "and-divider") {
-        // If it was the first item, remove the next 'AND' instead
-        groupDiv.nextElementSibling.remove();
-      }
-      groupDiv.remove();
-    });
-
-    const keywordsContainer = groupDiv.querySelector(".group-keywords");
-    
-    // Add Keyword logic
-    groupDiv.querySelector(".add-group-keyword-btn").addEventListener("click", () => {
-      createKeywordUI(keywordsContainer);
-    });
-
-    // Initialize with one empty keyword
-    createKeywordUI(keywordsContainer);
-    groupsWrapper.appendChild(groupDiv);
-  }
-
-  function createKeywordUI(container) {
-    const row = document.createElement("div");
-    row.className = "keyword-row-ui";
-    
-    row.innerHTML = `
-      <input type="text" class="keyword-input" placeholder="Example: memory formation">
-      <select class="keyword-field-select">
-        <option value="all">All fields</option>
-        <option value="title">Title</option>
-        <option value="abstract">Abstract</option>
-        <option value="authors">Authors</option>
-        <option value="journal">Journal</option>
-        <option value="concepts">Concepts</option>
-      </select>
-      <button type="button" class="danger remove-keyword-btn" style="padding: 0 12px;">×</button>
-    `;
-
-    row.querySelector(".remove-keyword-btn").addEventListener("click", () => row.remove());
-    container.appendChild(row);
-  }
-
-  function createGroupUI() {
-    if (!groupsWrapper) return;
-    groupCount++;
-
-    const groupDiv = document.createElement("div");
-    groupDiv.className = "keyword-group-ui";
-    
-    // Add "AND" divider if it's not the first group
-    if (groupsWrapper.children.length > 0) {
-      const divider = document.createElement("div");
-      divider.className = "and-divider";
-      divider.textContent = "AND";
-      groupsWrapper.appendChild(divider);
-    }
-
-    groupDiv.innerHTML = `
-      <div class="group-header">
-        <span>Keyword Group</span>
-        <button type="button" class="danger remove-group-btn" style="padding: 4px 8px; font-size: 12px;">Remove group</button>
-      </div>
-      <div class="group-keywords"></div>
-      <button type="button" class="secondary add-group-keyword-btn" style="padding: 6px 12px; margin-top: 4px; font-size: 13px;">+ Add keyword</button>
-      
-      <div class="group-logic">
-        <strong>Match within group:</strong>
-        <label><input type="radio" name="groupMode_${groupCount}" value="all"> ALL (AND)</label>
-        <label><input type="radio" name="groupMode_${groupCount}" value="any" checked> ANY (OR)</label>
-      </div>
-    `;
-
-    // Remove group logic
-    groupDiv.querySelector(".remove-group-btn").addEventListener("click", () => {
-      // Remove the preceding 'AND' divider if it exists
-      if (groupDiv.previousElementSibling && groupDiv.previousElementSibling.className === "and-divider") {
-        groupDiv.previousElementSibling.remove();
-      } else if (groupDiv.nextElementSibling && groupDiv.nextElementSibling.className === "and-divider") {
-        // If it was the first item, remove the next 'AND' instead
-        groupDiv.nextElementSibling.remove();
-      }
-      groupDiv.remove();
-    });
-
-    const keywordsContainer = groupDiv.querySelector(".group-keywords");
-    
-    // Add Keyword logic
-    groupDiv.querySelector(".add-group-keyword-btn").addEventListener("click", () => {
-      createKeywordUI(keywordsContainer);
-    });
-
-    // Initialize with one empty keyword
-    createKeywordUI(keywordsContainer);
-    groupsWrapper.appendChild(groupDiv);
-  }
-
-  function createKeywordUI(container) {
-    const row = document.createElement("div");
-    row.className = "keyword-row-ui";
-    
-    row.innerHTML = `
-      <input type="text" class="keyword-input" placeholder="Example: memory formation">
-      <select class="keyword-field-select">
-        <option value="all">All fields</option>
-        <option value="title">Title</option>
-        <option value="abstract">Abstract</option>
-        <option value="authors">Authors</option>
-        <option value="journal">Journal</option>
-        <option value="concepts">Concepts</option>
-      </select>
-      <button type="button" class="danger remove-keyword-btn" style="padding: 0 12px;">×</button>
-    `;
-
-    row.querySelector(".remove-keyword-btn").addEventListener("click", () => row.remove());
-    container.appendChild(row);
-  }
 
   // ==========================================
   // ADD EXCLUDED KEYWORD
@@ -639,45 +492,67 @@ function createInputRow(
 
  
 // ==========================================
-  // GET ADVANCED CRITERIA
-  // ==========================================
-  function getCriteria() {
-    const keywordGroups = [];
-    
-    // Read the groups from UI
-    if (document.getElementById("groupsWrapper")) {
-      document.querySelectorAll(".keyword-group-ui").forEach(groupEl => {
-        const mode = groupEl.querySelector('input[type="radio"]:checked').value;
-        const keywords = [];
-        
-        groupEl.querySelectorAll(".keyword-row-ui").forEach(rowEl => {
-          const term = rowEl.querySelector(".keyword-input").value.trim();
-          const field = rowEl.querySelector(".keyword-field-select").value;
-          if (term) keywords.push({ term, fields: [field] });
-        });
-        
-        if (keywords.length > 0) {
-          keywordGroups.push({ mode, keywords });
-        }
+// GET ADVANCED CRITERIA
+// ==========================================
+
+function getCriteria() {
+
+  const keywordRows =
+    Array.from(
+      document.querySelectorAll(
+        "#keywordContainer .keyword-row"
+      )
+    );
+
+
+  const keywordData = [];
+
+
+  keywordRows.forEach(
+    row => {
+
+      const input =
+        row.querySelector(
+          ".required-keyword"
+        );
+
+
+      if (!input) {
+        return;
+      }
+
+
+      const keyword =
+        input.value.trim();
+
+
+      if (!keyword) {
+        return;
+      }
+
+
+      const fields =
+        Array.from(
+          row.querySelectorAll(
+            ".keyword-field:checked"
+          )
+        )
+          .map(
+            checkbox =>
+              checkbox.value
+          );
+
+
+      keywordData.push({
+
+        keyword,
+
+        fields
+
       });
+
     }
-
-    const excluded = Array.from(document.querySelectorAll(".excluded-keyword"))
-      .map(input => input.value.trim()).filter(Boolean);
-
-    const accuracy = accuracyInput ? Number(accuracyInput.value) : 0;
-
-    return {
-      keywordGroups,
-      excluded,
-      author: authorInput ? authorInput.value.trim() : "",
-      journal: journalInput ? journalInput.value.trim() : "",
-      field: fieldInput ? fieldInput.value : "",
-      dateRange: dateRangeInput ? dateRangeInput.value : "all",
-      documentType: documentTypeInput ? documentTypeInput.value : "",
-      accuracy: Number.isFinite(accuracy) ? Math.max(0, Math.min(100, accuracy)) : 0
-    };
-  }
+  );
 
 
   // ========================================
@@ -1014,37 +889,78 @@ function createInputRow(
     // ==========================================
   // SEARCH WITH CRITERIA
   // ==========================================
-  async function searchWithCriteria(criteria) {
-    const safeCriteria = cloneCriteria(criteria);
-    let queryTerms = [];
-    
-    // Extract terms for initial broad API fetch
-    if (safeCriteria.keywordGroups) {
-      safeCriteria.keywordGroups.forEach(g => {
-        g.keywords.forEach(k => { if (k.term) queryTerms.push(k.term); });
-      });
-    }
 
-    let query = queryTerms.join(" ");
+  async function searchWithCriteria(
+    criteria
+  ) {
+
+    let query =
+      criteria.keywords.join(" ");
+
 
     if (!query) {
-      if (safeCriteria.author) query = safeCriteria.author;
-      else if (safeCriteria.journal) query = safeCriteria.journal;
-      else if (safeCriteria.field) query = safeCriteria.field;
+
+      if (criteria.author) {
+
+        query =
+          criteria.author;
+
+      } else if (criteria.journal) {
+
+        query =
+          criteria.journal;
+
+      } else if (criteria.field) {
+
+        query =
+          criteria.field;
+
+      }
+
     }
 
-    if (!query) throw new Error("No searchable criteria were provided.");
 
-    let papers = await searchFreeSources(query);
-    papers = papers.filter(paper => matchesAdvancedCriteria(paper, safeCriteria));
-    papers = papers.map(paper => ({
-      ...paper,
-      strackerScore: calculateScore(paper, safeCriteria)
-    }));
-    papers = papers.filter(paper => paper.strackerScore >= safeCriteria.accuracy);
-    sortPapersNewestFirst(papers);
-    
+    if (!query) {
+
+      throw new Error(
+        "No searchable criteria were provided."
+      );
+
+    }
+
+
+    // Use the exact same research sources
+    // as Quick Search.
+
+    let papers =
+      await searchFreeSources(
+        query
+      );
+
+
+    // Apply ONLY the criteria explicitly
+    // selected by the user.
+
+    papers =
+      papers.filter(
+        paper =>
+          matchesAdvancedCriteria(
+            paper,
+            criteria
+          )
+      );
+
+
+    // Newest papers first.
+    // No artificial relevance score.
+
+    sortPapersNewestFirst(
+      papers
+    );
+
+
     return papers;
+
   }
 
   // ==========================================
@@ -1982,97 +1898,579 @@ function createInputRow(
 
 
   // ==========================================
-  // ADVANCED FILTERS (CORE AND/OR LOGIC)
-  // ==========================================
-  function matchesAdvancedCriteria(paper, criteria) {
-    const safeCriteria = cloneCriteria(criteria); // Ensures standard group format
-    
-    const title = String(paper.title || "").toLowerCase();
-    const abstract = getAbstract(paper).toLowerCase();
-    const authors = getAuthors(paper).toLowerCase();
-    const journal = getJournal(paper).toLowerCase();
-    const concepts = getConcepts(paper).toLowerCase();
-    const allText = [title, abstract, authors, journal, concepts].join(" ");
+// ADVANCED FILTERS
+// ==========================================
 
-    // 1. Check Exclusions
-    for (const keyword of safeCriteria.excluded) {
-      const term = String(keyword || "").trim().toLowerCase();
-      if (term && allText.includes(term)) return false;
+function matchesAdvancedCriteria(
+  paper,
+  criteria
+) {
+
+  const safeCriteria =
+    criteria || {};
+
+
+  const title =
+    String(
+      paper.title || ""
+    );
+
+
+  const abstract =
+    getAbstract(paper);
+
+
+  const authors =
+    getAuthors(paper);
+
+
+  const journal =
+    getJournal(paper);
+
+
+  const concepts =
+    getConcepts(paper);
+
+
+  const allText = [
+
+    title,
+    abstract,
+    authors,
+    journal,
+    concepts
+
+  ]
+    .join(" ")
+    .toLowerCase();
+
+
+  // ========================================
+  // EXCLUDED KEYWORDS
+  // ========================================
+
+  const excluded =
+    Array.isArray(
+      safeCriteria.excluded
+    )
+      ? safeCriteria.excluded
+      : [];
+
+
+  for (const keyword of excluded) {
+
+    const term =
+      String(keyword || "")
+        .trim()
+        .toLowerCase();
+
+
+    if (!term) {
+
+      continue;
+
     }
 
-    // 2. Check Keyword Groups (AND logic across groups)
-    const groups = safeCriteria.keywordGroups;
-    if (groups && groups.length > 0) {
-      for (const group of groups) {
-        if (!group.keywords || group.keywords.length === 0) continue;
 
-        const groupMode = group.mode === "all" ? "all" : "any";
-        let matchCount = 0;
+    if (allText.includes(term)) {
 
-        for (const kw of group.keywords) {
-          const term = String(kw.term || "").trim().toLowerCase();
-          if (!term) continue;
+      return false;
 
-          const fields = Array.isArray(kw.fields) && kw.fields.length > 0 ? kw.fields : ["all"];
-          let termMatched = false;
+    }
 
-          // Check specific fields
-          if (fields.includes("all")) {
-            termMatched = allText.includes(term);
-          } else {
-            if (fields.includes("title") && title.includes(term)) termMatched = true;
-            else if (fields.includes("abstract") && abstract.includes(term)) termMatched = true;
-            else if (fields.includes("authors") && authors.includes(term)) termMatched = true;
-            else if (fields.includes("journal") && journal.includes(term)) termMatched = true;
-            else if (fields.includes("concepts") && concepts.includes(term)) termMatched = true;
+  }
+
+
+  // ========================================
+  // REQUIRED KEYWORDS
+  // ========================================
+
+  const keywordData =
+    Array.isArray(
+      safeCriteria.keywordData
+    )
+      ? safeCriteria.keywordData
+          .filter(
+            item =>
+              item &&
+              String(
+                item.keyword || ""
+              ).trim()
+          )
+          .map(
+            item => ({
+
+              keyword:
+                String(
+                  item.keyword
+                )
+                  .trim()
+                  .toLowerCase(),
+
+              fields:
+                Array.isArray(item.fields)
+                  ? item.fields
+                  : []
+
+            })
+          )
+      : [];
+
+
+  /*
+   * Each keyword now keeps its own fields.
+   *
+   * Example:
+   *
+   * memory       -> title
+   * inflammation -> abstract
+   *
+   * They are evaluated independently.
+   */
+
+
+  if (keywordData.length > 0) {
+
+    const keywordMode =
+      safeCriteria.keywordMode === "any"
+        ? "any"
+        : "all";
+
+
+    const keywordMatches =
+      keywordData.map(
+        item => {
+
+          const fieldTexts = [];
+
+
+          // ----------------------------------
+          // Use ONLY the fields belonging
+          // to this specific keyword.
+          // ----------------------------------
+
+          if (
+            item.fields.includes("title")
+          ) {
+
+            fieldTexts.push(title);
+
           }
 
-          if (termMatched) matchCount++;
-        }
 
-        // Group Evaluation
-        if (groupMode === "any" && matchCount === 0) {
-          return false; // Group failed (ANY requires >= 1 match)
+          if (
+            item.fields.includes("abstract")
+          ) {
+
+            fieldTexts.push(abstract);
+
+          }
+
+
+          if (
+            item.fields.includes("authors")
+          ) {
+
+            fieldTexts.push(authors);
+
+          }
+
+
+          if (
+            item.fields.includes("journal")
+          ) {
+
+            fieldTexts.push(journal);
+
+          }
+
+
+          if (
+            item.fields.includes("concepts")
+          ) {
+
+            fieldTexts.push(concepts);
+
+          }
+
+
+          /*
+           * If this particular keyword has
+           * no fields selected, preserve the
+           * old behavior and search all fields.
+           */
+
+          const searchableText =
+            fieldTexts.length > 0
+              ? fieldTexts
+                  .join(" ")
+                  .toLowerCase()
+              : allText;
+
+
+          return searchableText.includes(
+            item.keyword
+          );
+
         }
-        if (groupMode === "all" && matchCount < group.keywords.filter(k => k.term.trim()).length) {
-          return false; // Group failed (ALL requires 100% match)
-        }
+      );
+
+
+    // --------------------------------------
+    // ANY keyword
+    // --------------------------------------
+
+    if (keywordMode === "any") {
+
+      if (
+        !keywordMatches.some(Boolean)
+      ) {
+
+        return false;
+
       }
+
     }
 
-    // 3. Check Metadata Filters
-    const authorFilter = String(safeCriteria.author || "").trim().toLowerCase();
-    if (authorFilter && !authors.includes(authorFilter)) return false;
 
-    const journalFilter = String(safeCriteria.journal || "").trim().toLowerCase();
-    if (journalFilter && !journal.includes(journalFilter)) return false;
+    // --------------------------------------
+    // ALL keywords
+    // --------------------------------------
 
-    const fieldFilter = String(safeCriteria.field || "").trim().toLowerCase();
-    if (fieldFilter && !allText.includes(fieldFilter)) return false;
+    else {
 
-    // 4. Date Range
-    const dateRange = String(safeCriteria.dateRange || "all");
-    if (dateRange !== "all") {
-      const days = Number(dateRange);
-      if (Number.isFinite(days) && days > 0) {
-        const publicationDate = new Date(paper.publication_date || paper.published || paper.date || "");
-        if (!Number.isNaN(publicationDate.getTime())) {
-          const cutoff = new Date();
-          cutoff.setDate(cutoff.getDate() - days);
-          if (publicationDate < cutoff) return false;
-        }
+      if (
+        !keywordMatches.every(Boolean)
+      ) {
+
+        return false;
+
       }
+
     }
 
-    // 5. Document Type
-    const documentType = String(safeCriteria.documentType || "").trim().toLowerCase();
-    if (documentType) {
-      const paperType = String(paper.type || paper.documentType || "").toLowerCase();
-      if (!paperType.includes(documentType)) return false;
-    }
-
-    return true;
   }
+
+
+  // ========================================
+  // LEGACY KEYWORD FALLBACK
+  // ========================================
+
+  /*
+   * Keeps compatibility with older saved
+   * criteria that have "keywords" but do
+   * not have "keywordData".
+   */
+
+  else {
+
+    const keywords =
+      Array.isArray(
+        safeCriteria.keywords
+      )
+        ? safeCriteria.keywords
+            .map(
+              keyword =>
+                String(keyword || "")
+                  .trim()
+                  .toLowerCase()
+            )
+            .filter(Boolean)
+        : [];
+
+
+    const selectedFields =
+      Array.isArray(
+        safeCriteria.keywordFields
+      )
+        ? safeCriteria.keywordFields
+        : [];
+
+
+    let searchableText =
+      allText;
+
+
+    if (selectedFields.length > 0) {
+
+      const fieldTexts = [];
+
+
+      if (
+        selectedFields.includes("title")
+      ) {
+
+        fieldTexts.push(title);
+
+      }
+
+
+      if (
+        selectedFields.includes("abstract")
+      ) {
+
+        fieldTexts.push(abstract);
+
+      }
+
+
+      if (
+        selectedFields.includes("authors")
+      ) {
+
+        fieldTexts.push(authors);
+
+      }
+
+
+      if (
+        selectedFields.includes("journal")
+      ) {
+
+        fieldTexts.push(journal);
+
+      }
+
+
+      if (
+        selectedFields.includes("concepts")
+      ) {
+
+        fieldTexts.push(concepts);
+
+      }
+
+
+      searchableText =
+        fieldTexts
+          .join(" ")
+          .toLowerCase();
+
+    }
+
+
+    if (keywords.length > 0) {
+
+      const keywordMode =
+        safeCriteria.keywordMode === "any"
+          ? "any"
+          : "all";
+
+
+      if (keywordMode === "any") {
+
+        const anyMatch =
+          keywords.some(
+            keyword =>
+              searchableText.includes(
+                keyword
+              )
+          );
+
+
+        if (!anyMatch) {
+
+          return false;
+
+        }
+
+      }
+
+      else {
+
+        const allMatch =
+          keywords.every(
+            keyword =>
+              searchableText.includes(
+                keyword
+              )
+          );
+
+
+        if (!allMatch) {
+
+          return false;
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+  // ========================================
+  // AUTHOR
+  // ========================================
+
+  const authorFilter =
+    String(
+      safeCriteria.author || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    authorFilter &&
+    !authors
+      .toLowerCase()
+      .includes(authorFilter)
+  ) {
+
+    return false;
+
+  }
+
+
+  // ========================================
+  // JOURNAL
+  // ========================================
+
+  const journalFilter =
+    String(
+      safeCriteria.journal || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    journalFilter &&
+    !journal
+      .toLowerCase()
+      .includes(journalFilter)
+  ) {
+
+    return false;
+
+  }
+
+
+  // ========================================
+  // RESEARCH FIELD
+  // ========================================
+
+  const fieldFilter =
+    String(
+      safeCriteria.field || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    fieldFilter &&
+    !allText.includes(fieldFilter)
+  ) {
+
+    return false;
+
+  }
+
+
+  // ========================================
+  // DATE RANGE
+  // ========================================
+
+  const dateRange =
+    String(
+      safeCriteria.dateRange || "all"
+    );
+
+
+  if (dateRange !== "all") {
+
+    const days =
+      Number(dateRange);
+
+
+    if (
+      Number.isFinite(days) &&
+      days > 0
+    ) {
+
+      const publicationDate =
+        new Date(
+          paper.publication_date ||
+          paper.published ||
+          paper.publicationDate ||
+          paper.date ||
+          ""
+        );
+
+
+      if (
+        !Number.isNaN(
+          publicationDate.getTime()
+        )
+      ) {
+
+        const cutoff =
+          new Date();
+
+
+        cutoff.setDate(
+          cutoff.getDate() - days
+        );
+
+
+        if (
+          publicationDate < cutoff
+        ) {
+
+          return false;
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+  // ========================================
+  // DOCUMENT TYPE
+  // ========================================
+
+  const documentType =
+    String(
+      safeCriteria.documentType || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (documentType) {
+
+    const paperType =
+      String(
+        paper.type ||
+        paper.documentType ||
+        paper.publicationType ||
+        ""
+      )
+        .toLowerCase();
+
+
+    if (
+      !paperType.includes(
+        documentType
+      )
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+
+  return true;
+
+}
 
   
 
@@ -3222,31 +3620,73 @@ function createInputRow(
   // TRACKER PROFILE IDENTITY
   // ==========================================
 
-  function createTrackerProfileKey(criteria) {
-  const safeCriteria = cloneCriteria(criteria);
-  
-  // Sort deeply to ensure consistent hashing
-  const normalizedGroups = safeCriteria.keywordGroups.map(g => ({
-    mode: g.mode,
-    keywords: g.keywords.map(k => ({
-      term: normalizeString(k.term),
-      fields: normalizeStringArray(k.fields)
-    })).sort((a, b) => a.term.localeCompare(b.term))
-  })).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  function createTrackerProfileKey(
+    criteria
+  ) {
 
-  const normalized = {
-    keywordGroups: normalizedGroups,
-    excluded: normalizeStringArray(safeCriteria.excluded),
-    author: normalizeString(safeCriteria.author),
-    journal: normalizeString(safeCriteria.journal),
-    field: normalizeString(safeCriteria.field),
-    dateRange: String(safeCriteria.dateRange || "all").trim().toLowerCase(),
-    documentType: normalizeString(safeCriteria.documentType),
-    accuracy: Number(safeCriteria.accuracy || 0)
-  };
+    const normalized = {
 
-  return JSON.stringify(normalized);
-}
+      keywords:
+        normalizeStringArray(
+          criteria?.keywords
+        ),
+
+      excluded:
+        normalizeStringArray(
+          criteria?.excluded
+        ),
+
+      keywordFields:
+        normalizeStringArray(
+          criteria?.keywordFields
+        ),
+
+      keywordMode:
+        criteria?.keywordMode === "any"
+          ? "any"
+          : "all",
+
+      author:
+        normalizeString(
+          criteria?.author
+        ),
+
+      journal:
+        normalizeString(
+          criteria?.journal
+        ),
+
+      field:
+        normalizeString(
+          criteria?.field
+        ),
+
+      dateRange:
+        String(
+          criteria?.dateRange || "all"
+        )
+          .trim()
+          .toLowerCase(),
+
+      documentType:
+        normalizeString(
+          criteria?.documentType
+        ),
+
+      accuracy:
+        Number(
+          criteria?.accuracy || 0
+        )
+
+    };
+
+
+    return JSON.stringify(
+      normalized
+    );
+
+  }
+
 
   // ==========================================
   // STABLE TRACKER ID
@@ -3349,45 +3789,74 @@ function createInputRow(
 
 
   // ==========================================
-  // CLONE CRITERIA (WITH MIGRATION)
+  // CLONE CRITERIA
   // ==========================================
-  function cloneCriteria(criteria) {
-    const clonedGroups = [];
 
-    // Migrate Legacy Format
-    if (criteria?.keywords && criteria.keywords.length > 0 && (!criteria.keywordGroups || criteria.keywordGroups.length === 0)) {
-      clonedGroups.push({
-        mode: criteria.keywordMode === "any" ? "any" : "all",
-        keywords: criteria.keywords.map(k => ({
-          term: k,
-          fields: Array.isArray(criteria.keywordFields) && criteria.keywordFields.length > 0 ? [...criteria.keywordFields] : ["all"]
-        }))
-      });
-    } 
-    // Handle New Format
-    else if (Array.isArray(criteria?.keywordGroups)) {
-      criteria.keywordGroups.forEach(g => {
-        clonedGroups.push({
-          mode: g.mode === "any" ? "any" : "all",
-          keywords: Array.isArray(g.keywords) ? g.keywords.map(k => ({
-            term: k.term || "",
-            fields: Array.isArray(k.fields) ? [...k.fields] : ["all"]
-          })) : []
-        });
-      });
-    }
+  function cloneCriteria(criteria) {
 
     return {
-      keywordGroups: clonedGroups,
-      excluded: Array.isArray(criteria?.excluded) ? [...criteria.excluded] : [],
-      author: criteria?.author || "",
-      journal: criteria?.journal || "",
-      field: criteria?.field || "",
-      dateRange: criteria?.dateRange || "all",
-      documentType: criteria?.documentType || "",
-      accuracy: Number(criteria?.accuracy || 0)
+
+      keywords:
+        Array.isArray(
+          criteria?.keywords
+        )
+          ? [
+              ...criteria.keywords
+            ]
+          : [],
+
+      excluded:
+        Array.isArray(
+          criteria?.excluded
+        )
+          ? [
+              ...criteria.excluded
+            ]
+          : [],
+
+      keywordFields:
+        Array.isArray(
+          criteria?.keywordFields
+        )
+          ? [
+              ...criteria.keywordFields
+            ]
+          : [],
+
+      keywordMode:
+        criteria?.keywordMode === "any"
+          ? "any"
+          : "all",
+
+      author:
+        criteria?.author ||
+        "",
+
+      journal:
+        criteria?.journal ||
+        "",
+
+      field:
+        criteria?.field ||
+        "",
+
+      dateRange:
+        criteria?.dateRange ||
+        "all",
+
+      documentType:
+        criteria?.documentType ||
+        "",
+
+      accuracy:
+        Number(
+          criteria?.accuracy || 0
+        )
+
     };
+
   }
+
 
   // ==========================================
   // GET TRACKERS
@@ -3897,22 +4366,64 @@ function createInputRow(
   // SHORT TRACKER LABEL
   // ==========================================
 
-  function getTrackerShortLabel(tracker) {
-  const criteria = cloneCriteria(tracker?.criteria || {});
-  const allTerms = [];
-  criteria.keywordGroups.forEach(g => {
-    g.keywords.forEach(k => { if (k.term) allTerms.push(k.term); });
-  });
+  function getTrackerShortLabel(
+    tracker
+  ) {
 
-  if (allTerms.length) {
-    const text = allTerms.slice(0, 3).join(", ");
-    return allTerms.length > 3 ? `${text} +${allTerms.length - 3}` : text;
+    const criteria =
+      tracker?.criteria || {};
+
+
+    const keywords =
+      Array.isArray(criteria.keywords)
+        ? criteria.keywords.filter(Boolean)
+        : [];
+
+
+    if (keywords.length) {
+
+      const text =
+        keywords.slice(0, 3).join(", ");
+
+
+      if (keywords.length > 3) {
+
+        return (
+          `${text} +${keywords.length - 3}`
+        );
+
+      }
+
+
+      return text;
+
+    }
+
+
+    if (criteria.author) {
+
+      return `Author: ${criteria.author}`;
+
+    }
+
+
+    if (criteria.journal) {
+
+      return `Journal: ${criteria.journal}`;
+
+    }
+
+
+    if (criteria.field) {
+
+      return `Field: ${criteria.field}`;
+
+    }
+
+
+    return "Custom research profile";
+
   }
-  if (criteria.author) return `Author: ${criteria.author}`;
-  if (criteria.journal) return `Journal: ${criteria.journal}`;
-  if (criteria.field) return `Field: ${criteria.field}`;
-  return "Custom research profile";
-}
 
 
   // ==========================================
