@@ -9,6 +9,57 @@
 
   <style>
 
+    /* =========================================================
+       STRACKER VISUAL IDENTITY
+       A scientific-instrument palette built around a single
+       deep laboratory red (#950606) — used sparingly, as a
+       precision accent against neutral paper/ink tones, never
+       as a wash of color across the whole interface.
+       ========================================================= */
+
+    :root {
+
+      /* Brand accent — deep laboratory red */
+      --accent: #950606;
+      --accent-dark: #6e0404;
+      --accent-darker: #4a0303;
+      --accent-tint: #fbeceb;
+      --accent-tint-strong: #f2d3d1;
+      --accent-ink: #3a0505;
+
+      /* Secondary lab-navy, used only in the header */
+      --navy-950: #0f172a;
+      --navy-900: #1b1030;
+      --navy-800: #2a0f18;
+
+      /* Neutrals */
+      --ink: #172033;
+      --text: #334155;
+      --text-subtle: #475569;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --border: #e2e8f0;
+      --border-strong: #d1d5db;
+      --surface: #ffffff;
+      --surface-muted: #f8fafc;
+      --surface-muted-2: #f1f5f9;
+
+      /* Status colors (kept independent of the brand accent
+         so "tracked" / "new" / "danger" states stay legible) */
+      --success: #0f9d6b;
+      --success-tint: #ecfdf5;
+      --success-border: #cdf1e2;
+      --success-ink: #05714a;
+      --danger: #b3400f;
+      --danger-tint: #fdf1ea;
+      --danger-border: #f4d9c6;
+
+      --shadow-color: 15, 23, 42;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
 
     /* =========================================================
    MINIMAL TRACKING STATISTICS
@@ -246,9 +297,9 @@
       background:
         linear-gradient(
           135deg,
-          #0f172a 0%,
-          #172554 50%,
-          #1e3a8a 100%
+          var(--navy-950) 0%,
+          var(--navy-900) 55%,
+          var(--accent-darker) 130%
         );
 
       color: white;
@@ -270,7 +321,7 @@
 
       border-radius: 50%;
 
-      background: rgba(96, 165, 250, 0.12);
+      background: rgba(149, 6, 6, 0.16);
 
       top: -180px;
       left: 10%;
@@ -286,10 +337,36 @@
 
       border-radius: 50%;
 
-      background: rgba(59, 130, 246, 0.10);
+      background: rgba(255, 255, 255, 0.05);
 
       bottom: -260px;
       right: 8%;
+    }
+
+    header::after,
+    header::before {
+      pointer-events: none;
+    }
+
+    header h1 {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1::before {
+      content: "";
+
+      display: inline-block;
+
+      width: 10px;
+      height: 10px;
+
+      border-radius: 50%;
+
+      background: #ef7a6c;
+
+      box-shadow: 0 0 0 4px rgba(239, 122, 108, 0.18);
     }
 
     header h1 {
@@ -432,10 +509,10 @@
     select:focus {
       outline: none;
 
-      border-color: #2563eb;
+      border-color: var(--accent);
 
       box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.12);
+        0 0 0 3px rgba(149, 6, 6, 0.12);
     }
 
 
@@ -453,8 +530,8 @@
       background:
         linear-gradient(
           135deg,
-          #2563eb,
-          #1d4ed8
+          var(--accent),
+          var(--accent-dark)
         );
 
       color: white;
@@ -476,14 +553,14 @@
       background:
         linear-gradient(
           135deg,
-          #1d4ed8,
-          #1e40af
+          var(--accent-dark),
+          var(--accent-darker)
         );
 
       transform: translateY(-1px);
 
       box-shadow:
-        0 5px 12px rgba(37, 99, 235, 0.20);
+        0 5px 12px rgba(149, 6, 6, 0.22);
     }
 
     button:active {
@@ -499,11 +576,11 @@
     }
 
     .danger {
-      background: #dc2626;
+      background: var(--danger);
     }
 
     .danger:hover {
-      background: #b91c1c;
+      background: #8f330c;
     }
 
 
@@ -542,17 +619,73 @@
 
     .keyword-row {
       display: flex;
+      flex-direction: column;
 
-      gap: 8px;
+      gap: 10px;
 
-      margin-bottom: 8px;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+
+      border-bottom: 1px dashed var(--border);
     }
 
-    .keyword-row input {
+    .keyword-group-rows .keyword-row:last-child {
+      padding-bottom: 0;
+      margin-bottom: 0;
+
+      border-bottom: none;
+    }
+
+    .keyword-row-main {
+      display: flex;
+
+      gap: 8px;
+    }
+
+    .keyword-row-main input {
       flex: 1;
     }
 
-    .keyword-options,
+    .keyword-row-simple {
+      flex-direction: row;
+
+      padding-bottom: 0;
+      margin-bottom: 8px;
+
+      border-bottom: none;
+    }
+
+    .keyword-row-simple input {
+      flex: 1;
+    }
+
+    .keyword-remove-button {
+      flex-shrink: 0;
+
+      width: 40px;
+      padding: 0;
+
+      border-radius: 10px;
+
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+
+      color: var(--danger);
+
+      font-size: 19px;
+      line-height: 1;
+
+      box-shadow: none;
+    }
+
+    .keyword-remove-button:hover {
+      background: var(--danger-tint);
+      border-color: var(--danger);
+
+      transform: none;
+      box-shadow: none;
+    }
+
     .keyword-mode {
       margin-top: 15px;
 
@@ -566,7 +699,6 @@
       border-radius: 12px;
     }
 
-    .keyword-options > label,
     .keyword-mode > label:first-child {
       display: block;
 
@@ -582,9 +714,7 @@
 
       flex-wrap: wrap;
 
-      gap: 12px 18px;
-
-      margin-bottom: 13px;
+      gap: 10px 14px;
     }
 
     .checkbox-group label,
@@ -608,13 +738,145 @@
 
       padding: 0;
 
-      accent-color: #2563eb;
+      accent-color: var(--accent);
     }
 
     .keyword-mode > label:not(:first-child) {
       display: inline-flex;
 
       margin-right: 20px;
+    }
+
+
+    /* =========================================================
+       COLLAPSIBLE "SEARCH KEYWORDS IN" FIELD SELECTOR
+       ========================================================= */
+
+    .keyword-fields-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+
+      background: var(--surface-muted);
+
+      overflow: hidden;
+
+      transition: border-color 0.2s ease;
+    }
+
+    .keyword-fields-card.expanded {
+      border-color: var(--accent-tint-strong);
+    }
+
+    .keyword-fields-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      width: 100%;
+
+      gap: 10px;
+
+      padding: 10px 12px;
+
+      background: transparent;
+      border: none;
+      box-shadow: none;
+
+      cursor: pointer;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      color: var(--text-subtle);
+
+      text-align: left;
+    }
+
+    .keyword-fields-toggle:hover {
+      background: var(--accent-tint);
+      color: var(--accent-dark);
+
+      transform: none;
+      box-shadow: none;
+    }
+
+    .keyword-fields-toggle-text {
+      flex-shrink: 0;
+    }
+
+    .keyword-fields-summary {
+      display: none;
+
+      flex: 1;
+      flex-wrap: wrap;
+
+      justify-content: flex-end;
+
+      gap: 5px;
+    }
+
+    .keyword-fields-card:not(.expanded) .keyword-fields-summary {
+      display: flex;
+    }
+
+    .keyword-fields-chip {
+      display: inline-block;
+
+      background: var(--surface);
+      border: 1px solid var(--accent-tint-strong);
+
+      color: var(--accent-dark);
+
+      font-size: 11px;
+      font-weight: 700;
+
+      padding: 3px 9px;
+
+      border-radius: 999px;
+
+      white-space: nowrap;
+    }
+
+    .keyword-fields-chip-muted {
+      background: var(--surface);
+      border-color: var(--border);
+
+      color: var(--text-muted);
+    }
+
+    .keyword-fields-chevron {
+      flex-shrink: 0;
+
+      color: var(--text-muted);
+
+      transition: transform 0.25s ease;
+    }
+
+    .keyword-fields-card.expanded .keyword-fields-chevron {
+      color: var(--accent);
+
+      transform: rotate(180deg);
+    }
+
+    .keyword-fields-panel {
+      display: grid;
+
+      grid-template-rows: 0fr;
+
+      transition: grid-template-rows 0.25s ease;
+    }
+
+    .keyword-fields-card.expanded .keyword-fields-panel {
+      grid-template-rows: 1fr;
+    }
+
+    .keyword-fields-panel-inner {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .keyword-fields-panel-inner > .checkbox-group {
+      padding: 2px 12px 14px;
     }
 
 
@@ -647,7 +909,7 @@
 
       font-weight: 800;
 
-      color: #2563eb;
+      color: var(--accent);
 
       margin-bottom: 5px;
     }
@@ -657,7 +919,7 @@
 
       cursor: pointer;
 
-      accent-color: #2563eb;
+      accent-color: var(--accent);
     }
 
 
@@ -686,9 +948,11 @@
        ========================================================= */
 
     .paper {
+      position: relative;
+
       background: #ffffff;
 
-      padding: 25px;
+      padding: 25px 25px 25px 28px;
 
       border:
         1px solid #e5e7eb;
@@ -702,14 +966,39 @@
 
       transition:
         transform 0.2s ease,
-        box-shadow 0.2s ease;
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .paper::before {
+      content: "";
+
+      position: absolute;
+
+      top: 14px;
+      bottom: 14px;
+      left: 0;
+
+      width: 3px;
+
+      border-radius: 0 3px 3px 0;
+
+      background: var(--accent-tint-strong);
+
+      transition: background 0.2s ease;
     }
 
     .paper:hover {
       transform: translateY(-2px);
 
+      border-color: var(--accent-tint-strong);
+
       box-shadow:
         0 8px 24px rgba(15, 23, 42, 0.09);
+    }
+
+    .paper:hover::before {
+      background: var(--accent);
     }
 
     .paper h2 {
@@ -721,7 +1010,7 @@
     }
 
     .paper a {
-      color: #2563eb;
+      color: var(--accent-dark);
 
       font-weight: 700;
 
@@ -740,9 +1029,9 @@
     .badge {
       display: inline-block;
 
-      background: #eff6ff;
+      background: var(--accent-tint);
 
-      color: #1d4ed8;
+      color: var(--accent-dark);
 
       padding: 5px 9px;
 
@@ -797,9 +1086,6 @@
         0 10px 30px rgba(15, 23, 42, 0.10);
     }
 
-
-    /* Profile heading text generated by JS */
-
     .tracked-topic h2,
     .tracked-topic h3 {
       color: #111827;
@@ -817,18 +1103,13 @@
       line-height: 1.6;
     }
 
-
-    /* =========================================================
-       TRACKER TEXT / DATA VISUAL POLISH
-       ========================================================= */
-
     .tracked-topic .badge {
-      background: #eff6ff;
+      background: var(--accent-tint);
 
-      color: #1d4ed8;
+      color: var(--accent-dark);
 
       border:
-        1px solid #dbeafe;
+        1px solid var(--accent-tint-strong);
 
       border-radius: 999px;
 
@@ -839,18 +1120,9 @@
       margin-top: 8px;
     }
 
-
-    /* Make common generated sections look like dashboard
-       blocks without changing JavaScript-generated markup. */
-
     .tracked-topic > div {
       line-height: 1.65;
     }
-
-
-    /* =========================================================
-       TRACKER STATISTICS
-       ========================================================= */
 
     .tracked-topic .tracker-stat {
       background: #f8fafc;
@@ -964,7 +1236,7 @@
 
     #results .card:first-child {
       border-top:
-        4px solid #2563eb;
+        4px solid var(--accent);
     }
 
 
@@ -1040,504 +1312,125 @@
       }
     }
 
-    /* =========================================================
-   COMPACT TRACKING STATISTICS
-   Matches the "Search keywords in" design
-   ========================================================= */
-
-.tracker-statistics-compact {
-
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 8px 18px;
-
-  margin-top: 8px;
-
-  padding: 14px 16px;
-
-  background: #f8fafc;
-
-  border:
-    1px solid #e2e8f0;
-
-  border-radius: 12px;
-
-}
-
-
-.tracker-stat-item {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  gap: 7px;
-
-  min-height: 30px;
-
-}
-
-
-.tracker-stat-label {
-
-  font-size: 13px;
-
-  color: #475569;
-
-  font-weight: 500;
-
-}
-
-
-.tracker-stat-value {
-
-  font-size: 13px;
-
-  color: #172033;
-
-  font-weight: 700;
-
-}
-
-
-/* Small separator between statistics */
-
-.tracker-stat-item:not(:last-child)::after {
-
-  content: "•";
-
-  color: #cbd5e1;
-
-  margin-left: 10px;
-
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-  .tracker-statistics-compact {
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: flex-start;
-
-    gap: 6px;
-
-    padding: 14px 16px;
-
-  }
-
-
-  .tracker-stat-item {
-
-    width: 100%;
-
-    justify-content: space-between;
-
-  }
-
-
-  .tracker-stat-item:not(:last-child)::after {
-
-    display: none;
-
-  }
-
-}
 
     /* =========================================================
-   MINIMAL TRACKER CARD
-   ========================================================= */
+       COMPACT TRACKING STATISTICS & MINIMAL DESIGN OVERRIDES
+       ========================================================= */
+
+    .tracker-statistics-compact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin-top: 8px;
+      padding: 14px 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    .tracker-stat-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+    }
+
+    .tracker-stat-item:not(:last-child)::after {
+      content: "•";
+      color: #cbd5e1;
+      margin-left: 10px;
+    }
+
+    .tracker-card-header {
+      padding: 18px 20px 12px;
+    }
+
+    .tracker-card-title {
+      display: flex;
+      align-items: center;
+    }
+
+    .tracker-id-label {
+      font-size: 17px;
+      font-weight: 700;
+      color: #334155;
+      margin: 0;
+    }
+
+    .tracker-section {
+      padding: 0 20px 14px;
+    }
+
+    .tracker-section-heading {
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .tracker-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 20px 18px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .tracker-actions button {
+      background: #64748b;
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    .tracker-actions button:hover {
+      background: #475569;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .tracker-dashboard {
+      padding: 18px 20px;
+    }
+
+    .tracker-dashboard-header {
+      margin: 0 0 10px;
+      padding: 0;
+    }
+
+    .tracker-dashboard-header h2 {
+      margin: 0;
+    }
+
+    .tracked-topic.tracker-card {
+      margin-bottom: 12px;
+      padding: 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .tracked-topic.tracker-card:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .tracker-number,
+    .tracker-card-title h3,
+    .tracker-card-title .tracker-id-label + h3 {
+      display: none !important;
+    }
+
+    .tracker-card-status {
+      margin: 0;
+      padding: 0;
+    }
+
+    .tracker-dashboard .tracker-status {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
 
-.tracker-card-header {
-  padding: 18px 20px 12px;
-}
-
-
-.tracker-card-title {
-  display: flex;
-  align-items: center;
-}
-
-
-.tracker-id-label {
-  font-size: 17px;
-
-  font-weight: 700;
-
-  color: #334155;
-
-  margin: 0;
-}
-
-
-/* =========================================================
-   TRACKING STATISTICS
-   ========================================================= */
-
-.tracker-section {
-  padding: 0 20px 14px;
-}
-
-
-.tracker-section-heading {
-  font-size: 14px;
-
-  font-weight: 700;
-
-  color: #334155;
-
-  margin-bottom: 8px;
-}
-
-
-.tracker-statistics-compact {
-  margin-top: 0;
-}
-
-
-/* =========================================================
-   ACTION BUTTONS
-   ========================================================= */
-
-.tracker-actions {
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 8px;
-
-  padding: 12px 20px 18px;
-
-  border-top: 1px solid #e5e7eb;
-}
-
-
-.tracker-actions button {
-  background: #64748b;
-
-  color: #ffffff;
-
-  box-shadow: none;
-}
-
-
-.tracker-actions button:hover {
-  background: #475569;
-
-  box-shadow: none;
-
-  transform: none;
-}
-
-
-/* Delete uses the same quiet style */
-
-.tracker-actions .delete-tracker-button {
-  background: #64748b;
-}
-
-
-.tracker-actions .delete-tracker-button:hover {
-  background: #475569;
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-  .tracker-card-header {
-    padding: 16px 16px 10px;
-  }
-
-
-  .tracker-section {
-    padding: 0 16px 12px;
-  }
-
-
-  .tracker-actions {
-    padding: 10px 16px 16px;
-
-    gap: 7px;
-  }
-
-
-  .tracker-actions button {
-    flex: 1;
-
-    min-width: 0;
-
-    padding: 10px 12px;
-
-    font-size: 13px;
-  }
-
-}
-
-    /* =========================================================
-   FINAL MINIMAL TRACKER DESIGN
-   ========================================================= */
-
-.tracker-dashboard {
-  padding: 18px 20px;
-}
-
-.tracker-dashboard-header {
-  margin: 0 0 10px;
-  padding: 0;
-}
-
-.tracker-dashboard-header h2 {
-  margin: 0;
-}
-
-
-/* Tracker card */
-
-.tracked-topic.tracker-card {
-  margin-bottom: 12px;
-  padding: 0;
-
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-
-  box-shadow: none;
-
-  transform: none;
-}
-
-.tracked-topic.tracker-card:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-
-/* Header */
-
-.tracker-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 12px 14px 8px;
-
-  min-height: 0;
-}
-
-.tracker-card-title {
-  display: flex;
-  align-items: center;
-}
-
-.tracker-id-label {
-  margin: 0;
-
-  font-size: 15px;
-  font-weight: 700;
-
-  color: #334155;
-}
-
-
-/* Completely hide old number/profile elements */
-
-.tracker-number,
-.tracker-card-title h3,
-.tracker-card-title .tracker-id-label + h3 {
-  display: none !important;
-}
-
-
-/* Status */
-
-.tracker-card-status {
-  margin: 0;
-  padding: 0;
-}
-
-.tracker-status {
-  padding: 4px 8px;
-
-  font-size: 11px;
-}
-
-
-/* Statistics */
-
-.tracker-section {
-  margin: 0;
-  padding: 4px 14px 10px;
-}
-
-.tracker-section-heading {
-  margin: 0 0 6px;
-
-  font-size: 13px;
-  font-weight: 700;
-
-  color: #475569;
-}
-
-
-/* Horizontal statistics */
-
-.tracker-stats {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-
-  gap: 6px 18px;
-
-  margin: 0;
-  padding: 0;
-}
-
-.tracker-stat {
-  display: inline-flex;
-  align-items: baseline;
-
-  gap: 5px;
-
-  margin: 0;
-  padding: 0;
-
-  background: transparent;
-  border: none;
-
-  text-align: left;
-
-  box-shadow: none;
-}
-
-.tracker-stat:hover {
-  background: transparent;
-  transform: none;
-}
-
-.tracker-stat-label {
-  font-size: 12px;
-  font-weight: 500;
-
-  color: #64748b;
-}
-
-.tracker-stat-value {
-  font-size: 13px;
-  font-weight: 700;
-
-  color: #334155;
-}
-
-.tracker-stat-icon {
-  display: none !important;
-}
-
-
-/* Buttons */
-
-.tracker-actions {
-  display: flex;
-  flex-wrap: wrap;
-
-  gap: 6px;
-
-  margin: 0;
-  padding: 8px 14px 12px;
-
-  border-top: 1px solid #f1f5f9;
-}
-
-.tracker-actions button {
-  margin: 0 !important;
-
-  padding: 8px 12px;
-
-  border-radius: 8px;
-
-  background: #64748b;
-  color: #ffffff;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  box-shadow: none;
-}
-
-.tracker-actions button:hover {
-  background: #475569;
-
-  transform: none;
-  box-shadow: none;
-}
-
-
-/* Remove old red Delete styling */
-
-.tracker-actions .delete-tracker-button,
-.tracker-actions .danger {
-  background: #64748b;
-}
-
-.tracker-actions .delete-tracker-button:hover,
-.tracker-actions .danger:hover {
-  background: #475569;
-}
-
-
-/* =========================================================
-   MOBILE — KEEP IT SHORT
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-  .tracker-dashboard {
-    padding: 14px;
-  }
-
-  .tracker-card-header {
-    padding: 10px 12px 6px;
-  }
-
-  .tracker-section {
-    padding: 3px 12px 8px;
-  }
-
-  .tracker-stats {
-    gap: 5px 12px;
-  }
-
-  .tracker-stat-label {
-    font-size: 11px;
-  }
-
-  .tracker-stat-value {
-    font-size: 12px;
-  }
-
-  .tracker-actions {
-    padding: 7px 12px 10px;
-
-    gap: 5px;
-  }
-
-  .tracker-actions button {
-    padding: 7px 10px;
-    font-size: 11px;
-  }
-
-}
 
     /* =========================================================
        KEYWORD GROUPS (AND / OR)
@@ -1549,15 +1442,24 @@
     }
 
     .keyword-group {
-      background: #f8fafc;
+      position: relative;
 
-      border: 1px solid #e2e8f0;
+      background: var(--surface);
 
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-tint-strong);
 
-      padding: 16px;
+      border-radius: var(--radius-md);
+
+      padding: 16px 16px 16px 18px;
 
       margin-top: 10px;
+
+      transition: border-left-color 0.2s ease;
+    }
+
+    .keyword-group:focus-within {
+      border-left-color: var(--accent);
     }
 
     .keyword-group-header {
@@ -1626,15 +1528,39 @@
     }
 
     .keyword-group-divider {
+      position: relative;
+
+      display: flex;
+      align-items: center;
+
       text-align: center;
 
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
 
-      color: #2563eb;
+      color: var(--accent-dark);
 
-      margin: 4px 0;
+      margin: 6px 0;
+    }
+
+    .keyword-group-divider::before,
+    .keyword-group-divider::after {
+      content: "";
+
+      flex: 1;
+
+      height: 1px;
+
+      background: var(--accent-tint-strong);
+    }
+
+    .keyword-group-divider::before {
+      margin-right: 10px;
+    }
+
+    .keyword-group-divider::after {
+      margin-left: 10px;
     }
 
     @media (max-width: 600px) {
@@ -1726,29 +1652,29 @@
 
         <!-- REQUIRED KEYWORDS -->
 
-<div class="field full-width">
+        <div class="field full-width">
 
-  <label>
-    Required keywords
-  </label>
+          <label>
+            Required keywords
+          </label>
 
-  <p class="hint">
-    Keyword groups are combined with AND. Inside a group, choose
-    ANY (OR) or ALL (AND) to control how its keywords are matched.
-    Example: (memory OR cognition) AND (inflammation OR neuroinflammation).
-  </p>
+          <p class="hint">
+            Keyword groups are combined with AND. Inside a group, choose
+            ANY (OR) or ALL (AND) to control how its keywords are matched.
+            Example: (memory OR cognition) AND (inflammation OR neuroinflammation).
+          </p>
 
-  <div id="keywordGroupsContainer"></div>
+          <div id="keywordGroupsContainer"></div>
 
-  <button
-    type="button"
-    id="addKeywordGroupButton"
-    class="secondary"
-  >
-    + Add keyword group
-  </button>
+          <button
+            type="button"
+            id="addKeywordGroupButton"
+            class="secondary"
+          >
+            + Add keyword group
+          </button>
 
-</div>
+        </div>
 
         <!-- EXCLUDED KEYWORDS -->
 
@@ -1761,7 +1687,7 @@
 
           <div id="excludeContainer">
 
-            <div class="keyword-row">
+            <div class="keyword-row keyword-row-simple">
 
               <input
                 type="text"
@@ -1939,8 +1865,8 @@
 
         </div>
 
+      </div>
 
-        
 
       <!-- ACTIONS -->
 
