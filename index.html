@@ -1613,160 +1613,59 @@
 
         <!-- REQUIRED KEYWORDS -->
 
-        <div class="field full-width">
+<div class="field full-width">
 
-          <label>
-            Required keywords
-          </label>
+  <label>
+    Required keywords
+  </label>
 
-          <div id="keywordContainer">
+  <div id="keywordContainer"></div>
 
-            <div class="keyword-row">
-
-              <input
-                type="text"
-                class="required-keyword"
-                placeholder="Example: cognitive neuroscience"
-              >
-
-            </div>
-
-          </div>
+  <button
+    type="button"
+    id="addKeywordButton"
+    class="secondary"
+  >
+    + Add keyword
+  </button>
 
 
-          <button
-            type="button"
-            id="addKeywordButton"
-            class="secondary"
-          >
-            + Add keyword
-          </button>
+  <div class="keyword-mode">
+
+    <label>
+      Match keywords:
+    </label>
 
 
-          <div class="keyword-options">
+    <label>
 
-            <label>
-              Search keywords in:
-            </label>
+      <input
+        type="radio"
+        name="keywordMode"
+        value="all"
+        checked
+      >
 
+      All keywords
 
-            <div class="checkbox-group">
-
-              <label>
-
-                <input
-                  type="checkbox"
-                  class="keyword-field"
-                  value="title"
-                >
-
-                Title
-
-              </label>
+    </label>
 
 
-              <label>
+    <label>
 
-                <input
-                  type="checkbox"
-                  class="keyword-field"
-                  value="abstract"
-                >
+      <input
+        type="radio"
+        name="keywordMode"
+        value="any"
+      >
 
-                Abstract
+      Any keyword
 
-              </label>
+    </label>
 
+  </div>
 
-              <label>
-
-                <input
-                  type="checkbox"
-                  class="keyword-field"
-                  value="authors"
-                >
-
-                Authors
-
-              </label>
-
-
-              <label>
-
-                <input
-                  type="checkbox"
-                  class="keyword-field"
-                  value="journal"
-                >
-
-                Journal
-
-              </label>
-
-
-              <label>
-
-                <input
-                  type="checkbox"
-                  class="keyword-field"
-                  value="concepts"
-                >
-
-                Concepts
-
-              </label>
-
-            </div>
-
-
-            <button
-              type="button"
-              id="selectAllKeywordFields"
-              class="secondary"
-            >
-              Select all
-            </button>
-
-          </div>
-
-
-          <div class="keyword-mode">
-
-            <label>
-              Match keywords:
-            </label>
-
-
-            <label>
-
-              <input
-                type="radio"
-                name="keywordMode"
-                value="all"
-                checked
-              >
-
-              All keywords
-
-            </label>
-
-
-            <label>
-
-              <input
-                type="radio"
-                name="keywordMode"
-                value="any"
-              >
-
-              Any keyword
-
-            </label>
-
-          </div>
-
-        </div>
-
+</div>
 
         <!-- EXCLUDED KEYWORDS -->
 
