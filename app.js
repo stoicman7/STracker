@@ -16,8 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const trackedTopics =
     document.getElementById("trackedTopics");
 
-  const keywordContainer =
-    document.getElementById("keywordContainer");
+  const container =
+  document.getElementById(
+    "keywordGroupsContainer" );
 
   const excludeContainer =
     document.getElementById("excludeContainer");
@@ -215,7 +216,7 @@ document.addEventListener(
 
     const button =
       event.target.closest(
-        "#addKeywordButton"
+        "#addKeywordGroupButton"
       );
 
 
@@ -230,7 +231,7 @@ document.addEventListener(
 
 
     console.log(
-      "Add keyword button clicked"
+      "Add keyword group button clicked"
     );
 
 
