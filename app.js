@@ -205,8 +205,8 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
 
-  // ==========================================
-// ADD REQUIRED KEYWORD
+ // ==========================================
+// ADD KEYWORD GROUP
 // ==========================================
 
 if (addKeywordButton) {
@@ -215,11 +215,7 @@ if (addKeywordButton) {
     "click",
     () => {
 
-      createInputRow(
-        keywordContainer,
-        "required-keyword",
-        "Example: memory formation"
-      );
+      createKeywordGroup();
 
     }
   );
