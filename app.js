@@ -709,10 +709,16 @@ function createKeywordGroup() {
 // ==========================================
 // GET ADVANCED CRITERIA
 // ==========================================
+// GET ADVANCED CRITERIA
+// ==========================================
 
 function getCriteria() {
 
-  const keywordGroups =
+  // ========================================
+  // KEYWORD GROUPS
+  // ========================================
+
+  const groups =
     Array.from(
       document.querySelectorAll(
         "#keywordGroupsContainer .keyword-group"
@@ -720,14 +726,10 @@ function getCriteria() {
     );
 
 
-  const groups = [];
+  const keywordGroups = [];
 
 
-  // ========================================
-  // READ KEYWORD GROUPS
-  // ========================================
-
-  keywordGroups.forEach(
+  groups.forEach(
     group => {
 
       const rows =
@@ -788,11 +790,6 @@ function getCriteria() {
       );
 
 
-      if (!keywords.length) {
-        return;
-      }
-
-
       // --------------------------------------
       // GROUP MODE
       // --------------------------------------
@@ -804,39 +801,52 @@ function getCriteria() {
 
 
       const mode =
-        modeInput?.value === "all"
-          ? "all"
+        modeInput
+          ? modeInput.value
           : "any";
 
 
-      groups.push({
+      // Only save non-empty groups
 
-        keywords,
+      if (keywords.length > 0) {
 
-        mode
+        keywordGroups.push({
 
-      });
+          keywords,
+
+          mode:
+            mode === "all"
+              ? "all"
+              : "any"
+
+        });
+
+      }
 
     }
   );
 
 
   // ========================================
-  // FLAT KEYWORDS
+  // FLAT KEYWORD LIST
   // ========================================
 
-  const keywordData =
-    groups.flatMap(
-      group =>
-        group.keywords
-    );
+  const allKeywordData = [];
 
 
-  const keywords =
-    keywordData.map(
-      item =>
-        item.keyword
-    );
+  keywordGroups.forEach(
+    group => {
+
+      group.keywords.forEach(
+        item => {
+
+          allKeywordData.push(item);
+
+        }
+      );
+
+    }
+  );
 
 
   // ========================================
@@ -857,19 +867,53 @@ function getCriteria() {
 
 
   // ========================================
-  // LEGACY KEYWORD MODE
+  // AUTHOR
   // ========================================
 
-  const keywordModeInput =
-    document.querySelector(
-      'input[name="keywordMode"]:checked'
+  const authorInput =
+    document.getElementById(
+      "authorInput"
     );
 
 
-  const keywordMode =
-    keywordModeInput
-      ? keywordModeInput.value
-      : "all";
+  // ========================================
+  // JOURNAL
+  // ========================================
+
+  const journalInput =
+    document.getElementById(
+      "journalInput"
+    );
+
+
+  // ========================================
+  // FIELD
+  // ========================================
+
+  const fieldInput =
+    document.getElementById(
+      "fieldInput"
+    );
+
+
+  // ========================================
+  // DATE RANGE
+  // ========================================
+
+  const dateRangeInput =
+    document.getElementById(
+      "dateRangeInput"
+    );
+
+
+  // ========================================
+  // DOCUMENT TYPE
+  // ========================================
+
+  const documentTypeInput =
+    document.getElementById(
+      "documentTypeInput"
+    );
 
 
   // ========================================
@@ -878,19 +922,33 @@ function getCriteria() {
 
   return {
 
-    keywords,
+    // New group structure
 
-    keywordData,
+    keywordGroups,
 
-    keywordGroups:
-      groups,
+
+    // Compatibility with existing code
+
+    keywords:
+      allKeywordData.map(
+        item =>
+          item.keyword
+      ),
+
+
+    keywordData:
+      allKeywordData,
+
 
     excluded,
 
+
+    // Old global keywordMode is no longer
+    // the main mode. Groups have their
+    // own ALL / ANY mode.
+
     keywordMode:
-      keywordMode === "any"
-        ? "any"
-        : "all",
+      "all",
 
 
     author:
@@ -925,7 +983,6 @@ function getCriteria() {
   };
 
 }
-
   // ==========================================
   // ADVANCED SEARCH
   // ==========================================
