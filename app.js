@@ -489,73 +489,7 @@ function createInputRow(
 
 }
 
-    // ==========================================
-  // GET ADVANCED CRITERIA
-  // ==========================================
-
-  function getCriteria() {
-
-    const keywordRows =
-      Array.from(
-        document.querySelectorAll(
-          ".keyword-row"
-        )
-      );
-
-
-    const keywordData = [];
-
-
-    keywordRows.forEach(
-      row => {
-
-        const input =
-          row.querySelector(
-            ".required-keyword"
-          );
-
-
-        if (!input) {
-
-          return;
-
-        }
-
-
-        const keyword =
-          input.value.trim();
-
-
-        if (!keyword) {
-
-          return;
-
-        }
-
-
-        const fields =
-          Array.from(
-            row.querySelectorAll(
-              ".keyword-field:checked"
-            )
-          )
-            .map(
-              checkbox =>
-                checkbox.value
-            );
-
-
-        keywordData.push({
-
-          keyword,
-
-          fields
-
-        });
-
-      }
-    );
-
+   function getCriteria
 
     // ========================================
     // EXCLUDED KEYWORDS
