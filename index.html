@@ -1256,6 +1256,7 @@
       transform: translateX(-50%);
 
       width: 250px;
+      max-width: calc(100vw - 24px);
 
       background: var(--paper-raised);
       border: 1px solid var(--line-strong);
@@ -1325,6 +1326,16 @@
 
     .keyword-group-divider::after {
       margin-left: 10px;
+    }
+
+    /* The "?" explainer sitting on the AND divider between
+       keyword groups reuses the same help-button/popover
+       styling as the OR/AND-within-a-group one above; it
+       just needs a little breathing room from the "AND"
+       label beside it. */
+
+    .keyword-group-divider .match-mode-help {
+      margin-left: 6px;
     }
 
 

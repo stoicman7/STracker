@@ -542,6 +542,15 @@ document.addEventListener("DOMContentLoaded", () => {
             popover.hidden =
               !willOpen;
 
+
+            if (willOpen) {
+
+              positionMatchModePopover(
+                popover
+              );
+
+            }
+
           }
 
 
@@ -613,9 +622,105 @@ document.addEventListener("DOMContentLoaded", () => {
 
       popover.hidden = true;
 
+
+      // Clear any viewport-clamp correction so the
+      // next open starts from the default centered
+      // position again (see positionMatchModePopover).
+
+      popover.style.transform =
+        "";
+
     }
 
   }
+
+
+  // ==========================================
+  // KEEP THE POPOVER ON-SCREEN (MOBILE FIX)
+  // ------------------------------------------
+  // The popover is centered on its "?" button by
+  // default (CSS: left: 50%; transform: translateX(-50%)).
+  // On narrow screens the button often sits close to
+  // one edge of the card, so that centered box can run
+  // past the edge of the viewport — the user only sees
+  // whichever half stayed on-screen. This measures the
+  // popover after it's shown and nudges it sideways by
+  // exactly the overflow amount, so it always stays
+  // fully visible without needing a hard-coded position
+  // per breakpoint.
+  // ==========================================
+
+  function positionMatchModePopover(popover) {
+
+    if (!popover) {
+
+      return;
+
+    }
+
+
+    const viewportMargin = 12;
+
+
+    // Reset to the default centered position before
+    // measuring, so re-opening after a previous
+    // correction doesn't compound the offset.
+
+    popover.style.transform =
+      "translateX(-50%)";
+
+
+    const rect =
+      popover.getBoundingClientRect();
+
+
+    const overflowRight =
+      rect.right -
+      (window.innerWidth - viewportMargin);
+
+
+    const overflowLeft =
+      viewportMargin - rect.left;
+
+
+    if (overflowRight > 0) {
+
+      popover.style.transform =
+        `translateX(calc(-50% - ${overflowRight}px))`;
+
+    } else if (overflowLeft > 0) {
+
+      popover.style.transform =
+        `translateX(calc(-50% + ${overflowLeft}px))`;
+
+    }
+
+  }
+
+
+  // Keep an open popover on-screen if the viewport is
+  // resized or the phone is rotated while it's open.
+
+  window.addEventListener(
+    "resize",
+    () => {
+
+      document
+        .querySelectorAll(
+          ".match-mode-help.open .match-mode-popover"
+        )
+        .forEach(
+          popover => {
+
+            positionMatchModePopover(
+              popover
+            );
+
+          }
+        );
+
+    }
+  );
 
 
   // ==========================================
@@ -834,7 +939,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Visual "AND" divider between this group and
-    // whichever group already precedes it.
+    // whichever group already precedes it, with its own
+    // "?" explainer covering how groups combine (separate
+    // from the OR/AND-within-a-group explainer on each
+    // group's own match-mode control).
 
     if (keywordGroupsContainer.children.length > 0) {
 
@@ -846,8 +954,42 @@ document.addEventListener("DOMContentLoaded", () => {
         "keyword-group-divider";
 
 
-      divider.textContent =
-        "AND";
+      divider.innerHTML = `
+
+        <span class="keyword-group-divider-label">
+          AND
+        </span>
+
+        <div class="match-mode-help">
+
+          <button
+            type="button"
+            class="match-mode-info-button"
+            aria-expanded="false"
+            aria-label="How AND between keyword groups works"
+          >
+            ?
+          </button>
+
+          <div class="match-mode-popover" role="tooltip" hidden>
+
+            <p>
+              <strong>AND</strong> connects keyword groups —
+              a paper must match <em>every</em> group to be
+              included.
+            </p>
+
+            <p class="match-mode-popover-example">
+              Example: Group 1 = <code>memory</code>,
+              Group 2 = <code>inflammation</code>.<br>
+              Only papers matching both groups are shown.
+            </p>
+
+          </div>
+
+        </div>
+
+      `;
 
 
       keywordGroupsContainer.appendChild(
@@ -5805,17 +5947,6 @@ function matchesAdvancedCriteria(
 
     if (!matchingIndexes.length) {
 
-      const paperIds =
-        Array.isArray(papers)
-          ? papers
-              .map(
-                paper =>
-                  getStablePaperId(paper)
-              )
-              .filter(Boolean)
-          : [];
-
-
       const tracker = {
 
         id:
@@ -5832,12 +5963,9 @@ function matchesAdvancedCriteria(
           getToday(),
 
         lastChecked:
-          getToday(),
+          "",
 
-        seenPaperIds:
-          Array.from(
-            new Set(paperIds)
-          ),
+        seenPaperIds: [],
 
         lastCheckNewPapers:
           0,
@@ -5846,6 +5974,24 @@ function matchesAdvancedCriteria(
           0
 
       };
+
+
+      // A brand-new tracker starts with nothing marked
+      // as "seen", so running the very same check used
+      // for existing trackers naturally treats every
+      // matching paper found right now as new — which is
+      // correct, since the user is seeing these results
+      // for the first time. This also keeps the "new vs.
+      // previously seen" bookkeeping (seenPaperIds,
+      // lastCheckNewPapers, totalNewPapers) consistent
+      // with how later checks compute it, instead of
+      // duplicating that logic here.
+
+      const check =
+        updateTrackerAfterCheck(
+          tracker,
+          papers
+        );
 
 
       trackers.push(tracker);
@@ -5860,12 +6006,11 @@ function matchesAdvancedCriteria(
 
         tracker,
 
-        newPapers: [],
+        newPapers:
+          check.newPapers,
 
         previouslySeenPapers:
-          Array.isArray(papers)
-            ? papers
-            : [],
+          check.previouslySeenPapers,
 
         isNewTracker: true
 
