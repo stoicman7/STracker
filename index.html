@@ -873,6 +873,16 @@
       border: 1px solid var(--line);
     }
 
+    .badge-source {
+      background: var(--paper-raised);
+      color: var(--ink-soft);
+      border: 1px solid var(--line-strong);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 10px;
+    }
+
 
     /* =========================================================
        TRACKER DASHBOARD
@@ -1201,6 +1211,91 @@
       color: var(--ink-soft);
     }
 
+    /* Match within: OR/AND help ("?") popover */
+
+    .match-mode-help {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .match-mode-info-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 18px;
+      height: 18px;
+      padding: 0;
+
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      background: var(--paper-raised);
+      color: var(--ink-muted);
+
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+
+      cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .match-mode-info-button:hover,
+    .match-mode-help.open .match-mode-info-button {
+      border-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .match-mode-popover {
+      position: absolute;
+      z-index: 5;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+
+      width: 250px;
+
+      background: var(--paper-raised);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+
+      padding: 12px 14px;
+
+      font-size: 12.5px;
+      font-weight: normal;
+      line-height: 1.45;
+      color: var(--ink-soft);
+
+      white-space: normal;
+      text-align: left;
+    }
+
+    .match-mode-popover p {
+      margin: 0 0 8px;
+    }
+
+    .match-mode-popover p:last-child {
+      margin-bottom: 0;
+    }
+
+    .match-mode-popover-example {
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: var(--ink-muted);
+      font-size: 12px;
+    }
+
+    .match-mode-popover code {
+      font-family: var(--font-mono);
+      background: var(--paper-sunken);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 11.5px;
+    }
+
     .keyword-group-divider {
       position: relative;
       display: flex;
@@ -1431,8 +1526,7 @@
         <label>Required keywords</label>
 
         <p class="hint">
-          Keyword groups are combined with AND. Inside a group, choose
-          ANY (OR) or ALL (AND) to control how its keywords are matched.
+          Keyword groups are combined with AND.
           Example: (memory OR cognition) AND (inflammation OR neuroinflammation).
         </p>
 
