@@ -58,6 +58,59 @@ document.addEventListener("DOMContentLoaded", () => {
   const advancedTrackButton =
     document.getElementById("advancedTrackButton");
 
+  const advancedFiltersCard =
+    document.getElementById("advancedFiltersCard");
+
+  const advancedFiltersToggle =
+    document.getElementById("advancedFiltersToggle");
+
+  const advancedFiltersSummary =
+    document.getElementById("advancedFiltersSummary");
+
+
+  // ==========================================
+  // ICONOGRAPHY
+  // ------------------------------------------
+  // A small set of single-stroke line icons used
+  // in place of emoji throughout the interface.
+  // Each returns an inline <svg>; sizing/color are
+  // controlled entirely through CSS (.icon).
+  // ==========================================
+
+  const ICONS = {
+
+    bell: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 8a5 5 0 0 1 10 0c0 3.2 1 4.2 1.5 5H3.5C4 12.2 5 11.2 5 8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8.3 15.5a1.8 1.8 0 0 0 3.4 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+    layers: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5 17 7l-7 3.5L3 7l7-3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 11l7 3.5L17 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14.5 10 18l7-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+    check: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+    clock: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5V10l2.6 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+    alert: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5 17.5 16h-15L10 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 8.3v3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="13.7" r="0.9" fill="currentColor"/></svg>',
+
+    help: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 8a2 2 0 1 1 2.9 1.8c-.7.4-.9.8-.9 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="13.6" r="0.85" fill="currentColor"/></svg>',
+
+    trash: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 6h12M8 6V4.6c0-.4.3-.6.6-.6h2.8c.3 0 .6.2.6.6V6M6.2 6l.6 9.4c0 .3.3.6.6.6h5.2c.3 0 .6-.3.6-.6L13.8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+    eye: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2 10s2.8-5 8-5 8 5 8 5-2.8 5-8 5-8-5-8-5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="10" r="2.2" stroke="currentColor" stroke-width="1.5"/></svg>',
+
+    refresh: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M15.5 6.5A6 6 0 1 0 16.8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M15.5 3v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+    external: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M8.5 5H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 3.5H16.5V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 4 9.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+    search: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3" stroke="currentColor" stroke-width="1.5"/><path d="M16.2 16.2 12.8 12.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+    calendar: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3.2" y="4.2" width="13.6" height="12" rx="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M3.2 8.2h13.6M7 3v2.6M13 3v2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+    flask: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M8 3h4M8.6 3v4.9L4.7 14a1.6 1.6 0 0 0 1.4 2.4h7.8a1.6 1.6 0 0 0 1.4-2.4L11.4 7.9V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 12h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+    stack: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 8.2h13" stroke="currentColor" stroke-width="1.5"/></svg>',
+
+    sliders: '<svg class="icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="6" r="1.4" fill="var(--paper)" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="10" r="1.4" fill="var(--paper)" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="14" r="1.4" fill="var(--paper)" stroke="currentColor" stroke-width="1.4"/></svg>'
+
+  };
+
 
   // ==========================================
   // SEARCH STATE
@@ -140,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     showSearchingMessage(
-      "🔎 Searching...",
+      "Searching…",
       `Searching free research sources for
        <strong>${escapeHtml(query)}</strong>`
     );
@@ -158,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!papers.length) {
 
         showMessage(`
-          <h2>🔎 No papers found</h2>
+          <h2>No papers found</h2>
 
           <p>
             No papers were found for
@@ -190,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       showMessage(`
-        <h2>❌ Search failed</h2>
+        <h2>Search failed</h2>
 
         <p>
           ${escapeHtml(
@@ -974,6 +1027,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         row.remove();
 
+        updateAdvancedFiltersSummary();
+
       }
     );
 
@@ -983,11 +1038,168 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
+    input.addEventListener(
+      "input",
+      updateAdvancedFiltersSummary
+    );
+
+
     container.appendChild(
       row
     );
 
   }
+
+
+  // ==========================================
+  // "REFINE FURTHER" PROGRESSIVE DISCLOSURE
+  // ------------------------------------------
+  // Collapsed by default so a new user can create
+  // a basic tracker from keywords alone. When
+  // collapsed, a chip summary communicates exactly
+  // which of the secondary filters are currently
+  // configured, without requiring the panel to be
+  // reopened.
+  // ==========================================
+
+  if (advancedFiltersToggle && advancedFiltersCard) {
+
+    advancedFiltersToggle.addEventListener(
+      "click",
+      () => {
+
+        const expanded =
+          advancedFiltersCard.classList.toggle(
+            "expanded"
+          );
+
+        advancedFiltersToggle.setAttribute(
+          "aria-expanded",
+          String(expanded)
+        );
+
+      }
+    );
+
+  }
+
+
+  function updateAdvancedFiltersSummary() {
+
+    if (!advancedFiltersSummary) {
+
+      return;
+
+    }
+
+    const chips = [];
+
+    const author =
+      authorInput ? authorInput.value.trim() : "";
+
+    const journal =
+      journalInput ? journalInput.value.trim() : "";
+
+    const field =
+      fieldInput ? fieldInput.value : "";
+
+    const dateRange =
+      dateRangeInput ? dateRangeInput.value : "all";
+
+    const documentType =
+      documentTypeInput ? documentTypeInput.value : "";
+
+    const excludedCount =
+      Array.from(
+        document.querySelectorAll(".excluded-keyword")
+      )
+        .map(input => input.value.trim())
+        .filter(Boolean).length;
+
+    if (author) {
+      chips.push(`Author: ${author}`);
+    }
+
+    if (journal) {
+      chips.push(`Journal: ${journal}`);
+    }
+
+    if (field) {
+      chips.push(field);
+    }
+
+    if (dateRange && dateRange !== "all") {
+
+      const dateLabel =
+        dateRangeInput &&
+        dateRangeInput.selectedOptions.length
+          ? dateRangeInput.selectedOptions[0].textContent.trim()
+          : dateRange;
+
+      chips.push(dateLabel);
+
+    }
+
+    if (documentType) {
+
+      const typeLabel =
+        documentTypeInput &&
+        documentTypeInput.selectedOptions.length
+          ? documentTypeInput.selectedOptions[0].textContent.trim()
+          : documentType;
+
+      chips.push(typeLabel);
+
+    }
+
+    if (excludedCount > 0) {
+
+      chips.push(
+        `${excludedCount} exclusion${excludedCount === 1 ? "" : "s"}`
+      );
+
+    }
+
+    advancedFiltersSummary.innerHTML =
+      chips.length
+        ? chips
+            .map(
+              text =>
+                `<span class="keyword-fields-chip">${escapeHtml(text)}</span>`
+            )
+            .join("")
+        : `<span class="keyword-fields-chip keyword-fields-chip-muted">No extra filters</span>`;
+
+  }
+
+
+  [
+    authorInput,
+    journalInput,
+    fieldInput,
+    dateRangeInput,
+    documentTypeInput
+  ].forEach(
+    field => {
+
+      if (!field) {
+
+        return;
+
+      }
+
+      field.addEventListener(
+        "input",
+        updateAdvancedFiltersSummary
+      );
+
+      field.addEventListener(
+        "change",
+        updateAdvancedFiltersSummary
+      );
+
+    }
+  );
 
 
  
@@ -1257,7 +1469,7 @@ function getCriteria() {
     if (!hasSearchCriteria) {
 
       showMessage(`
-        <h2>🔬 Add some criteria first</h2>
+        <h2>Add some criteria first</h2>
 
         <p>
           Add at least one keyword, author,
@@ -1271,7 +1483,7 @@ function getCriteria() {
 
 
     showSearchingMessage(
-      "🔎 Searching...",
+      "Searching…",
       "Searching free research sources for papers matching your research profile."
     );
 
@@ -1310,7 +1522,7 @@ function getCriteria() {
           showMessage(`
 
             <h2>
-              🔔 Research tracking saved
+              Research tracking saved
             </h2>
 
             <p>
@@ -1324,7 +1536,6 @@ function getCriteria() {
             </p>
 
             <p>
-              📚
               <strong>
                 Papers tracked:
               </strong>
@@ -1332,7 +1543,6 @@ function getCriteria() {
             </p>
 
             <p>
-              📅
               <strong>
                 Last checked:
               </strong>
@@ -1352,8 +1562,8 @@ function getCriteria() {
         displayResults(
           markedPapers,
           trackingResult.isNewTracker
-            ? "🎯 Research tracking started"
-            : `🎯 Tracker updated — ${trackingResult.newPapers.length} new`
+            ? "Research tracking started"
+            : `Tracker updated — ${trackingResult.newPapers.length} new`
         );
 
 
@@ -1377,7 +1587,7 @@ function getCriteria() {
         showMessage(`
 
           <h2>
-            🔎 No matching papers
+            No matching papers
           </h2>
 
           <p>
@@ -1400,7 +1610,7 @@ function getCriteria() {
 
       displayResults(
         papers,
-        "🎯 Matching research"
+        "Matching research"
       );
 
 
@@ -1415,7 +1625,7 @@ function getCriteria() {
       showMessage(`
 
         <h2>
-          ❌ Search failed
+          Search failed
         </h2>
 
         <p>
@@ -3693,7 +3903,7 @@ function matchesAdvancedCriteria(
 
       &nbsp;•&nbsp;
 
-      🔔
+      ${ICONS.bell}
       <strong>
         ${newCount}
       </strong>
@@ -3753,14 +3963,8 @@ function matchesAdvancedCriteria(
 
       badges += `
 
-        <span
-          class="badge"
-          style="
-            background:#dcfce7;
-            color:#166534;
-          "
-        >
-          🆕 New
+        <span class="badge badge-new">
+          ${ICONS.bell} New
         </span>
 
       `;
@@ -3771,14 +3975,8 @@ function matchesAdvancedCriteria(
 
       badges += `
 
-        <span
-          class="badge"
-          style="
-            background:#e5e7eb;
-            color:#374151;
-          "
-        >
-          📚 Previously seen
+        <span class="badge badge-seen">
+          ${ICONS.layers} Previously seen
         </span>
 
       `;
@@ -3830,11 +4028,12 @@ function matchesAdvancedCriteria(
       </p>
 
       <a
+        class="paper-link"
         href="${escapeAttribute(link)}"
         target="_blank"
         rel="noopener noreferrer"
       >
-        View paper →
+        View paper ${ICONS.external}
       </a>
 
     `;
@@ -5034,7 +5233,7 @@ function matchesAdvancedCriteria(
 
         label: "Unknown",
 
-        icon: "❔",
+        icon: ICONS.help,
 
         className: "tracker-status-unknown"
 
@@ -5059,7 +5258,7 @@ function matchesAdvancedCriteria(
 
         label: "Never checked",
 
-        icon: "⏳",
+        icon: ICONS.clock,
 
         className: "tracker-status-never"
 
@@ -5075,7 +5274,7 @@ function matchesAdvancedCriteria(
         label:
           `${lastNew} new paper${lastNew === 1 ? "" : "s"}`,
 
-        icon: "🆕",
+        icon: ICONS.bell,
 
         className: "tracker-status-new"
 
@@ -5088,7 +5287,7 @@ function matchesAdvancedCriteria(
 
       label: "No new papers",
 
-      icon: "✓",
+      icon: ICONS.check,
 
       className: "tracker-status-clear"
 
@@ -5281,57 +5480,26 @@ function matchesAdvancedCriteria(
 
     return `
 
-      <div class="tracker-stats">
+      <div class="tracker-readout">
 
-        <div class="tracker-stat">
-
-          <span class="tracker-stat-label">
-            Papers tracked
-          </span>
-
-          <strong class="tracker-stat-value">
-            ${papersTracked}
-          </strong>
-
+        <div class="tracker-readout-cell">
+          <span class="tracker-readout-value">${papersTracked}</span>
+          <span class="tracker-readout-label">Papers tracked</span>
         </div>
 
-
-        <div class="tracker-stat">
-
-          <span class="tracker-stat-label">
-            New on last check
-          </span>
-
-          <strong class="tracker-stat-value">
-            ${newOnLastCheck}
-          </strong>
-
+        <div class="tracker-readout-cell${newOnLastCheck > 0 ? " tracker-readout-cell-active" : ""}">
+          <span class="tracker-readout-value">${newOnLastCheck}</span>
+          <span class="tracker-readout-label">New last check</span>
         </div>
 
-
-        <div class="tracker-stat">
-
-          <span class="tracker-stat-label">
-            Total new
-          </span>
-
-          <strong class="tracker-stat-value">
-            ${totalNewDiscovered}
-          </strong>
-
+        <div class="tracker-readout-cell">
+          <span class="tracker-readout-value">${totalNewDiscovered}</span>
+          <span class="tracker-readout-label">Total discovered</span>
         </div>
 
-
-        <div class="tracker-stat">
-
-          <span class="tracker-stat-label">
-            Last checked
-          </span>
-
-          <strong class="tracker-stat-value tracker-stat-date">
-            ${escapeHtml(lastChecked)}
-          </strong>
-
+        <div class="tracker-readout-cell tracker-readout-cell-date">
+          <span class="tracker-readout-value tracker-readout-date">${escapeHtml(lastChecked)}</span>
+          <span class="tracker-readout-label">Last checked</span>
         </div>
 
       </div>
@@ -5355,44 +5523,59 @@ function matchesAdvancedCriteria(
   if (!trackers.length) {
 
     trackedTopics.innerHTML = `
-      <div class="card">
-        <h2>📚 My tracked research</h2>
-        <p>You don't have any tracked research profiles yet.</p>
+      <div class="card tracker-empty">
+        <div class="section-eyebrow">${ICONS.flask}<span>My tracked research</span></div>
+        <h2>No research profiles yet</h2>
+        <p>
+          Build an Advanced Research Tracker below to start
+          monitoring a topic — new matching papers will appear
+          here every time you check it.
+        </p>
       </div>
     `;
 
     return;
   }
 
+  const activeCount =
+    trackers.filter(
+      tracker => Number(tracker.lastCheckNewPapers || 0) > 0
+    ).length;
+
   trackedTopics.innerHTML = `
 
     <div class="card tracker-dashboard">
 
       <div class="tracker-dashboard-header">
-        <h2>📚 My tracked research</h2>
+        <div class="section-eyebrow">${ICONS.flask}<span>My tracked research</span></div>
+        <h2>Research monitors</h2>
+        <p class="tracker-dashboard-sub">
+          ${trackers.length} profile${trackers.length === 1 ? "" : "s"} being watched
+          ${activeCount > 0 ? `&nbsp;·&nbsp; <span class="tracker-dashboard-highlight">${activeCount} with new results</span>` : ""}
+        </p>
       </div>
 
       <div class="tracker-list">
 
-        ${trackers.map((tracker) => {
+        ${trackers.map((tracker, index) => {
+
+          const trackerId = escapeAttribute(tracker.id || "");
+          const specimenNumber = String(index + 1).padStart(2, "0");
 
           return `
 
-            <div
+            <article
               class="tracked-topic tracker-card"
-              data-tracker-id="${escapeAttribute(tracker.id || "")}"
+              data-tracker-id="${trackerId}"
             >
 
               <div class="tracker-card-header">
 
                 <div class="tracker-card-title">
-
-                  <div class="tracker-id-label">
-                    ${escapeHtml(
-                      getTrackerShortLabel(tracker)
-                    )}
-                  </div>
-
+                  <span class="tracker-specimen-no">${specimenNumber}</span>
+                  <h3 class="tracker-id-label">
+                    ${escapeHtml(getTrackerShortLabel(tracker))}
+                  </h3>
                 </div>
 
                 <div class="tracker-card-status">
@@ -5401,47 +5584,39 @@ function matchesAdvancedCriteria(
 
               </div>
 
-
               <div class="tracker-section">
-
-                <div class="tracker-section-heading">
-                  Tracking statistics
-                </div>
-
                 ${buildTrackerStatisticsHtml(tracker)}
-
               </div>
-
 
               <div class="tracker-actions">
 
                 <button
                   type="button"
-                  class="view-tracker-button"
-                  data-tracker-id="${escapeAttribute(tracker.id || "")}"
+                  class="ghost-button view-tracker-button"
+                  data-tracker-id="${trackerId}"
                 >
-                  View
+                  ${ICONS.eye} View results
                 </button>
 
                 <button
                   type="button"
-                  class="check-tracker-button"
-                  data-tracker-id="${escapeAttribute(tracker.id || "")}"
+                  class="ghost-button check-tracker-button"
+                  data-tracker-id="${trackerId}"
                 >
-                  Check for new papers
+                  ${ICONS.refresh} Check now
                 </button>
 
                 <button
                   type="button"
-                  class="delete-tracker-button"
-                  data-tracker-id="${escapeAttribute(tracker.id || "")}"
+                  class="ghost-button ghost-button-danger delete-tracker-button"
+                  data-tracker-id="${trackerId}"
                 >
-                  Delete
+                  ${ICONS.trash} Delete
                 </button>
 
               </div>
 
-            </div>
+            </article>
 
           `;
 
@@ -5795,7 +5970,7 @@ function matchesAdvancedCriteria(
               showMessage(`
 
                 <h2>
-                  🗑️ Tracker deleted
+                  Tracker deleted
                 </h2>
 
                 <p>
@@ -5858,7 +6033,7 @@ function matchesAdvancedCriteria(
     showMessage(`
 
       <h2>
-        ❌ Tracker not found
+        Tracker not found
       </h2>
 
       <p>
@@ -5934,7 +6109,7 @@ function matchesAdvancedCriteria(
       showMessage(`
 
         <h2>
-          ⚠️ Invalid tracking profile
+          Invalid tracking profile
         </h2>
 
         <p>
@@ -5955,7 +6130,7 @@ function matchesAdvancedCriteria(
 
 
     showSearchingMessage(
-      "🔎 Checking tracked research...",
+      "Checking tracked research…",
       `Looking for papers matching
        <strong>${escapeHtml(
          getTrackerShortLabel(tracker)
@@ -6078,57 +6253,16 @@ function matchesAdvancedCriteria(
         showMessage(`
 
           <h2>
-            🔎 No matching papers
+            No matching papers
           </h2>
 
           <p>
             No papers currently match
             this tracking profile.
-          </p>
-
-          <p>
             The tracker was checked successfully.
           </p>
 
-          <div class="tracker-result-summary">
-
-            <div>
-              📚
-              <strong>
-                Papers tracked:
-              </strong>
-              ${getSeenCount(tracker)}
-            </div>
-
-            <div>
-              🆕
-              <strong>
-                New on this check:
-              </strong>
-              0
-            </div>
-
-            <div>
-              🔔
-              <strong>
-                Total new discovered:
-              </strong>
-              ${Number(
-                tracker.totalNewPapers || 0
-              )}
-            </div>
-
-            <div>
-              📅
-              <strong>
-                Last checked:
-              </strong>
-              ${escapeHtml(
-                tracker.lastChecked
-              )}
-            </div>
-
-          </div>
+          ${buildTrackerStatisticsHtml(tracker)}
 
         `);
 
@@ -6155,8 +6289,8 @@ function matchesAdvancedCriteria(
       displayResults(
         markedPapers,
         check.newPapers.length > 0
-          ? `🆕 Tracked research — ${check.newPapers.length} new`
-          : "📚 Tracked research — no new papers"
+          ? `Tracked research — ${check.newPapers.length} new`
+          : "Tracked research — no new papers"
       );
 
 
@@ -6175,70 +6309,17 @@ function matchesAdvancedCriteria(
         counter.innerHTML = `
 
           Showing
-          ${Math.min(
-            10,
-            markedPapers.length
-          )}
+          ${Math.min(10, markedPapers.length)}
           of
           ${markedPapers.length}
           papers
 
-          &nbsp;•&nbsp;
-
-          ${
-            check.newPapers.length > 0
-              ? `
-                🆕
-                <strong>
-                  ${check.newPapers.length}
-                </strong>
-                new
-              `
-              : `
-                ✓
-                <strong>
-                  No new papers
-                </strong>
-              `
-          }
-
-          &nbsp;•&nbsp;
-
-          📚
-          <strong>
-            ${check.previouslySeenPapers.length}
-          </strong>
-          previously seen
-
-          &nbsp;•&nbsp;
-
-          📊
-          <strong>
-            ${getSeenCount(tracker)}
-          </strong>
-          tracked
-
-          &nbsp;•&nbsp;
-
-          🔔
-          <strong>
-            ${Number(
-              tracker.totalNewPapers || 0
-            )}
-          </strong>
-          total new discovered
-
-          &nbsp;•&nbsp;
-
-          📅
-          Last checked:
-          <strong>
-            ${escapeHtml(
-              tracker.lastChecked
-            )}
-          </strong>
-
         `;
+
+        counter.insertAdjacentHTML(
+          "afterend",
+          buildTrackerStatisticsHtml(tracker)
+        );
 
       }
 
@@ -6254,7 +6335,7 @@ function matchesAdvancedCriteria(
       showMessage(`
 
         <h2>
-          ❌ Tracking search failed
+          Tracking search failed
         </h2>
 
         <p>
@@ -6415,6 +6496,9 @@ function matchesAdvancedCriteria(
   // to use right away.
 
   createKeywordGroup();
+
+
+  updateAdvancedFiltersSummary();
 
 
   displayTrackedTopics();
